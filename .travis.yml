@@ -1,0 +1,8 @@
+sudo: false
+language: python
+python:
+  - 3.6.2
+script:
+  - nosetests --with-coverage tests
+after_success:
+  - coveralls
