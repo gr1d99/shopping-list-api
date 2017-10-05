@@ -1,28 +1,19 @@
 import os
-from .settings import BASE_DIR
-
-
-POSTGRES = {
-    'user': 'postgres',
-    'pw': '123',
-    'db': 'my_db',
-    'host': 'localhost',
-    'port': '5432',
-}
+from ..settings import BASE_DIR
 
 
 class Config(object):
     DEBUG = False
     TESTING = False
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')
+    SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 
 class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')
+    pass
 
 
 class DevelopmentConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')
     DEBUG = True
 
 
