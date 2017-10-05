@@ -1,5 +1,5 @@
 import os
-from .settings import BASE_DIR
+from ..settings import BASE_DIR
 
 
 class Config(object):
@@ -7,7 +7,7 @@ class Config(object):
     TESTING = False
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')
     SQLALCHEMY_TRACK_MODIFICATIONS = True
-    
+
 
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')
