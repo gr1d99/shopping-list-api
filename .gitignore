@@ -5,4 +5,4 @@ env
 .coverage
 shl_api/
 /instance/
-
+migrations/
