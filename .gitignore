@@ -1,4 +1,8 @@
 .idea
 env
+.idea/
 *.pyc
+.coverage
+shl_api/
+/instance/
 
