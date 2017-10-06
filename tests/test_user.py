@@ -30,8 +30,10 @@ class TestUser(unittest.TestCase):
         self.db = db
         self.user = User
 
+        self.user_raw_password = 'gideonpassword'
+        user_hashed_password = main.bcrypt.generate_password_hash(self.user_raw_password)
         self.gideon_data = {'username': 'giddy',
-                            'pass': 'gideonpassword',
+                            'pass': user_hashed_password,
                             'email': 'giddy@gmail.com'}
 
         self.gideon = self.user(username=self.gideon_data.get('username'),
@@ -69,7 +71,7 @@ class TestUser(unittest.TestCase):
         gideon_password = self.user.query.filter_by(
             username=self.gideon_data.get('username')
         ).first().password
-        self.assertEqual(gideon_password, self.gideon_data.get('pass'))
+        self.assertTrue(main.bcrypt.check_password_hash(gideon_password, self.user_raw_password))
 
     def tearDown(self):
         """
