@@ -36,36 +36,39 @@ class TestUser(unittest.TestCase):
 
         self.gideon = self.user(username=self.gideon_data.get('username'),
                                 email=self.gideon_data.get('email'),
-                                password=self.gideon_data.get('password'))
+                                password=self.gideon_data.get('pass'))
 
-    def test_user_creation(self):
+    def test_user_username(self):
         """
-        create user named `gideon` and assert whether the user created
-        has the same username as `gideon`
+        assert whether the user created has the same username as `gideon`
         """
-        username = 'gideon'  # set username to be used during assertion
-        user = self.user(username=username)
-        self.db.session.add(user)  # issue an INSERT statement
+        self.db.session.add(self.gideon)  # issue an INSERT statement
         self.db.session.commit()  # commit
-        added_user = self.user.query.filter_by(username=username).\
+        added_user = self.user.query.filter_by(username=self.gideon_data.get('username')).\
             first().username  # retrieve the username itself
 
-        self.assertEqual(added_user, username)
+        self.assertEqual(added_user, self.gideon_data.get('username'))
 
     def test_user_email(self):
+        """
+        Assert if user created has the expected email
+        """
         self.db.session.add(self.gideon)
         self.db.session.commit()
         gideon_email = self.user.query.filter_by(
             email=self.gideon_data.get('email')
-        ).first()
+        ).first().email
         self.assertEqual(gideon_email, self.gideon_data.get('email'))
 
     def test_user_password(self):
+        """
+        Assert if the user created has the expected password
+        """
         self.db.session.add(self.gideon)
         self.db.session.commit()
         gideon_password = self.user.query.filter_by(
             username=self.gideon_data.get('username')
-        ).first()
+        ).first().password
         self.assertEqual(gideon_password, self.gideon_data.get('pass'))
 
     def tearDown(self):
