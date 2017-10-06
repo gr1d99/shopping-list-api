@@ -30,6 +30,14 @@ class TestUser(unittest.TestCase):
         self.db = db
         self.user = User
 
+        self.gideon_data = {'username': 'giddy',
+                            'pass': 'gideonpassword',
+                            'email': 'giddy@gmail.com'}
+
+        self.gideon = self.user(username=self.gideon_data.get('username'),
+                                email=self.gideon_data.get('email'),
+                                password=self.gideon_data.get('password'))
+
     def test_user_creation(self):
         """
         create user named `gideon` and assert whether the user created
@@ -43,6 +51,22 @@ class TestUser(unittest.TestCase):
             first().username  # retrieve the username itself
 
         self.assertEqual(added_user, username)
+
+    def test_user_email(self):
+        self.db.session.add(self.gideon)
+        self.db.session.commit()
+        gideon_email = self.user.query.filter_by(
+            email=self.gideon_data.get('email')
+        ).first()
+        self.assertEqual(gideon_email, self.gideon_data.get('email'))
+
+    def test_user_password(self):
+        self.db.session.add(self.gideon)
+        self.db.session.commit()
+        gideon_password = self.user.query.filter_by(
+            username=self.gideon_data.get('username')
+        ).first()
+        self.assertEqual(gideon_password, self.gideon_data.get('pass'))
 
     def tearDown(self):
         """
