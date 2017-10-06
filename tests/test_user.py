@@ -31,7 +31,7 @@ class TestUserModel(TestUserBase):
     """tests main User model class"""
 
     def setUp(self):
-        super(TestUserModel, self).setUp()
+        super(TestUserModel, self).setUp()  # call the super class setUp method
         self.user_raw_password = 'gideonpassword'
         user_hashed_password = bcrypt. \
             generate_password_hash(self.user_raw_password)  # hash user password
@@ -73,7 +73,7 @@ class TestUserModel(TestUserBase):
         db.session.commit()
         gideon_password = User.query.filter_by(
             username=self.gideon_data.get('username')
-        ).first().password
+        ).first().password  # query `gideon` details and get the password
         self.assertTrue(bcrypt.check_password_hash(gideon_password, self.user_raw_password))
 
 
@@ -82,19 +82,21 @@ class TestUserRegisterAndLogin(TestUserBase):
     def setUp(self):
         super(TestUserRegisterAndLogin, self).setUp()
         self.client = app.test_client()
+        self.user_register_data = {
+            'username': 'gideon',
+            'password': 'gideonpassword',
+            'email': 'gideon@email.com'
+        }
+        self.api_register_url = '/shopping-list/api/v1/auth/register/'
+        self.api_login_url = '/shopping-list/api/v1/auth/login/'
 
     def test_user_registration(self):
         """
         test if response code is 404
             `we currently don't have an endpoint to handle registration`
         """
-        user_register_data = {
-            'username': 'gideon',
-            'password': 'gideonpassword',
-            'email': 'gideon@email.com'
-        }
-        response = self.client.post('/shopping-list/api/v1/auth/register/',
-                                    data=user_register_data)
+        response = self.client.post(self.api_register_url,
+                                    data=self.user_register_data)
         self.assertEqual(response.status_code, 404)
 
     def test_user_login(self):
@@ -102,16 +104,11 @@ class TestUserRegisterAndLogin(TestUserBase):
         test is response code is 404
             `there is no api endpoint to handle user login as of yet`
         """
-        user_register_data = {
-            'username': 'gideon',
-            'password': 'gideonpassword',
-            'email': 'gideon@email.com'
-        }
         login_data = {
-            'username': user_register_data.get('username'),
-            'password': user_register_data.get('password')
+            'username': self.user_register_data.get('username'),
+            'password': self.user_register_data.get('password')
         }
-        response = self.client.post('/shopping-list/api/v1/auth/login/', data=login_data)
+        response = self.client.post(self.api_login_url, data=login_data)
         self.assertEqual(response.status_code, 404)
 
 
