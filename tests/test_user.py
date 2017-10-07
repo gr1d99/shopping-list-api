@@ -3,7 +3,7 @@
 """Contains all Tests for system app user"""
 
 import unittest
-from main import app, db, bcrypt
+from main import app, db
 from web_app.conf import app_config
 from web_app.db.models import User
 
@@ -32,49 +32,47 @@ class TestUserModel(TestUserBase):
 
     def setUp(self):
         super(TestUserModel, self).setUp()  # call the super class setUp method
-        self.user_raw_password = 'gideonpassword'
-        user_hashed_password = bcrypt. \
-            generate_password_hash(self.user_raw_password)  # hash user password
-        self.gideon_data = {'username': 'giddy',
-                            'pass': user_hashed_password,
-                            'email': 'giddy@gmail.com'}
+        self.test_user_data = {'username': 'giddy',
+                               'pass': 'gideonpassword',
+                               'email': 'giddy@email.com'}
 
-        self.gideon = User(username=self.gideon_data.get('username'),
-                           email=self.gideon_data.get('email'),
-                           password=self.gideon_data.get('pass'))
+        self.user = User(username=self.test_user_data.get('username'),
+                         email=self.test_user_data.get('email'),
+                         password=self.test_user_data.get('pass'))
 
     def test_user_username(self):
         """
         assert whether the user created has the same username as `gideon`
         """
-        db.session.add(self.gideon)  # issue an INSERT statement
+        db.session.add(self.user)  # issue an INSERT statement
         db.session.commit()  # commit
-        added_user = User.query.filter_by(username=self.gideon_data.get('username')).\
+        added_user = User.query.filter_by(username=self.test_user_data.get('username')).\
             first().username  # retrieve the username itself
 
-        self.assertEqual(added_user, self.gideon_data.get('username'))
+        self.assertEqual(added_user, self.test_user_data.get('username'))
 
     def test_user_email(self):
         """
         Assert if user created has the expected email
         """
-        db.session.add(self.gideon)
+        db.session.add(self.user)
         db.session.commit()
-        gideon_email = User.query.filter_by(
-            email=self.gideon_data.get('email')
-        ).first().email
-        self.assertEqual(gideon_email, self.gideon_data.get('email'))
+        added_user = User.query.filter_by(
+            email=self.test_user_data.get('email')
+        ).first()
+        self.assertEqual(added_user.email, self.test_user_data.get('email'))
 
     def test_user_password(self):
         """
         Assert if the user created has the expected password
         """
-        db.session.add(self.gideon)
+        user_raw_password = 'gideonpassword'
+        db.session.add(self.user)
         db.session.commit()
-        gideon_password = User.query.filter_by(
-            username=self.gideon_data.get('username')
-        ).first().password  # query `gideon` details and get the password
-        self.assertTrue(bcrypt.check_password_hash(gideon_password, self.user_raw_password))
+        adder_user = User.query.filter_by(
+            username=self.test_user_data.get('username')
+        ).first()  # query user details
+        self.assertTrue(adder_user.verify_password(user_raw_password))
 
 
 class TestUserRegisterAndLogin(TestUserBase):
