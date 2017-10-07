@@ -1,13 +1,12 @@
-from main import db, bcrypt
+from main import bcrypt
 
 
-class BaseUser(db.Model):
+class BaseUserManager(object):
     @classmethod
     def hash_password(cls, raw_password):
         """
-        never store passwords in plaintext
-        :param raw_password:
-        :return: hashed password
+        never store passwords in plaintext, this method
+        hashes the raw password and returns hashed password.
         """
         return bcrypt.generate_password_hash(raw_password)
 
@@ -24,3 +23,10 @@ class BaseUser(db.Model):
         else:
             email = '@'.join([email_name, domain_part.lower()])
         return email
+
+    def _verify_password(self, raw_password):
+        """
+        used to verify user password using the provided raw_password
+        since password stored are hashed.
+        """
+        return bcrypt.check_password_hash(self.password, raw_password)
