@@ -71,7 +71,7 @@ class TestUserModel(TestUserBase):
         db.session.commit()
         adder_user = User.query.filter_by(
             username=self.test_user_data.get('username')
-        ).first().password  # query user details
+        ).first()  # query user details
         self.assertTrue(adder_user.verify_password(user_raw_password))
 
 
