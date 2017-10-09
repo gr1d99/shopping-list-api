@@ -95,7 +95,7 @@ class TestUserRegisterAndLogin(TestUserBase):
         """
         response = self.client.post(self.api_register_url,
                                     data=self.user_register_data)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 201)
 
     def test_user_login(self):
         """
@@ -107,7 +107,7 @@ class TestUserRegisterAndLogin(TestUserBase):
             'password': self.user_register_data.get('password')
         }
         response = self.client.post(self.api_login_url, data=login_data)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 200)
 
 
 if __name__ == '__main__':
