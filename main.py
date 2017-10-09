@@ -14,7 +14,6 @@ db = SQLAlchemy(app)
 from web_app import views
 # ---------------------------
 
-
 app.add_url_rule(
     '/api/v1/auth/', view_func=views.UserRegisterView.as_view('api_reqister')
 )
