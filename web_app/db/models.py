@@ -10,6 +10,7 @@ from .base import BaseUserManager
 
 
 class User(BaseUserManager, db.Model):
+    """A model class used to store user detail"""
     ___tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -23,6 +24,10 @@ class User(BaseUserManager, db.Model):
         self.email = self.normalize_email(email)
 
     def verify_password(self, password):
+        """
+        provides a way to verify if the stored password
+        matches with the passed `password` argument
+        """
         return self._verify_password(password)
 
     def __repr__(self):
