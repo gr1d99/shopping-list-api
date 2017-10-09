@@ -90,8 +90,7 @@ class TestUserRegisterAndLogin(TestUserBase):
 
     def test_user_registration(self):
         """
-        test if response code is 404
-            `we currently don't have an endpoint to handle registration`
+        test if response code is 201
         """
         response = self.client.post(self.api_register_url,
                                     data=self.user_register_data)
@@ -99,8 +98,7 @@ class TestUserRegisterAndLogin(TestUserBase):
 
     def test_user_login(self):
         """
-        test is response code is 404
-            `there is no api endpoint to handle user login as of yet`
+        test is response code is 200
         """
         login_data = {
             'username': self.user_register_data.get('username'),
