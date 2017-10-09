@@ -1,7 +1,19 @@
+# -*- coding: utf-8 -*-
+"""
+    This module contains all Manager classes used by;
+        `User Model`
+"""
 from main import bcrypt
 
 
 class BaseUserManager(object):
+    """
+    Manager classes are helpful in this web app.
+    Methods and attributes defined in this class include.
+        - hash_password
+        - normalize_email
+        - _verify_password
+    """
     @classmethod
     def hash_password(cls, raw_password):
         """
