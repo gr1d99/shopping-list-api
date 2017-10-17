@@ -11,7 +11,8 @@ from web_app.utils.date_helpers import datetime
 from .base import BaseUserManager, BaseModel
 
 
-class User(BaseUserManager, BaseModel, db.Model):
+class User(BaseUserManager, BaseModel,  db.Model):
+    __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
@@ -34,23 +35,14 @@ class User(BaseUserManager, BaseModel, db.Model):
         db.session.commit()
         return None
 
-    def save(self):
-        """
-        using save() is a cleaner way.
-        saves user object to db
-        """
-        db.session.add(self)
-        db.session.commit()
-        return self
-
     def __repr__(self):
         return '<User %r>' % self.username
 
 
-class ShoppingList(db.Model):
+class ShoppingList(BaseModel, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
-    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     shopping_items = db.relationship('ShoppingItem', backref='shopping_list',
                                      lazy=True, cascade='all, delete-orphan')
     timestamp = db.Column(db.DateTime, default=datetime.now())
@@ -59,7 +51,7 @@ class ShoppingList(db.Model):
         return '<%(name) obj>' % dict(name=self.name.capitalize())
 
 
-class ShoppingItem(db.Model):
+class ShoppingItem(BaseModel, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
     shoppinglist_id = db.Column(db.Integer, db.ForeignKey('shopping_list.id'))
