@@ -8,3 +8,4 @@ migrations/
 *.db
 *.sqlite3
 *.sqlite
+htmlcov/
