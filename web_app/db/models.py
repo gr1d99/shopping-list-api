@@ -21,13 +21,28 @@ class User(BaseUserManager, BaseModel, db.Model):
                                      lazy=True, cascade='all, delete-orphan')
     date_joined = db.Column(db.DateTime, default=datetime.now())
 
-    def __init__(self, username, password, email):
+    def __init__(self, username, password, email, date_joined=None):
         self.username = username
         self.password = self.hash_password(password)
         self.email = self.normalize_email(email)
+        self.date_joined = date_joined
 
     def verify_password(self, password):
         return self._verify_password(password)
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+        return None
+
+    def save(self):
+        """
+        using save() is a cleaner way.
+        saves user object to db
+        """
+        db.session.add(self)
+        db.session.commit()
+        return self
 
     def __repr__(self):
         return '<User %r>' % self.username
