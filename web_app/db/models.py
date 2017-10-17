@@ -10,6 +10,7 @@ from .base import BaseUserManager
 
 
 class User(BaseUserManager, db.Model):
+
     ___tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)

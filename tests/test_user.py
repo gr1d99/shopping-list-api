@@ -40,6 +40,7 @@ class TestUserModel(TestUserBase):
                          email=self.test_user_data.get('email'),
                          password=self.test_user_data.get('pass'))
 
+
     def test_user_username(self):
         """
         assert whether the user created has the same username as `gideon`
@@ -61,6 +62,7 @@ class TestUserModel(TestUserBase):
             email=self.test_user_data.get('email')
         ).first()
         self.assertEqual(added_user.email, self.test_user_data.get('email'))
+
 
     def test_user_password(self):
         """
@@ -108,7 +110,6 @@ class TestUserRegisterAndLogin(TestUserBase):
         }
         response = self.client.post(self.api_login_url, data=login_data)
         self.assertEqual(response.status_code, 200)
-
 
 if __name__ == '__main__':
     unittest.main()
