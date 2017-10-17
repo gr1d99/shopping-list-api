@@ -6,25 +6,20 @@
             2. `ShoppingList`
             3. `ShoppingItem`
 """
-import datetime
 from main import db
-from ..settings import TIME_ZONE
-from .base import BaseUserManager
+from web_app.utils.date_helpers import datetime
+from .base import BaseUserManager, BaseModel
 
 
-class User(BaseUserManager, db.Model):
-    ___tablename__ = 'users'
+class User(BaseUserManager, BaseModel, db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(30), unique=True, nullable=False)
-    shopping_lists = db.relationship('ShoppingList',
-                                     backref='owner',
-                                     lazy=True,
-                                     cascade='all, delete-orphan')
-    date_joined = db.Column(db.DateTime,
-                            default=datetime.datetime.now(tz=TIME_ZONE))
+    shopping_lists = db.relationship('ShoppingList', backref='user',
+                                     lazy=True, cascade='all, delete-orphan')
+    date_joined = db.Column(db.DateTime, default=datetime.now())
 
     def __init__(self, username, password, email):
         self.username = username
@@ -39,29 +34,22 @@ class User(BaseUserManager, db.Model):
 
 
 class ShoppingList(db.Model):
-    __tablename__ = 'shopping_lists'
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
-    owner_id = db.Column(db.Integer, db.ForeignKey('owner.id'))
-    shoppingitems = db.relationship('ShoppingItem', backref='shoppinglist',
-                                    lazy=True,
-                                    cascade='all, delete-orphan')
-    timestamp = db.Column(db.DateTime,
-                          default=datetime.datetime.now(tz=TIME_ZONE))
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    shopping_items = db.relationship('ShoppingItem', backref='shopping_list',
+                                     lazy=True, cascade='all, delete-orphan')
+    timestamp = db.Column(db.DateTime, default=datetime.now())
 
     def __repr__(self):
         return '<%(name) obj>' % dict(name=self.name.capitalize())
 
 
 class ShoppingItem(db.Model):
-    __tablename__ = 'shopping_item'
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
-    shoppinglist_id = db.Column(db.Integer, db.ForeignKey('shoppinglist.id'))
-    timestamp = db.Column(db.DateTime,
-                          default=datetime.datetime.now(tz=TIME_ZONE))
+    shoppinglist_id = db.Column(db.Integer, db.ForeignKey('shopping_list.id'))
+    timestamp = db.Column(db.DateTime, default=datetime.now())
 
     def __repr__(self):
         return '<%(name) obj>' % dict(name=self.name.capitalize())
