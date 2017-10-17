@@ -1,4 +1,16 @@
-from main import bcrypt
+from main import bcrypt, db
+
+
+class BaseModel(db.Model):
+    """
+    Base class for all models.
+    Contains common methods used by all models.
+    """
+    __abstract__ = True
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
 
 
 class BaseUserManager(object):
