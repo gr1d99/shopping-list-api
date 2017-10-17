@@ -7,4 +7,4 @@ shl_api/
 migrations/
 *.db
 *.sqlite3
-htmlcov/
+*.sqlite

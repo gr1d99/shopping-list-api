@@ -2,86 +2,71 @@
 
 """Contains all Tests for system app user"""
 
-import unittest
-from main import app, db
+import collections
+from main import db
 from web_app.conf import app_config
 from web_app.db.models import User
 
+from .base import TestBase
 
-class TestUserBase(unittest.TestCase):
+
+class TestUserModel(TestBase):
+    """tests main User model class"""
+
     def setUp(self):
-        """Create instances and objects that will be used by the tests"""
-        app.config['SQLALCHEMY_DATABASE_URI'] = app_config.\
-            TestingConfig.SQLALCHEMY_DATABASE_URI  # database to use
-        app.config['TESTING'] = app_config.TestingConfig.TESTING
-        app.config['DEBUG'] = False
-        db.init_app(app)
-        # --------------------------------------------#
-        db.session.commit()   # ----------------------#
-        db.drop_all()         # credits: Mbithe Nzomo #
-        db.create_all()       # ----------------------#
-        # --------------------------------------------#
+        super(TestUserModel, self).setUp()  # call the super class setUp method
+        self.app.config.from_object(app_config.TestingConfig)
+        db.init_app(self.app)
+
+        db.session.commit()
+        db.drop_all()
+        db.create_all()
+
+        _info = collections.namedtuple('User', ['username', 'email', 'password'])
+        user_info = _info('giddy', 'giddy@email.com', 'gideonpassword')
+
+        self.user = User(username=user_info.username, email=user_info.email, password=user_info.password)
+        self.user_info = user_info
 
     def tearDown(self):
         db.session.remove()
         db.drop_all()
 
-
-class TestUserModel(TestUserBase):
-    """tests main User model class"""
-
-    def setUp(self):
-        super(TestUserModel, self).setUp()  # call the super class setUp method
-        self.test_user_data = {'username': 'giddy',
-                               'pass': 'gideonpassword',
-                               'email': 'giddy@email.com'}
-
-        self.user = User(username=self.test_user_data.get('username'),
-                         email=self.test_user_data.get('email'),
-                         password=self.test_user_data.get('pass'))
-
-
     def test_user_username(self):
         """
         assert whether the user created has the same username as `gideon`
         """
-        db.session.add(self.user)  # issue an INSERT statement
-        db.session.commit()  # commit
-        added_user = User.query.filter_by(username=self.test_user_data.get('username')).\
-            first().username  # retrieve the username itself
+        self.user.save()
+        # retrieve the username itself
+        added_user = User.query.filter_by(username=self.user_info.username).first().username
 
-        self.assertEqual(added_user, self.test_user_data.get('username'))
+        self.assertEqual(added_user, self.user_info.username)
 
     def test_user_email(self):
         """
         Assert if user created has the expected email
         """
-        db.session.add(self.user)
-        db.session.commit()
-        added_user = User.query.filter_by(
-            email=self.test_user_data.get('email')
-        ).first()
-        self.assertEqual(added_user.email, self.test_user_data.get('email'))
+        self.user.save()
+        added_user = User.query.filter_by(email=self.user_info.email).first()
 
+        self.assertEqual(added_user.email, self.user_info.email)
 
     def test_user_password(self):
         """
         Assert if the user created has the expected password
         """
         user_raw_password = 'gideonpassword'
-        db.session.add(self.user)
-        db.session.commit()
-        adder_user = User.query.filter_by(
-            username=self.test_user_data.get('username')
-        ).first()  # query user details
+        self.user.save()
+        adder_user = User.query.filter_by(username=self.user_info.username).first()
+
         self.assertTrue(adder_user.verify_password(user_raw_password))
 
 
-class TestUserRegisterAndLogin(TestUserBase):
+class TestUserRegisterAndLogin(TestBase):
     """test user registration and login"""
     def setUp(self):
         super(TestUserRegisterAndLogin, self).setUp()
-        self.client = app.test_client()
+        self.client = self.app.test_client()
         self.user_register_data = {
             'username': 'gideon',
             'password': 'gideonpassword',
@@ -110,6 +95,3 @@ class TestUserRegisterAndLogin(TestUserBase):
         }
         response = self.client.post(self.api_login_url, data=login_data)
         self.assertEqual(response.status_code, 200)
-
-if __name__ == '__main__':
-    unittest.main()
