@@ -30,6 +30,11 @@ class User(BaseUserManager, BaseModel,  db.Model):
         self.date_joined = date_joined
 
     def authenticate(self):
+        self.is_authenticated = CallableTrue
+        self.save()
+        return CallableTrue
+
+    def deauthenticate(self):
         self.is_authenticated = CallableFalse
         self.save()
         return CallableTrue
