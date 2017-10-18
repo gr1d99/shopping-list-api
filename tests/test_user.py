@@ -5,6 +5,7 @@
 import collections
 from main import db
 from web_app.conf import app_config
+from web_app.core.exceptions import UsernameExists
 from web_app.db.models import User
 
 from .base import TestBase
@@ -86,7 +87,8 @@ class TestUserModel(TestBase):
         """
         self.user.save()  # save user instance
         self.user.authenticate()  # call authenticate method
-        self.assertTrue(self.user.is_authenticated)  # test
+        saved_user = User.query.filter_by(username=self.user_info.username).first()
+        self.assertTrue(saved_user.is_authenticated)  # test
 
     def test_can_deauthenticate(self):
         """
@@ -95,17 +97,25 @@ class TestUserModel(TestBase):
         :return:
         """
         self.user.save()
+        saved_user = User.query.filter_by(username=self.user_info.username).first()
 
         # test if authenticated is set to False initially
-        self.assertFalse(self.user.is_authenticated)
+        self.assertFalse(saved_user.is_authenticated)
 
         # call authenticate method and test it
         self.user.authenticate()
-        self.assertTrue(self.user.is_authenticated)
+        self.assertTrue(saved_user.is_authenticated)
 
         # finally deauthenticate and test it
         self.user.deauthenticate()
-        self.assertFalse(self.user.is_authenticated)
+        self.assertFalse(saved_user.is_authenticated)
+
+    def test_username_unique(self):
+        """
+        Check if an exception is raised if the username is already used
+        """
+        self.user.save()  # save the user for the first time
+        self.assertRaises(UsernameExists, self.user.save)
 
 
 # class TestUserRegisterAndLogin(TestBase):
