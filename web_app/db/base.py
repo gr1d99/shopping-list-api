@@ -9,6 +9,11 @@ class BaseModel(db.Model):
     __abstract__ = True
 
     def save(self):
+        # check if username exists before actually saving the data
+        self.check_username(self.username)
+        return self._save()
+
+    def _save(self):
         db.session.add(self)
         db.session.commit()
 
