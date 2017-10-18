@@ -20,22 +20,23 @@ class User(BaseUserManager, BaseModel,  db.Model):
     email = db.Column(db.String(30), unique=True, nullable=False)
     shopping_lists = db.relationship('ShoppingList', backref='user',
                                      lazy='dynamic', cascade='all, delete-orphan')
-    authenticated = db.Column(db.Boolean, default=CallableFalse)
+    authenticated = db.Column(db.Boolean, default=False)
     date_joined = db.Column(db.DateTime, default=datetime.now())
 
-    def __init__(self, username, password, email, date_joined=None):
+    def __init__(self, username, password, email, authenticated=False, date_joined=None):
         self.username = username
         self.password = self.hash_password(password)
         self.email = self.normalize_email(email)
+        self.authenticated = authenticated
         self.date_joined = date_joined
 
     def authenticate(self):
-        self.authenticated = CallableTrue
+        self.authenticated = True
         self.save()
         return CallableTrue
 
     def deauthenticate(self):
-        self.authenticated = CallableFalse
+        self.authenticated = False
         self.save()
         return CallableTrue
 
