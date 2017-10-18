@@ -27,10 +27,11 @@ class TestUserModel(TestBase):
 
         self.user = User(username=user_info.username, email=user_info.email, password=user_info.password)
         self.user_info = user_info
+        self._info = _info
 
-    # def tearDown(self):
-    #     db.session.remove()
-    #     db.drop_all()
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
 
     def test_user_username(self):
         """
@@ -39,7 +40,6 @@ class TestUserModel(TestBase):
         self.user.save()
         # retrieve the username itself
         added_user = User.query.filter_by(username=self.user_info.username).first().username
-
         self.assertEqual(added_user, self.user_info.username)
 
     def test_user_email(self):
@@ -61,37 +61,83 @@ class TestUserModel(TestBase):
 
         self.assertTrue(adder_user.verify_password(user_raw_password))
 
+    def test_update(self):
+        """
+        test if user values are updated successfully and new values are
+        reflected back when we run the query.
+        :return:
+        """
+        self.user.save()
+        _new_data = self._info('gideon', 'gideon@yahoo.com', 'gideonpassword')
+        self.user.username = _new_data.username
+        self.user.email = _new_data.email
+        self.user.save()
 
-class TestUserRegisterAndLogin(TestBase):
-    """test user registration and login"""
-    def setUp(self):
-        super(TestUserRegisterAndLogin, self).setUp()
-        self.client = self.app.test_client()
-        self.user_register_data = {
-            'username': 'gideon',
-            'password': 'gideonpassword',
-            'email': 'gideon@email.com'
-        }
-        self.api_register_url = '/shopping-list/api/v1/auth/register/'
-        self.api_login_url = '/shopping-list/api/v1/auth/login/'
+        saved_user = User.query.filter_by(username=_new_data.username).first()
 
-    def test_user_registration(self):
-        """
-        test if response code is 404
-            `we currently don't have an endpoint to handle registration`
-        """
-        response = self.client.post(self.api_register_url,
-                                    data=self.user_register_data)
-        self.assertEqual(response.status_code, 201)
+        self.assertTrue((saved_user.username == _new_data.username and
+                         saved_user.email == _new_data.email))
 
-    def test_user_login(self):
+    def test_can_authenticate(self):
         """
-        test is response code is 404
-            `there is no api endpoint to handle user login as of yet`
+        test if `is_authenticate` property will return True if
+        `authenticate()` method is called against the created
+        user instance.
         """
-        login_data = {
-            'username': self.user_register_data.get('username'),
-            'password': self.user_register_data.get('password')
-        }
-        response = self.client.post(self.api_login_url, data=login_data)
-        self.assertEqual(response.status_code, 200)
+        self.user.save()  # save user instance
+        self.user.authenticate()  # call authenticate method
+        self.assertTrue(self.user.is_authenticated)  # test
+
+    def test_can_deauthenticate(self):
+        """
+        test if user can deauthenticate successfully after authenticate method
+        has been called
+        :return:
+        """
+        self.user.save()
+
+        # test if authenticated is set to False initially
+        self.assertFalse(self.user.is_authenticated)
+
+        # call authenticate method and test it
+        self.user.authenticate()
+        self.assertTrue(self.user.is_authenticated)
+
+        # finally deauthenticate and test it
+        self.user.deauthenticate()
+        self.assertFalse(self.user.is_authenticated)
+
+
+# class TestUserRegisterAndLogin(TestBase):
+#     """test user registration and login"""
+#     def setUp(self):
+#         super(TestUserRegisterAndLogin, self).setUp()
+#         self.client = self.app.test_client()
+#         self.user_register_data = {
+#             'username': 'gideon',
+#             'password': 'gideonpassword',
+#             'email': 'gideon@email.com'
+#         }
+#         self.api_register_url = '/shopping-list/api/v1/auth/register/'
+#         self.api_login_url = '/shopping-list/api/v1/auth/login/'
+#
+#     def test_user_registration(self):
+#         """
+#         test if response code is 404
+#             `we currently don't have an endpoint to handle registration`
+#         """
+#         response = self.client.post(self.api_register_url,
+#                                     data=self.user_register_data)
+#         self.assertEqual(response.status_code, 201)
+#
+#     def test_user_login(self):
+#         """
+#         test is response code is 404
+#             `there is no api endpoint to handle user login as of yet`
+#         """
+#         login_data = {
+#             'username': self.user_register_data.get('username'),
+#             'password': self.user_register_data.get('password')
+#         }
+#         response = self.client.post(self.api_login_url, data=login_data)
+#         self.assertEqual(response.status_code, 200)
