@@ -18,7 +18,7 @@ class User(BaseUserManager, BaseModel,  db.Model):
     password = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(30), unique=True, nullable=False)
     shopping_lists = db.relationship('ShoppingList', backref='user',
-                                     lazy=True, cascade='all, delete-orphan')
+                                     lazy='dynamic', cascade='all, delete-orphan')
     date_joined = db.Column(db.DateTime, default=datetime.now())
 
     def __init__(self, username, password, email, date_joined=None):
@@ -44,11 +44,11 @@ class ShoppingList(BaseModel, db.Model):
     name = db.Column(db.String(100), nullable=False, unique=True)
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     shopping_items = db.relationship('ShoppingItem', backref='shopping_list',
-                                     lazy=True, cascade='all, delete-orphan')
+                                     lazy='dynamic', cascade='all, delete-orphan')
     timestamp = db.Column(db.DateTime, default=datetime.now())
 
     def __repr__(self):
-        return '<%(name) obj>' % dict(name=self.name.capitalize())
+        return '<%(name)s obj>' % dict(name=self.name.capitalize())
 
 
 class ShoppingItem(BaseModel, db.Model):
@@ -58,4 +58,4 @@ class ShoppingItem(BaseModel, db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.now())
 
     def __repr__(self):
-        return '<%(name) obj>' % dict(name=self.name.capitalize())
+        return '<%(name)s obj>' % dict(name=self.name.capitalize())
