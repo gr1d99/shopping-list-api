@@ -10,6 +10,7 @@ from main import db
 from web_app.utils.date_helpers import datetime
 from web_app.utils.callables import CallableFalse, CallableTrue
 from .base import BaseUserManager, BaseModel
+from ..core.exceptions import UsernameExists
 
 
 class User(BaseUserManager, BaseModel,  db.Model):
@@ -34,6 +35,11 @@ class User(BaseUserManager, BaseModel,  db.Model):
         self.authenticated = True
         self.save()
         return CallableTrue
+
+    def check_username(self, username):
+        for user in db.session.query(User).filter_by(username=self.username).all():
+            if user.username == username:
+                raise UsernameExists
 
     def deauthenticate(self):
         self.authenticated = False
