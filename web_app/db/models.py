@@ -7,10 +7,10 @@
             3. `ShoppingItem`
 """
 from main import db
+from web_app.core.exceptions import UsernameExists
 from web_app.utils.date_helpers import datetime
 from web_app.utils.callables import CallableFalse, CallableTrue
 from .base import BaseUserManager, BaseModel
-from ..core.exceptions import UsernameExists
 
 
 class User(BaseUserManager, BaseModel,  db.Model):
