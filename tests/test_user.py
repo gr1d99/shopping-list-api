@@ -39,6 +39,7 @@ class TestUserModel(TestBase):
         Assert whether the user created has the same username as `gideon`
         """
         self.user.save()
+
         # retrieve the username itself
         added_user = User.query.filter_by(username=self.user_info.username).first().username
         self.assertEqual(added_user, self.user_info.username)
@@ -136,6 +137,26 @@ class TestUserModel(TestBase):
 
             # call check method
             another_user.check_email()
+
+    def test_required_colums(self):
+        """
+        Test required fields(username, email, password).
+        """
+        # start with null username
+        expected_username_error = 'username is required'
+        expected_email_error = 'email is required'
+        empty_username = User('', 'password', 'user@email.com')
+        empty_email = User('username', 'password', '')
+
+        # None is always returned if data is saved successfully,
+        # we will also counter check it with querying with the
+        # model.
+        self.assertIn(expected_username_error, empty_username.save().values())
+        self.assertIn(expected_email_error, empty_email.save().values())
+
+        # counter check by querying the database
+        self.assertIsNone(User.query.filter_by(email=empty_username.email).first())
+        self.assertIsNone(User.query.filter_by(username=empty_email.username).first())
 
     def test_delete_user(self):
         self.user.save()
