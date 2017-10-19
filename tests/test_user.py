@@ -136,6 +136,22 @@ class TestUserModel(TestBase):
             # call check method
             another_user.check_email()
 
+    def test_delete_user(self):
+        self.user.save()
+        # query user
+        saved_user = User.query.filter_by(username=self.user_info.username).first()
+
+        # check if saved user is not none
+        self.assertIsNotNone(saved_user)
+
+        # call delete method
+        self.user.delete()
+        # run the query again
+        saved_user = User.query.filter_by(username=self.user_info.username).first()
+
+        # check if the returned value is None
+        self.assertIsNone(saved_user)
+
 
 # class TestUserRegisterAndLogin(TestBase):
 #     """test user registration and login"""
