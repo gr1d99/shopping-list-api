@@ -7,15 +7,14 @@
             3. `ShoppingItem`
 """
 from main import db
-from web_app.core.exceptions import EmailExists, UsernameExists
 from web_app.utils.date_helpers import datetime
-from web_app.utils.callables import CallableFalse, CallableTrue
 from .base import BaseUserManager, BaseModel
 
 
 class User(BaseUserManager, BaseModel,  db.Model):
+
     __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.Binary(200), nullable=False)
     email = db.Column(db.String(30), unique=True, nullable=False)
@@ -31,35 +30,23 @@ class User(BaseUserManager, BaseModel,  db.Model):
         self.authenticated = authenticated
         self.date_joined = date_joined
 
-    def authenticate(self):
-        self.authenticated = True
-        self.save()
-        return True
-
     def check_email(self):
-        if db.session.query(User).filter_by(email=self.email).first():
-            raise EmailExists
+        if db.session.query(self).filter_by(email=self.email).first():
+            raise User.EmailExists
 
     def check_username(self):
         if db.session.query(User).filter_by(username=self.username).first():
-            raise UsernameExists
+            raise User.UsernameExists
 
-    def deauthenticate(self):
-        self.authenticated = False
-        self.save()
-        return CallableTrue
+    def save(self):
+        """Override the default save method to enable inspection of required fields"""
+        # if None is returned, continue and save data
+        if self.validate_required() is None:
+            return self._save()
 
-    @property
-    def is_authenticated(self):
-        return self.authenticated
-
-    def verify_password(self, password):
-        return self._verify_password(password)
-
-    def delete(self):
-        db.session.delete(self)
-        db.session.commit()
-        return None
+        else:
+            # throw error message and do not save data
+            return self.validate_required()
 
     def __repr__(self):
         return '<User %r>' % self.username
