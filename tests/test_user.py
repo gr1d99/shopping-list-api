@@ -5,7 +5,7 @@
 import collections
 from main import db
 from web_app.conf import app_config
-from web_app.core.exceptions import UsernameExists
+from web_app.core.exceptions import EmailExists, UsernameExists
 from web_app.db.models import User
 
 from .base import TestBase
@@ -104,18 +104,37 @@ class TestUserModel(TestBase):
 
         # call authenticate method and test it
         self.user.authenticate()
+        self.assertTrue(self.user.authenticate())
         self.assertTrue(saved_user.is_authenticated)
 
         # finally deauthenticate and test it
         self.user.deauthenticate()
         self.assertFalse(saved_user.is_authenticated)
 
-    def test_username_unique(self):
+    def test_unique_username(self):
         """
         Check if an exception is raised if the username is already used
         """
-        self.user.save()  # save the user for the first time
-        self.assertRaises(UsernameExists, self.user.save)
+        with self.assertRaises(UsernameExists):
+            self.user.save()  # save the user for the first time
+
+            # call save() method for the second time that will
+            # try to save the data for the second time.
+            self.user.check_username()
+
+    def test_unique_email(self):
+        """
+        check if an exception is raised if a used email is used for the second time
+        """
+        with self.assertRaises(EmailExists):
+            # save the first user
+            User('anotheruser', self.user_info.email, 'anotheruserpass').save()
+
+            # another user with the same email as the first user
+            another_user = User('anotheruser1', self.user_info.email, 'anotheruserpass')
+
+            # call check method
+            another_user.check_email()
 
 
 # class TestUserRegisterAndLogin(TestBase):
