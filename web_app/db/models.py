@@ -7,7 +7,7 @@
             3. `ShoppingItem`
 """
 from main import db
-from web_app.core.exceptions import UsernameExists
+from web_app.core.exceptions import EmailExists, UsernameExists
 from web_app.utils.date_helpers import datetime
 from web_app.utils.callables import CallableFalse, CallableTrue
 from .base import BaseUserManager, BaseModel
@@ -34,12 +34,15 @@ class User(BaseUserManager, BaseModel,  db.Model):
     def authenticate(self):
         self.authenticated = True
         self.save()
-        return CallableTrue
+        return True
 
-    def check_username(self, username):
-        for user in db.session.query(User).filter_by(username=self.username).all():
-            if user.username == username:
-                raise UsernameExists
+    def check_email(self):
+        if db.session.query(User).filter_by(email=self.email).first():
+            raise EmailExists
+
+    def check_username(self):
+        if db.session.query(User).filter_by(username=self.username).first():
+            raise UsernameExists
 
     def deauthenticate(self):
         self.authenticated = False
