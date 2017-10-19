@@ -17,7 +17,7 @@ class User(BaseUserManager, BaseModel,  db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
+    password = db.Column(db.Binary(200), nullable=False)
     email = db.Column(db.String(30), unique=True, nullable=False)
     shopping_lists = db.relationship('ShoppingList', backref='user',
                                      lazy='dynamic', cascade='all, delete-orphan')
