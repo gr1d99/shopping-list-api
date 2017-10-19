@@ -12,7 +12,7 @@ from .base import TestBase
 
 
 class TestUserModel(TestBase):
-    """tests main User model class"""
+    """Tests main User model class"""
 
     def setUp(self):
         super(TestUserModel, self).setUp()  # call the super class setUp method
@@ -36,7 +36,7 @@ class TestUserModel(TestBase):
 
     def test_user_username(self):
         """
-        assert whether the user created has the same username as `gideon`
+        Assert whether the user created has the same username as `gideon`
         """
         self.user.save()
         # retrieve the username itself
@@ -64,9 +64,9 @@ class TestUserModel(TestBase):
 
     def test_update(self):
         """
-        test if user values are updated successfully and new values are
-        reflected back when we run the query.
-        :return:
+        Test if user values are updated successfully.
+
+        Updated values should be reflected back.
         """
         self.user.save()
         _new_data = self._info('gideon', 'gideon@yahoo.com', 'gideonpassword')
@@ -81,8 +81,9 @@ class TestUserModel(TestBase):
 
     def test_can_authenticate(self):
         """
-        test if `is_authenticate` property will return True if
-        `authenticate()` method is called against the created
+        Test `is_authenticate` property will return True.
+
+        authenticate() method should return True when called against the created
         user instance.
         """
         self.user.save()  # save user instance
