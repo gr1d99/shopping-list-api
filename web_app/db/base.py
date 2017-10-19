@@ -9,6 +9,9 @@ class BaseModel(db.Model):
     __abstract__ = True
 
     def save(self):
+        return self._save()
+
+    def _save(self):
         db.session.add(self)
         db.session.commit()
 
