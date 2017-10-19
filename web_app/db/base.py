@@ -23,7 +23,7 @@ class BaseUserManager(object):
         never store passwords in plaintext, this method
         hashes the raw password and returns hashed password.
         """
-        return bcrypt.generate_password_hash(raw_password.decode('utf-8'))
+        return bcrypt.generate_password_hash(raw_password.encode('utf-8'))
 
     @classmethod
     def normalize_email(cls, email):
