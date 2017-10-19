@@ -1,6 +1,6 @@
 
 from main import bcrypt, db
-from web_app.core.exceptions EmailExists, UsernameExists
+from web_app.core.exceptions import EmailExists, UsernameExists
 
 
 class BaseModel(db.Model):
@@ -100,5 +100,8 @@ class BaseUserManager(object):
         return self._verify_password(password)
 
     # bcrypt saves us the work of checking password column.
-    # we only need to pass critical columns.
+    # we only need to add critical columns to REQUIRED_COLUMNS.
+
+    # NB. This allows addition of other colums which appear in the Model.
+    # passing a column which does not exist will raise AttributeError.
     REQUIRED_COLUMNS = ['username', 'email']
