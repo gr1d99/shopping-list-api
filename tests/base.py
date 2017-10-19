@@ -1,10 +1,10 @@
 """Base class for all tests"""
 
-import unittest
+from flask_testing import TestCase
 
 from main import app
 
 
-class TestBase(unittest.TestCase):
-    def setUp(self):
-        self.app = app
+class TestBase(TestCase):
+    def create_app(self):
+        return app
