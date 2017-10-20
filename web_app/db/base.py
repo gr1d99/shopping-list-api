@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+
+"""
+This module contains base class and base managers for
+app models.
+
+BaseModel contains methods that are used by all models.
+BaseUserManager contains methods that are specific to only
+User model.
+
+"""
 
 from main import bcrypt, db
 from web_app.core.exceptions import EmailExists, UsernameExists
@@ -10,20 +21,24 @@ class BaseModel(db.Model):
     """
     __abstract__ = True
 
-    # ----Attach to class-------- #
-    # we will never have to import
-    # these exceptions to where
-    # User class has been imported
+    # ----Attach custom exceptions to class----- #
+    #       we will never have to import
+    #        these exceptions to where
+    #      User class has been imported
     UsernameExists = UsernameExists
     EmailExists = EmailExists
-    # --------------------------- #
+    # ------------------------------------------- #
 
     def delete(self):
+        """Remove instance from the database."""
         db.session.delete(self)
         db.session.commit()
         return None
 
     def save(self):
+        """
+        Calls protected method to populate the database with data.
+        """
         return self._save()
 
     def _save(self):
@@ -32,26 +47,34 @@ class BaseModel(db.Model):
 
 
 class BaseUserManager(object):
+    """Manager class for User model."""
+
     def authenticate(self):
+        """Method to authenticate user."""
         self.authenticated = True
         self.save()
         return True
 
     def deauthenticate(self):
+        """Set is_authenticated column to false."""
         self.authenticated = False
         self.save()
         return True
 
     @property
     def is_authenticated(self):
+        """A property to indicate whether the user is authenticated or not."""
+
         return self.authenticated
 
     @classmethod
     def hash_password(cls, raw_password):
         """
-        never store passwords in plaintext, this method
-        hashes the raw password and returns hashed password.
+        Never store passwords in plaintext.
+
+        This method hashes the raw password and returns hashed password.
         """
+
         return bcrypt.generate_password_hash(raw_password)
 
     @classmethod
@@ -59,20 +82,26 @@ class BaseUserManager(object):
         """
         Normalize the email address by lowercasing the domain part of it.
         """
+
         email = email or ''
+
         try:
             email_name, domain_part = email.strip().rsplit('@', 1)
+
         except ValueError:
             pass
+
         else:
             email = '@'.join([email_name, domain_part.lower()])
+
         return email
 
     def _verify_password(self, raw_password):
         """
-        used to verify user password using the provided raw_password
+        Used to verify user password using the provided raw_password
         since password stored are hashed.
         """
+
         return bcrypt.check_password_hash(self.password, raw_password)
 
     def validate_required(self):
@@ -90,13 +119,15 @@ class BaseUserManager(object):
             if getattr(self, col) == '':
                 errors.update({col: error_message % dict(col=col)})
 
-        if errors is not {}:
-            return errors
-
-        else:
+        if errors == {}:
             return None
 
+        else:
+            return errors
+
     def verify_password(self, password):
+        """Outer method that verifies stored hashed password and returns either True or False."""
+
         return self._verify_password(password)
 
     # bcrypt saves us the work of checking password column.
