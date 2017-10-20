@@ -15,19 +15,19 @@ class TestEnviroments(TestBase):
     """Test various app environment configurations"""
     def test_testing(self):
         """
-        test if app is set to testing
+        Test app is set to testing.
         """
         self.app.config.from_object(app_config.TestingConfig)
         self.assertTrue(self.app.testing)
 
     def test_development(self):
         """
-        test if app is set to development
+        Test app is set to development.
         """
         self.app.config.from_object(app_config.DevelopmentConfig)
         self.assertTrue(self.app.debug)
 
     def test_production(self):
-        """test if app is set to production"""
+        """Test app is set to production."""
         self.app.config.from_object(app_config.ProductionConfig)
         self.assertFalse(self.app.debug)
