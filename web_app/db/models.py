@@ -6,14 +6,19 @@
             2. `ShoppingList`
             3. `ShoppingItem`
 """
+
 from main import db
 from web_app.utils.date_helpers import datetime
 from .base import BaseUserManager, BaseModel
 
 
-class User(BaseUserManager, BaseModel,  db.Model):
+class User(BaseUserManager, BaseModel, db.Model):
+    """
+    Model used to store app user details and also used for auth purposes.
+    """
 
     __tablename__ = 'users'
+
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.Binary(200), nullable=False)
@@ -24,6 +29,7 @@ class User(BaseUserManager, BaseModel,  db.Model):
     date_joined = db.Column(db.DateTime, default=datetime.now())
 
     def __init__(self, username, password, email, authenticated=False, date_joined=None):
+        """Initialize model values."""
         self.username = username
         self.password = self.hash_password(password)
         self.email = self.normalize_email(email)
@@ -31,17 +37,21 @@ class User(BaseUserManager, BaseModel,  db.Model):
         self.date_joined = date_joined
 
     def check_email(self):
-        if db.session.query(self).filter_by(email=self.email).first():
+        """Check if email exists and raise an exception."""
+
+        if db.session.query(User).filter_by(email=self.email).first():
             raise User.EmailExists
 
     def check_username(self):
+        """Check if username exists and raise an exception."""
+
         if db.session.query(User).filter_by(username=self.username).first():
             raise User.UsernameExists
 
     def save(self):
         """Override the default save method to enable inspection of required fields"""
         # if None is returned, continue and save data
-        if self.validate_required() is None:
+        if not self.validate_required():
             return self._save()
 
         else:
@@ -49,10 +59,12 @@ class User(BaseUserManager, BaseModel,  db.Model):
             return self.validate_required()
 
     def __repr__(self):
-        return '<User %r>' % self.username
+        return '<%(user)s obj>' % dict(user=self.username.capitalize())
 
 
 class ShoppingList(BaseModel, db.Model):
+    """Model used to store user shopping lists"""
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'))
@@ -65,6 +77,8 @@ class ShoppingList(BaseModel, db.Model):
 
 
 class ShoppingItem(BaseModel, db.Model):
+    """Model used to store Shopping List items"""
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
     shoppinglist_id = db.Column(db.Integer, db.ForeignKey('shopping_list.id'))
