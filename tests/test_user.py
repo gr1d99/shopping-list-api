@@ -26,7 +26,9 @@ class TestUserModel(TestBase):
         _info = collections.namedtuple('User', ['username', 'email', 'password'])
         user_info = _info('giddy', 'giddy@email.com', 'gideonpassword')
 
-        self.user = User(username=user_info.username, email=user_info.email, password=user_info.password)
+        self.user = User(username=user_info.username,
+                         email=user_info.email,
+                         password=user_info.password)
         self.user_info = user_info
         self._info = _info
 
@@ -36,7 +38,7 @@ class TestUserModel(TestBase):
 
     def test_user_username(self):
         """
-        Assert whether the user created has the same username as `gideon`
+        Test username saved is same as used during creation.
         """
         self.user.save()
 
@@ -46,7 +48,7 @@ class TestUserModel(TestBase):
 
     def test_user_email(self):
         """
-        Assert if user created has the expected email
+        Test email created is same as one used during creation.
         """
         self.user.save()
         added_user = User.query.filter_by(email=self.user_info.email).first()
@@ -55,7 +57,7 @@ class TestUserModel(TestBase):
 
     def test_user_password(self):
         """
-        Assert if the user created has the expected password
+        Test verify password method.
         """
         user_raw_password = 'gideonpassword'
         self.user.save()
@@ -65,7 +67,7 @@ class TestUserModel(TestBase):
 
     def test_update(self):
         """
-        Test if user values are updated successfully.
+        Test update columns.
 
         Updated values should be reflected back.
         """
@@ -82,7 +84,7 @@ class TestUserModel(TestBase):
 
     def test_can_authenticate(self):
         """
-        Test `is_authenticate` property will return True.
+        Test is_authenticated().
 
         authenticate() method should return True when called against the created
         user instance.
@@ -94,8 +96,7 @@ class TestUserModel(TestBase):
 
     def test_can_deauthenticate(self):
         """
-        test if user can deauthenticate successfully after authenticate method
-        has been called
+        Test deauthentication.
         :return:
         """
         self.user.save()
@@ -115,7 +116,9 @@ class TestUserModel(TestBase):
 
     def test_unique_username(self):
         """
-        Check if an exception is raised if the username is already used
+        Test unique usernames only.
+
+        An exception should be raised if there exists the same username.
         """
         with self.assertRaises(UsernameExists):
             self.user.save()  # save the user for the first time
@@ -126,7 +129,9 @@ class TestUserModel(TestBase):
 
     def test_unique_email(self):
         """
-        check if an exception is raised if a used email is used for the second time
+        Test unique email per user id.
+
+        An exception should be raised if there exists the same email.
         """
         with self.assertRaises(EmailExists):
             # save the first user
@@ -140,7 +145,7 @@ class TestUserModel(TestBase):
 
     def test_required_colums(self):
         """
-        Test required fields(username, email, password).
+        Test required columns(username, email, password).
         """
         # start with null username
         expected_username_error = 'username is required'
@@ -151,6 +156,7 @@ class TestUserModel(TestBase):
         # None is always returned if data is saved successfully,
         # we will also counter check it with querying with the
         # model.
+
         self.assertIn(expected_username_error, empty_username.save().values())
         self.assertIn(expected_email_error, empty_email.save().values())
 
@@ -159,6 +165,7 @@ class TestUserModel(TestBase):
         self.assertIsNone(User.query.filter_by(username=empty_email.username).first())
 
     def test_delete_user(self):
+        """Test user instance is deleted successfully."""
         self.user.save()
         # query user
         saved_user = User.query.filter_by(username=self.user_info.username).first()
@@ -173,38 +180,3 @@ class TestUserModel(TestBase):
 
         # check if the returned value is None
         self.assertIsNone(saved_user)
-
-
-# class TestUserRegisterAndLogin(TestBase):
-#     """test user registration and login"""
-#     def setUp(self):
-#         super(TestUserRegisterAndLogin, self).setUp()
-#         self.client = self.app.test_client()
-#         self.user_register_data = {
-#             'username': 'gideon',
-#             'password': 'gideonpassword',
-#             'email': 'gideon@email.com'
-#         }
-#         self.api_register_url = '/shopping-list/api/v1/auth/register/'
-#         self.api_login_url = '/shopping-list/api/v1/auth/login/'
-#
-#     def test_user_registration(self):
-#         """
-#         test if response code is 404
-#             `we currently don't have an endpoint to handle registration`
-#         """
-#         response = self.client.post(self.api_register_url,
-#                                     data=self.user_register_data)
-#         self.assertEqual(response.status_code, 201)
-#
-#     def test_user_login(self):
-#         """
-#         test is response code is 404
-#             `there is no api endpoint to handle user login as of yet`
-#         """
-#         login_data = {
-#             'username': self.user_register_data.get('username'),
-#             'password': self.user_register_data.get('password')
-#         }
-#         response = self.client.post(self.api_login_url, data=login_data)
-#         self.assertEqual(response.status_code, 200)
