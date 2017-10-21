@@ -3,8 +3,8 @@
 """Contains all Tests for system app user"""
 
 import collections
-from web_app.db.models import User
-from . import db, app_config, EmailExists, TestBase, UsernameExists
+from . import \
+    (db, app_config, EmailExists, TestBase, User, UsernameExists)
 
 
 class TestUserModel(TestBase):
