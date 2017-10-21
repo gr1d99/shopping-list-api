@@ -1,0 +1,6 @@
+username_not_provided = 'Provide a username'
+email_not_provided = 'Provide an email'
+password_not_provided = 'Provide a password'
+username_exists = 'User with that username exists, use a different name or login if it belongs to you'
+email_exists = 'User with that email exists, use a different email id or login if it belongs to you'
+account_created = 'Account created, login with your email and password'
