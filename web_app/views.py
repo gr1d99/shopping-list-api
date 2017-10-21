@@ -1,29 +1,42 @@
+from collections import OrderedDict
 from flask import jsonify, make_response, request
 from flask_restful import Resource
-from main import auth
 from web_app.db.models import User
 from web_app.db.utils.messages \
     import (username_not_provided, email_not_provided, password_not_provided,
             username_exists, email_exists, account_created)
+from webargs import fields, validate, ValidationError
+from webargs.flaskparser import use_args
 
+
+auth_args = {
+    'user_id': fields.Str(required=True)
+}
+
+registration_args = OrderedDict(
+    [
+        ('username', fields.Str(required=True)),
+        ('email', fields.Str(message='Email required', required=True, validate=validate.Email())),
+        ('password', fields.Str(required=True, validate=validate.Length(min=6)))
+    ]
+)
+
+login_args = OrderedDict(
+    [
+        ('username', fields.Str(required=True)),
+        ('password', fields.Str(required=True))
+    ]
+)
+
+
+# TODO comp 220 OS MISSING, Interchanged INTE 223 and Comp 326, INTE 226 MISSING SAD, INTE 314
 
 class UserRegisterApi(Resource):
-    def post(self):
-        username = request.json.get('username')
-        email = request.json.get('email')
-        password = request.json.get('password')
-
-        if not username:
-            return make_response(
-                jsonify(dict(message=username_not_provided)), 400)
-
-        if not email:
-            return make_response(
-                jsonify(dict(message=email_not_provided)), 400)
-
-        if not password:
-            return make_response(
-                jsonify(dict(message=password_not_provided)), 400)
+    @use_args(registration_args)
+    def post(self, data):
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
 
         user = User(username=username, password=password, email=email)
 
@@ -48,17 +61,10 @@ class UserRegisterApi(Resource):
 
 
 class UserLoginApi(Resource):
-    def post(self):
-        username = request.json.get('username')
-        password = request.json.get('password')
-
-        if not username:
-            return make_response(
-                jsonify(dict(message=username_not_provided)), 400)
-
-        if not password:
-            return make_response(
-                jsonify(dict(message=password_not_provided)), 400)
+    @use_args(login_args)
+    def post(self, data):
+        username = data.get('username')
+        password = data.get('password')
 
         user = User.query.filter_by(username=username).first()
 
@@ -79,11 +85,9 @@ class UserLoginApi(Resource):
 
 
 class AuthApi(Resource):
-    def get(self, user_id):
-        if not user_id:
-            return make_response(
-                jsonify(dict(message='Provide a username')), 400
-            )
+    @use_args(auth_args)
+    def post(self, data):
+        user_id = data.get('user_id')
 
         user = User.query.filter_by(username=user_id).first()
 
@@ -105,7 +109,9 @@ class AuthApi(Resource):
             )), 200
         )
 
+    @use_args(auth_args)
     def put(self, user_id):
+        user_id = user_id.get('user_id')
         user = User.query.filter_by(username=user_id).first()
 
         if not user:
@@ -141,22 +147,24 @@ class AuthApi(Resource):
             if email != user.email:
                 user.email = email
 
-            if not user.verify_password(str(password)):
-                user.password = str(password)
+            print('READC')
+            if not user.verify_password(password):
+                user.password = bytes(password.encode('utf-8'))  # to bytes
 
             user.save()
             return make_response(
-                jsonify(
-                    dict(message="Account updated")),
-                200)
+                jsonify(dict(message="Account updated")), 200)
 
 
 class UserLogoutApi(Resource):
-    def get(self, user_id):
+    @use_args(auth_args)
+    def post(self, data):
+        user_id = data.get('user_id')
         if user_id:
             user = User.query.filter_by(username=user_id).first()
             if user and user.is_authenticated:
                 user.deauthenticate()
                 user.save()
+
         return make_response(
             jsonify(dict(message="Logged out")), 200)
