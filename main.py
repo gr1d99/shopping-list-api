@@ -18,7 +18,8 @@ from web_app import views
 
 api.add_resource(views.UserRegisterApi, 'auth/register')
 api.add_resource(views.UserLoginApi, 'auth/login')
-api.add_resource(views.AuthApi, 'auth/<string:username_id>', endpoint='users')
+api.add_resource(views.UserLogoutApi, 'auth/logout/<string:user_id>')
+api.add_resource(views.AuthApi, 'auth/<string:user_id>')
 
 if __name__ == '__main__':
     app.run()
