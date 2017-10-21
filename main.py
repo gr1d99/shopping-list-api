@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+"""
+Contains application main instances and configurations.
+"""
+
 from flask import Flask
 from flask_bcrypt import Bcrypt
 from flask_httpauth import HTTPBasicAuth
@@ -7,19 +11,20 @@ from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from web_app.conf import app_config
 
-app = Flask(__name__)
-bcrypt = Bcrypt(app)
-app.config.from_object(app_config.DevelopmentConfig)
-db = SQLAlchemy(app)
-auth = HTTPBasicAuth()
-api = Api(app, prefix="/api/v1/")
+APP = Flask(__name__)
+BCRYPT = Bcrypt(APP)
+APP.config.from_object(app_config.DevelopmentConfig)
+DB = SQLAlchemy(APP)
+AUTH = HTTPBasicAuth()
+API = Api(APP, prefix="/api/v1/")
 
 from web_app import views
 
-api.add_resource(views.UserRegisterApi, 'auth/register')
-api.add_resource(views.UserLoginApi, 'auth/login')
-api.add_resource(views.UserLogoutApi, 'auth/logout/<string:user_id>')
-api.add_resource(views.AuthApi, 'auth/<string:user_id>')
+
+API.add_resource(views.UserRegisterApi, 'auth/register')
+API.add_resource(views.UserLoginApi, 'auth/login')
+API.add_resource(views.UserLogoutApi, 'auth/logout')
+API.add_resource(views.AuthApi, 'auth')
 
 if __name__ == '__main__':
-    app.run()
+    APP.run()
