@@ -7,19 +7,6 @@ from web_app.db.utils.messages \
             username_exists, email_exists, account_created)
 
 
-@auth.verify_password
-def verify(username, password):
-    if not username or not password:
-        return False
-
-    user = User.query.filter_by(username=username).first()
-
-    if user is None:
-        return False
-
-    return user.verify_password(password)
-
-
 class UserRegisterApi(Resource):
     def post(self):
         username = request.json.get('username')
@@ -92,14 +79,13 @@ class UserLoginApi(Resource):
 
 
 class AuthApi(Resource):
-    @auth.login_required
-    def get(self, username_id):
-        if not username_id:
+    def get(self, user_id):
+        if not user_id:
             return make_response(
                 jsonify(dict(message='Provide a username')), 400
             )
 
-        user = User.query.filter_by(username=username_id).first()
+        user = User.query.filter_by(username=user_id).first()
 
         if not user:
             return make_response(
@@ -119,9 +105,8 @@ class AuthApi(Resource):
             )), 200
         )
 
-    @auth.login_required
-    def put(self, username_id):
-        user = User.query.filter_by(username=username_id).first()
+    def put(self, user_id):
+        user = User.query.filter_by(username=user_id).first()
 
         if not user:
             return make_response(
@@ -164,3 +149,14 @@ class AuthApi(Resource):
                 jsonify(
                     dict(message="Account updated")),
                 200)
+
+
+class UserLogoutApi(Resource):
+    def get(self, user_id):
+        if user_id:
+            user = User.query.filter_by(username=user_id).first()
+            if user and user.is_authenticated:
+                user.deauthenticate()
+                user.save()
+        return make_response(
+            jsonify(dict(message="Logged out")), 200)
