@@ -3,19 +3,21 @@
 """Contains all Tests for system app user"""
 
 import collections
-from main import db
-from web_app.conf import app_config
-from web_app.core.exceptions import EmailExists, UsernameExists
 from web_app.db.models import User
-
-from .base import TestBase
+from . import db, app_config, EmailExists, TestBase, UsernameExists
 
 
 class TestUserModel(TestBase):
     """Tests main User model class"""
 
+    def __init__(self, *args, **kwargs):
+        super(TestUserModel, self).__init__(*args, **kwargs)
+        self.user = None
+        self.user_info = None
+        self._info = None
+
     def setUp(self):
-        super(TestUserModel, self).setUp()  # call the super class setUp method
+        super(TestUserModel, self).setUp()
         self.app.config.from_object(app_config.TestingConfig)
         db.init_app(self.app)
 

@@ -7,8 +7,7 @@
 
 """
 
-from .base import TestBase
-from web_app.conf import app_config
+from . import TestBase, app_config
 
 
 class TestEnviroments(TestBase):

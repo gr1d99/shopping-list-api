@@ -41,18 +41,19 @@ class TestUserAuth(TestBase):
         to set the app config environment to testing.
         """
         super(TestUserAuth, self).setUp()
+        self.app.config.from_object(app_config.TestingConfig)
         db.session.commit()
         db.drop_all()
         db.create_all()
 
         _ = collections.namedtuple('User', ['username', 'password', 'email'])
         _user_info = _('gideon', 'gideonpassword', 'gideon@gmail.com')
-        self.app.config.from_object(app_config.TestingConfig)
         self.base_url_prefix = '/api/v1/'
         self.content_type = 'application/json'
         self.user_info = _user_info
         self.register_url = self.base_url_prefix + 'auth/register'
         self.login_url = self.base_url_prefix + 'auth/login'
+        self.logout_url = self.base_url_prefix + 'auth/logout/'
 
     def tearDown(self):
         """
@@ -86,6 +87,17 @@ class TestUserAuth(TestBase):
                                 data=json.dumps(dict(username=username,
                                                      password=password)),
                                 content_type=self.content_type)
+        return resp
+
+    def logout_user(self, username):
+        """
+        Helper method to login user.
+
+        Makes post request using user information initialized in
+        the setUp method.
+        """
+        url = self.logout_url + username
+        resp = self.client.get(url)
         return resp
 
     @file_data("test_data/valid_userinfo.json")
@@ -463,3 +475,30 @@ class TestUserAuth(TestBase):
                       dict(uname=target_username), update_det2.data)
         self.assertIn("User with %(email)s exists" %
                       dict(email=target_email), update_det3.data)
+
+    @file_data("test_data/valid_userinfo.json")
+    def test_logout(self, info):
+        """
+        Test user can logout.
+        """
+        # register user first
+        # register
+        reg_resp = self.register_user(username=info[0],
+                                      password=info[1],
+                                      email=info[2])
+
+        # confirm registration response
+        self.assertTrue(reg_resp.status_code == 201)
+        self.assertIn(account_created, reg_resp.data)
+
+        # login user
+        # login
+        resp = self.login_user(username=info[0], password=info[1])
+
+        self.assert200(resp)
+        self.assertIn('Logged in', resp.data)
+
+        # logout user
+        logout_resp = self.logout_user(info[0])
+
+        self.assert200(logout_resp)
