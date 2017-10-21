@@ -15,14 +15,12 @@
 """
 
 import collections
-import json
 from ddt import ddt, file_data
+import json
 
-from main import db
-from web_app.conf import app_config
-from web_app.db.models import User
-from web_app.db.utils.messages import account_created
-from .base import TestBase
+from . import \
+    (account_created, app_config, db,
+     User, TestBase)
 
 
 @ddt
@@ -133,21 +131,24 @@ class TestUserAuth(TestBase):
 
         # confirm registration response
         self.assertTrue(reg_resp.status_code == 201)
-        self.assertIn(account_created, reg_resp.data)
+        reg_resp = reg_resp.get_data().decode()
+        self.assertIn(account_created, reg_resp)
 
         # login user
         first_resp = self.login_user(username=info[0],
                                      password=info[1])
 
         self.assert200(first_resp)
-        self.assertIn('Logged in', first_resp.data)
+        self.assertIn('Logged in',
+                      first_resp.get_data().decode())
 
         # call make request to login again
         second_resp = self.login_user(username=info[0],
                                       password=info[1])
 
         self.assert200(second_resp)
-        self.assertIn('Already logged in', second_resp.data)
+        self.assertIn('Already logged in',
+                      second_resp.get_data().decode())
 
     def test_registration_without_username(self):
         """
@@ -160,7 +161,8 @@ class TestUserAuth(TestBase):
                                                          password=self.user_info.password)),
                                     content_type=self.content_type)
 
-        self.assertIn(expected_error_message, reg_resp.get_data())
+        self.assertIn(expected_error_message,
+                      reg_resp.get_data().decode())
         self.assert400(reg_resp)
 
     def test_register_without_email(self):
@@ -174,7 +176,8 @@ class TestUserAuth(TestBase):
                                                          password=self.user_info.password)),
                                     content_type=self.content_type)
 
-        self.assertIn(expected_error_message, reg_resp.get_data())
+        self.assertIn(expected_error_message,
+                      reg_resp.get_data().decode())
         self.assert400(reg_resp)
 
     def test_register_without_password(self):
@@ -187,7 +190,8 @@ class TestUserAuth(TestBase):
                                                          email=self.user_info.email)),
                                     content_type=self.content_type)
 
-        self.assertIn(expected_error_message, reg_resp.get_data())
+        self.assertIn(expected_error_message,
+                      reg_resp.get_data().decode())
         self.assert400(reg_resp)
 
     @file_data("test_data/valid_userinfo.json")
@@ -206,7 +210,8 @@ class TestUserAuth(TestBase):
                                              email="different@gmail.com")
 
         self.assert400(second_reg_resp)
-        self.assertIn('User with that username exists', second_reg_resp.data)
+        self.assertIn('User with that username exists',
+                      second_reg_resp.get_data().decode())
 
     @file_data("test_data/valid_userinfo.json")
     def test_register_with_existing_email(self, info):
@@ -224,7 +229,8 @@ class TestUserAuth(TestBase):
                                              email=info[2])
 
         self.assert400(second_reg_resp)
-        self.assertIn('User with that email exists', second_reg_resp.data)
+        self.assertIn('User with that email exists',
+                      second_reg_resp.get_data().decode())
 
     def test_login_without_username(self):
         """A user should not be able to login without a username."""
@@ -234,7 +240,8 @@ class TestUserAuth(TestBase):
                                       content_type=self.content_type)
 
         self.assert400(first_resp)
-        self.assertIn('Provide a username', first_resp.data)
+        self.assertIn('Provide a username',
+                      first_resp.get_data().decode())
 
     def test_login_without_password(self):
         """A user should not be able to login without a password."""
@@ -244,7 +251,8 @@ class TestUserAuth(TestBase):
                                       content_type=self.content_type)
 
         self.assert400(first_resp)
-        self.assertIn('Provide a password', first_resp.data)
+        self.assertIn('Provide a password',
+                      first_resp.get_data().decode())
 
     def test_invalid_cridentials(self):
         """Test invalid cridentials provided by user."""
@@ -255,7 +263,8 @@ class TestUserAuth(TestBase):
                                 content_type=self.content_type)
 
         self.assert401(resp)
-        self.assertIn('Incorrect username or password!!', resp.data)
+        self.assertIn('Incorrect username or password!!',
+                      resp.get_data().decode())
 
     @file_data("test_data/valid_userinfo.json")
     def test_user_can_login(self, info):
@@ -327,14 +336,16 @@ class TestUserAuth(TestBase):
 
         # confirm registration response
         self.assertTrue(reg_resp.status_code == 201)
-        self.assertIn(account_created, reg_resp.data)
+        self.assertIn(account_created,
+                      reg_resp.get_data().decode())
 
         # login user
         # login
         resp = self.login_user(username=info[0], password=info[1])
 
         self.assert200(resp)
-        self.assertIn('Logged in', resp.data)
+        self.assertIn('Logged in',
+                      resp.get_data().decode())
 
         # make update request
         update_url = self.base_url_prefix + 'auth/%(username)s' \
@@ -351,9 +362,9 @@ class TestUserAuth(TestBase):
         update_resp = self.client.put(update_url,
                                       data=data,
                                       content_type=self.content_type)
-
         self.assert200(update_resp)
-        self.assertIn("Account updated", update_resp.data)
+        self.assertIn("Account updated",
+                      update_resp.get_data().decode())
 
     @file_data("test_data/valid_userinfo.json")
     def test_unautheticated_update_request(self, info):
@@ -366,7 +377,8 @@ class TestUserAuth(TestBase):
 
         # confirm registration response
         self.assertTrue(reg_resp.status_code == 201)
-        self.assertIn(account_created, reg_resp.data)
+        self.assertIn(account_created,
+                      reg_resp.get_data().decode())
 
         # update url
         update_url = self.base_url_prefix + 'auth/%(username)s' \
@@ -385,7 +397,8 @@ class TestUserAuth(TestBase):
                                       content_type=self.content_type)
 
         self.assert401(update_resp)
-        self.assertIn("Login first", update_resp.data)
+        self.assertIn("Login first",
+                      update_resp.get_data().decode())
 
     @file_data("test_data/valid_userinfo.json")
     def test_update_with_none_existing_user(self, info):
@@ -407,7 +420,8 @@ class TestUserAuth(TestBase):
                                       content_type=self.content_type)
 
         self.assert401(update_resp)
-        self.assertIn("Create account or login", update_resp.data)
+        self.assertIn("Create account or login",
+                      update_resp.get_data().decode())
 
     @file_data("test_data/valid_userinfo.json")
     def test_update_with_existing_data(self, info):
@@ -427,17 +441,20 @@ class TestUserAuth(TestBase):
 
         # confirm registration responses
         self.assertTrue(reg_resp.status_code == 201)
-        self.assertIn(account_created, reg_resp.data)
+        self.assertIn(account_created,
+                      reg_resp.get_data().decode())
 
         self.assertTrue(reg_resp.status_code == 201)
-        self.assertIn(account_created, reg_resp2.data)
+        self.assertIn(account_created,
+                      reg_resp2.get_data().decode())
 
         # login first user
         # login
         resp = self.login_user(username=info[0], password=info[1])
 
         self.assert200(resp)
-        self.assertIn('Logged in', resp.data)
+        self.assertIn('Logged in',
+                      resp.get_data().decode())
 
         # update url
         update_url = self.base_url_prefix + 'auth/%(username)s' \
@@ -472,9 +489,11 @@ class TestUserAuth(TestBase):
         self.assert400(update_det2)
         self.assert400(update_det3)
         self.assertIn("User with %(uname)s exists" %
-                      dict(uname=target_username), update_det2.data)
+                      dict(uname=target_username),
+                      update_det2.get_data().decode())
         self.assertIn("User with %(email)s exists" %
-                      dict(email=target_email), update_det3.data)
+                      dict(email=target_email),
+                      update_det3.get_data().decode())
 
     @file_data("test_data/valid_userinfo.json")
     def test_logout(self, info):
@@ -489,14 +508,16 @@ class TestUserAuth(TestBase):
 
         # confirm registration response
         self.assertTrue(reg_resp.status_code == 201)
-        self.assertIn(account_created, reg_resp.data)
+        self.assertIn(account_created,
+                      reg_resp.get_data().decode())
 
         # login user
         # login
         resp = self.login_user(username=info[0], password=info[1])
 
         self.assert200(resp)
-        self.assertIn('Logged in', resp.data)
+        self.assertIn('Logged in',
+                      resp.get_data().decode())
 
         # logout user
         logout_resp = self.logout_user(info[0])
