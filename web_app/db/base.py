@@ -10,11 +10,11 @@ User model.
 
 """
 
-from main import bcrypt, db
+from main import BCRYPT, DB
 from web_app.core.exceptions import EmailExists, UsernameExists
 
 
-class BaseModel(db.Model):
+class BaseModel(DB.Model):
     """
     Base class for all models.
     Contains common methods used by all models.
@@ -31,8 +31,8 @@ class BaseModel(db.Model):
 
     def delete(self):
         """Remove instance from the database."""
-        db.session.delete(self)
-        db.session.commit()
+        DB.session.delete(self)
+        DB.session.commit()
         return None
 
     def save(self):
@@ -42,8 +42,8 @@ class BaseModel(db.Model):
         return self._save()
 
     def _save(self):
-        db.session.add(self)
-        db.session.commit()
+        DB.session.add(self)
+        DB.session.commit()
 
 
 class BaseUserManager(object):
@@ -75,7 +75,7 @@ class BaseUserManager(object):
         This method hashes the raw password and returns hashed password.
         """
 
-        return bcrypt.generate_password_hash(raw_password)
+        return BCRYPT.generate_password_hash(raw_password)
 
     @classmethod
     def normalize_email(cls, email):
@@ -102,7 +102,7 @@ class BaseUserManager(object):
         since password stored are hashed.
         """
 
-        return bcrypt.check_password_hash(self.password, raw_password)
+        return BCRYPT.check_password_hash(self.password, raw_password)
 
     def validate_required(self):
         """
