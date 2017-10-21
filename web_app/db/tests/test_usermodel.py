@@ -4,7 +4,7 @@
 
 import collections
 from . import \
-    (db, app_config, EmailExists, TestBase, User, UsernameExists)
+    (DB, app_config, EmailExists, TestBase, User, UsernameExists)
 
 
 class TestUserModel(TestBase):
@@ -19,11 +19,11 @@ class TestUserModel(TestBase):
     def setUp(self):
         super(TestUserModel, self).setUp()
         self.app.config.from_object(app_config.TestingConfig)
-        db.init_app(self.app)
+        DB.init_app(self.app)
 
-        db.session.commit()
-        db.drop_all()
-        db.create_all()
+        DB.session.commit()
+        DB.drop_all()
+        DB.create_all()
 
         _info = collections.namedtuple('User', ['username', 'email', 'password'])
         user_info = _info('giddy', 'giddy@email.com', 'gideonpassword')
@@ -35,8 +35,8 @@ class TestUserModel(TestBase):
         self._info = _info
 
     def tearDown(self):
-        db.session.remove()
-        db.drop_all()
+        DB.session.remove()
+        DB.drop_all()
 
     def test_user_username(self):
         """
