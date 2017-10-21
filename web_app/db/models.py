@@ -7,26 +7,26 @@
             3. `ShoppingItem`
 """
 
-from main import db
+from main import DB
 from web_app.utils.date_helpers import datetime
 from .base import BaseUserManager, BaseModel
 
 
-class User(BaseUserManager, BaseModel, db.Model):
+class User(BaseUserManager, BaseModel, DB.Model):
     """
     Model used to store app user details and also used for auth purposes.
     """
 
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True, nullable=False)
-    username = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.Binary(200), nullable=False)
-    email = db.Column(db.String(30), unique=True, nullable=False)
-    shopping_lists = db.relationship('ShoppingList', backref='user',
+    id = DB.Column(DB.Integer, primary_key=True, nullable=False)
+    username = DB.Column(DB.String(100), unique=True, nullable=False)
+    password = DB.Column(DB.Binary(200), nullable=False)
+    email = DB.Column(DB.String(30), unique=True, nullable=False)
+    shopping_lists = DB.relationship('ShoppingList', backref='user',
                                      lazy='dynamic', cascade='all, delete-orphan')
-    authenticated = db.Column(db.Boolean, default=False)
-    date_joined = db.Column(db.DateTime, default=datetime.now())
+    authenticated = DB.Column(DB.Boolean, default=False)
+    date_joined = DB.Column(DB.DateTime, default=datetime.now())
 
     def __init__(self, username, password, email, authenticated=False, date_joined=None):
         """Initialize model values."""
@@ -39,20 +39,24 @@ class User(BaseUserManager, BaseModel, db.Model):
     def check_email(self):
         """Check if email exists and raise an exception."""
 
-        if db.session.query(User).filter_by(email=self.email).first():
+        if DB.session.query(User).filter_by(email=self.email).first():
             raise User.EmailExists
 
     def check_username(self):
         """Check if username exists and raise an exception."""
 
-        if db.session.query(User).filter_by(username=self.username).first():
+        if DB.session.query(User).filter_by(username=self.username).first():
             raise User.UsernameExists
 
     def save(self):
-        """Override the default save method to enable inspection of required fields"""
+        """
+        Override the default save method to enable inspection of required fields
+        """
+
         # if None is returned, continue and save data
         if not self.validate_required():
-            return self._save()
+            # if there are no errors just call the original save method
+            return super(User, self).save()
 
         else:
             # throw error message and do not save data
@@ -62,27 +66,27 @@ class User(BaseUserManager, BaseModel, db.Model):
         return '<%(user)s obj>' % dict(user=self.username.capitalize())
 
 
-class ShoppingList(BaseModel, db.Model):
+class ShoppingList(BaseModel, DB.Model):
     """Model used to store user shopping lists"""
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)
-    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    shopping_items = db.relationship('ShoppingItem', backref='shopping_list',
+    id = DB.Column(DB.Integer, primary_key=True)
+    name = DB.Column(DB.String(100), nullable=False, unique=True)
+    owner_id = DB.Column(DB.Integer, DB.ForeignKey('users.id'))
+    shopping_items = DB.relationship('ShoppingItem', backref='shopping_list',
                                      lazy='dynamic', cascade='all, delete-orphan')
-    timestamp = db.Column(db.DateTime, default=datetime.now())
+    timestamp = DB.Column(DB.DateTime, default=datetime.now())
 
     def __repr__(self):
         return '<%(name)s obj>' % dict(name=self.name.capitalize())
 
 
-class ShoppingItem(BaseModel, db.Model):
+class ShoppingItem(BaseModel, DB.Model):
     """Model used to store Shopping List items"""
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)
-    shoppinglist_id = db.Column(db.Integer, db.ForeignKey('shopping_list.id'))
-    timestamp = db.Column(db.DateTime, default=datetime.now())
+    id = DB.Column(DB.Integer, primary_key=True)
+    name = DB.Column(DB.String(100), nullable=False, unique=True)
+    shoppinglist_id = DB.Column(DB.Integer, DB.ForeignKey('shopping_list.id'))
+    timestamp = DB.Column(DB.DateTime, default=datetime.now())
 
     def __repr__(self):
         return '<%(name)s obj>' % dict(name=self.name.capitalize())
