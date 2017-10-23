@@ -1,13 +1,13 @@
 from collections import OrderedDict
+
 from flask import jsonify, make_response, request
 from flask_restful import Resource
-from web_app.db.models import User
-from web_app.db.utils.messages \
-    import (username_not_provided, email_not_provided, password_not_provided,
-            username_exists, email_exists, account_created)
-from webargs import fields, validate, ValidationError
+from webargs import fields, validate
 from webargs.flaskparser import use_args
 
+from app.messages \
+    import (username_exists, email_exists, account_created)
+from app.models import User
 
 auth_args = {
     'user_id': fields.Str(required=True)
@@ -147,7 +147,6 @@ class AuthApi(Resource):
             if email != user.email:
                 user.email = email
 
-            print('READC')
             if not user.verify_password(password):
                 user.password = bytes(password.encode('utf-8'))  # to bytes
 

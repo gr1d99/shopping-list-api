@@ -170,6 +170,7 @@ class TestUserAuth(TestBase):
         # login
         first_resp = self.login_user(password=self.user_info.password)
         err = json.loads(first_resp.get_data(as_text=True))["messages"]["username"]
+
         self.assertStatus(first_resp, 422)
         self.assertIn(self.require_field_err, err)
 
@@ -238,6 +239,7 @@ class TestUserAuth(TestBase):
         # get user details
         view_resp = self.get_user_details(username=info[0])
 
+        # query user
         user = User.query.filter_by(username=info[0]).first()
 
         # format date_joined to string.
@@ -253,6 +255,7 @@ class TestUserAuth(TestBase):
         """
         Test a user who does not exist cannot view any details.
         """
+
         # get user details
         view_resp = self.get_user_details(username="idontexist")
 
@@ -264,7 +267,7 @@ class TestUserAuth(TestBase):
         """
         Test a user who is not authenticated cannot view any details.
         """
-        # get user details
+
         # register user first
         reg_resp = self.register_user(username=info[0], password=info[1], email=info[2])
 
@@ -275,6 +278,7 @@ class TestUserAuth(TestBase):
         # get user details
         view_resp = self.get_user_details(username=info[0])
         err = json.loads(view_resp.get_data(as_text=True))["message"]
+
         self.assertIn("Please login", err)
         self.assertStatus(view_resp, 401)
 

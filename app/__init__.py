@@ -1,6 +1,6 @@
 import os
-from web_app.settings import BASE_DIR
 
+from app.conf.settings import BASE_DIR
 
 POSTGRES = {
     'user': 'postgres',

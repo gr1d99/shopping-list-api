@@ -8,8 +8,8 @@
 """
 
 from main import DB
-from web_app.utils.date_helpers import datetime
-from .base import BaseUserManager, BaseModel
+from app.utils.date_helpers import datetime
+from app.db.base import BaseUserManager, BaseModel
 
 
 class User(BaseUserManager, BaseModel, DB.Model):

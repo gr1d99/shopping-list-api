@@ -11,7 +11,7 @@ User model.
 """
 
 from main import BCRYPT, DB
-from web_app.core.exceptions import EmailExists, UsernameExists
+from app.core.exceptions import EmailExists, UsernameExists
 
 
 class BaseModel(DB.Model):

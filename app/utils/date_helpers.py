@@ -1,7 +1,9 @@
-import pytz
-from web_app import settings
 from datetime import datetime as _datetime
+
+import pytz
 from pytz import timezone
+
+from app.conf import settings
 
 TZ = None
 

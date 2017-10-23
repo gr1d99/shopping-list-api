@@ -1,7 +1,7 @@
+from app.conf import app_config
+from app.messages import account_created
+from app.models import User
 from main import API, APP, DB
-from web_app.conf import app_config
-from web_app.db.utils.messages import account_created
-from web_app.db.models import User
 
 CONTENT_TYPE = 'application/json'
 BASE_PREFIX = API.prefix
