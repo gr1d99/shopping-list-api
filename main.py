@@ -9,7 +9,7 @@ from flask_bcrypt import Bcrypt
 from flask_httpauth import HTTPBasicAuth
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
-from web_app.conf import app_config
+from app.conf import app_config
 
 APP = Flask(__name__)
 BCRYPT = Bcrypt(APP)
@@ -18,7 +18,7 @@ DB = SQLAlchemy(APP)
 AUTH = HTTPBasicAuth()
 API = Api(APP, prefix="/api/v1/")
 
-from web_app import views
+from app import views
 
 
 API.add_resource(views.UserRegisterApi, 'auth/register')
