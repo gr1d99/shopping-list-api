@@ -1,5 +1,5 @@
 from main import APP
-from web_app.conf import app_config
+from app.conf import app_config
 from .base import TestBase
 
 
