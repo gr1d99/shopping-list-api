@@ -7,9 +7,9 @@
             3. `ShoppingItem`
 """
 
-from main import DB
-from app.utils.date_helpers import datetime
-from app.db.base import BaseUserManager, BaseModel
+from app import DB
+from .utils.date_helpers import datetime
+from .db.base import BaseUserManager, BaseModel
 
 
 class User(BaseUserManager, BaseModel, DB.Model):
