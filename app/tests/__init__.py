@@ -1,7 +1,7 @@
 from app.conf import app_config
 from app.messages import account_created
 from app.models import User
-from main import API, APP, DB
+from app import API, APP, DB
 
 CONTENT_TYPE = 'application/json'
 BASE_PREFIX = API.prefix
@@ -9,8 +9,8 @@ BASE_PREFIX = API.prefix
 LOGIN_PREFIX = "auth/login"
 LOGOUT_PREFIX = "auth/logout"
 REGISTER_PREFIX = "auth/register"
-USER_DETAILS_PREFIX = "auth"
-UPDATE_USER_DETAILS_PREFIX = "auth"
+USER_DETAILS_PREFIX = "auth/users"
+UPDATE_USER_DETAILS_PREFIX = "auth/users"
 
 LOGIN_URL = "%(prefix)s%(next)s" % dict(prefix=BASE_PREFIX, next=LOGIN_PREFIX)
 LOGOUT_URL = "%(prefix)s%(next)s" % dict(prefix=BASE_PREFIX, next=LOGOUT_PREFIX)

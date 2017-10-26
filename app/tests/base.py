@@ -77,7 +77,7 @@ class TestBase(TestCase):
 
         url = LOGOUT_URL
         return self.client.post(url,
-                                data=json.dumps(dict(user_id=username)),
+                                data=json.dumps(dict(username=username)),
                                 content_type=CONTENT_TYPE)
 
     def get_user_details(self, username):
@@ -85,13 +85,13 @@ class TestBase(TestCase):
         Helper method to make a POST request to fetch user details.
         """
 
-        return self.client.post(USER_DETAILS_URL, data=json.dumps(dict(user_id=username)),
+        return self.client.post(USER_DETAILS_URL, data=json.dumps(dict(username=username)),
                                 content_type=CONTENT_TYPE)
 
     def update_user_info(self, username, data):
         """
          Helper method to make a PUT request to update user details.
          """
-        data.setdefault('user_id', username)
+        data.update({'username': username})
         url = UPDATE_USER_DETAILS_URL
         return self.client.put(url, data=json.dumps(data), content_type=CONTENT_TYPE)

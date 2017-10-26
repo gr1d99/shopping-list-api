@@ -302,9 +302,9 @@ class TestUserAuth(TestBase):
         self.assertIn('Logged in', resp.get_data().decode())
 
         new_details = {
-            'username': 'newusername',
+            'new_username': 'new_admin',
             'password': 'newpassword',
-            'email': 'new@email.com'
+            'email': 'new_admin@email.com'
         }
 
         # make update request
@@ -375,7 +375,7 @@ class TestUserAuth(TestBase):
         self.assertIn(account_created, reg_resp.get_data().decode())
 
         # confirm second user registration response
-        self.assertTrue(reg_resp.status_code == 201)
+        self.assertTrue(reg_resp2.status_code == 201)
         self.assertIn(account_created, reg_resp2.get_data().decode())
 
         # login first user
@@ -387,13 +387,13 @@ class TestUserAuth(TestBase):
 
         # details that the first user intends to update
         new_details2 = {
-            'username': target_username,  # used username.
+            'new_username': target_username,  # used username.
             'password': 'somepassword',
             'email': 'new_user1@email.com'
         }
 
         new_details3 = {
-            'username': "new_detailuser",
+            'new_username': "new_detailuser",
             'password': 'updatedpassword',
             'email': target_email  # used email
         }
@@ -404,8 +404,9 @@ class TestUserAuth(TestBase):
         update_det3 = self.update_user_info(username=info[0], data=new_details3)
 
         # assertions
-        self.assert400(update_det2)
-        self.assert400(update_det3)
+
+        self.assertStatus(update_det2, 400)
+        self.assertStatus(update_det3, 400)
         self.assertIn("User with %(uname)s exists" % dict(uname=target_username),
                       update_det2.get_data().decode())
         self.assertIn("User with %(email)s exists" % dict(email=target_email),
@@ -420,20 +421,21 @@ class TestUserAuth(TestBase):
         # register user first
         # register
         reg_resp = self.register_user(username=info[0], password=info[1], email=info[2])
+        _reg_response = json.loads(reg_resp.get_data(as_text=True))
 
         # confirm registration response
         self.assertTrue(reg_resp.status_code == 201)
-        self.assertIn(account_created,
-                      reg_resp.get_data().decode())
+        self.assertIn(account_created, _reg_response['message'])
 
         # login user
         resp = self.login_user(username=info[0], password=info[1])
 
         self.assert200(resp)
-        self.assertIn('Logged in', resp.get_data().decode())
+        _response = json.loads(resp.get_data(as_text=True))
+        self.assertIn('Logged in', _response['message'])
 
         # logout user
-        logout_resp = self.logout_user(info[0])
+        logout_resp = self.logout_user(username=info[0])
 
         # assert response, response will be ok regardless
         self.assert200(logout_resp)
