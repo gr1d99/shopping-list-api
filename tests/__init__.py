@@ -1,4 +1,4 @@
-from main import APP
+from app import APP
 from app.conf import app_config
 from .base import TestBase
 
