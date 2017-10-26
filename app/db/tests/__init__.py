@@ -1,7 +1,7 @@
 from app.conf import app_config
 from app.core.exceptions import EmailExists, UsernameExists
 from app.models import User
-from main import APP, DB
+from app import APP, DB
 from tests.base import TestBase
 
 __all__ = [
