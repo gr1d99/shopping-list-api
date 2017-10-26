@@ -10,7 +10,7 @@ User model.
 
 """
 
-from main import BCRYPT, DB
+from app import BCRYPT, DB
 from app.core.exceptions import EmailExists, UsernameExists
 
 
