@@ -1,31 +1,27 @@
-import os
+# -*- coding: utf-8 -*-
 
-from app.conf.settings import BASE_DIR
+"""
+Contains application main instances and configurations.
+"""
 
-POSTGRES = {
-    'user': 'postgres',
-    'pw': '123',
-    'db': 'my_db',
-    'host': 'localhost',
-    'port': '5432',
-}
+from flask import Blueprint, Flask
+from flask_bcrypt import Bcrypt
+from flask_httpauth import HTTPBasicAuth
+from flask_restful import Api
+from flask_sqlalchemy import SQLAlchemy
+from app.conf import app_config
 
+APP = Flask(__name__)
+BCRYPT = Bcrypt(APP)
+APP.config.from_object(app_config.DevelopmentConfig)
+DB = SQLAlchemy(APP)
+AUTH = HTTPBasicAuth()
+API = Api(APP, prefix="/api/v1/")
 
-class Config(object):
-    DEBUG = False
-    TESTING = False
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'app.db')
+from app.auth.urls import urls
 
+for url in urls:
+    API.add_resource(url.resource, url.route)
 
-class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')
-
-
-class DevelopmentConfig(Config):
-    SQLALCHEMY_DATABASE_URI = 'postgresql://%(user)s:%(pw)s@%(host)s:%(port)s/%(db)s' % POSTGRES
-    DEBUG = True
-
-
-class TestingConfig(Config):
-    SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(BASE_DIR, 'test.db')
-    TESTING = True
+if __name__ == '__main__':
+    APP.run()
