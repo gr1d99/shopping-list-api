@@ -26,7 +26,7 @@ class UserRegisterApi(Resource):
 
         username = data.get('username')
         email = data.get('email')
-        password = data.get('password')
+        password = str(data.get('password'))
 
         try:
 
@@ -58,15 +58,9 @@ class UserRegisterApi(Resource):
             # if username and email are okey call the save method.
             user.save()
 
-            # create user authentication and refresh tokens using username as identity.
-            token = create_access_token(identity=user.username)
-            refresh_token = create_refresh_token(identity=user.username)
-
             return make_response(
                 jsonify(dict(
                     message=account_created,
-                    auth_token=token,
-                    refresh_token=refresh_token,
                     status='success'
                 )), 201)
 
@@ -90,12 +84,12 @@ class UserLoginApi(Resource):
         :param data: username and password
         """
         username = data.get('username')
-        password = data.get('password')
+        password = str(data.get('password'))
 
         try:
             user = User.query.filter_by(username=username).first()
 
-            if user is None:
+            if user is None or not user.verify_password(password):
                 return make_response(
                     jsonify(dict(
                         message='Incorrect username or password!!',
@@ -159,9 +153,9 @@ class UserProfileApi(Resource):
                 user = User.query.filter_by(username=current_user).first()
 
                 if user:
-                    new_username = request.json.get('username')
-                    email = request.json.get('email')
-                    password = request.json.get('password')
+                    new_username = request.json.get('username', None)
+                    email = request.json.get('email', None)
+                    password = request.json.get('password', None)
 
                     # use if else statement to check if user
                     # has provided any data. if not we will
@@ -172,9 +166,6 @@ class UserProfileApi(Resource):
 
                     if not email:
                         email = user.email
-
-                    if not password:
-                        password = user.password
 
                     # check if username is not equal to the current one used
                     # by the user.
@@ -217,11 +208,14 @@ class UserProfileApi(Resource):
                     if email != user.email:
                         user.email = email
 
-                    if not user.verify_password(password):
-                        user.password = password.encode('utf-8')
+                    if password:
+                        if user.verify_password(password) is False:
+                            user.password = user.hash_password(password)
 
                     # if everything checks out correctly, we save the new details.
                     user.save()
+
+                    BlacklistToken(token=get_raw_jwt()['jti']).save()
 
                     return make_response(
                         jsonify(dict(
@@ -233,7 +227,15 @@ class UserProfileApi(Resource):
                             status='success'
                         )), 200)
 
+                return make_response(
+                    jsonify(dict(
+                        message='login again',
+                        status='fail'
+                    )), 400
+                )
+
         except Exception as e:
+            print(e)
             return make_response(
                 jsonify(dict(
                     status='fail',
@@ -276,6 +278,6 @@ class RefreshTokenApi(Resource):
         current_user = get_jwt_identity()
         return make_response(
             jsonify(dict(
-                auth_token=create_refresh_token(identity=current_user)
+                access_token=create_refresh_token(identity=current_user)
             )), 200
         )
