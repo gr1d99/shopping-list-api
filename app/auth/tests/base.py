@@ -1,5 +1,3 @@
-"""Base class for all tests"""
-
 import collections
 from flask import json
 from flask_testing import TestCase
@@ -7,8 +5,8 @@ from flask_testing import TestCase
 
 from . import \
     (app_config, APP, CONTENT_TYPE, DB, INVALID_EMAIL_ERR, LOGIN_URL, LOGOUT_URL,
-     REFRESH_USER_TOKEN_URL, REGISTER_URL, REQUIRED_FIELDS_ERR, UPDATE_USER_DETAILS_URL,
-     USER_DETAILS_URL)
+     REFRESH_USER_TOKEN_URL, REGISTER_URL, RESET_PASSWORD_URL, REQUIRED_FIELDS_ERR,
+     UPDATE_USER_DETAILS_URL, USER_DETAILS_URL)
 
 
 class TestBase(TestCase):
@@ -115,3 +113,10 @@ class TestBase(TestCase):
         url = REFRESH_USER_TOKEN_URL
         return self.client.post(url, content_type=CONTENT_TYPE, headers=headers)
 
+    def reset_password(self, **data):
+        """
+        A method to make a post request with user details in order to reset user password.
+        """
+
+        url = RESET_PASSWORD_URL
+        return self.client.post(url, data=dict(data), content_type=CONTENT_TYPE)
