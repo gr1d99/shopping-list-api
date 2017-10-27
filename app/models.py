@@ -41,13 +41,19 @@ class User(BaseUserManager, BaseModel, DB.Model):
 
     @staticmethod
     def check_email(email):
-        """Check if email exists and raise an exception."""
+        """
+        Check if email exists and raise an exception.
+        """
+
         if User.query.filter_by(email=email).first():
             raise EmailExists
 
     @staticmethod
     def check_username(username):
-        """Check if username exists and raise an exception."""
+        """
+        Check if username exists and raise an exception.
+        """
+
         if User.query.filter_by(username=username).first():
             raise UsernameExists
 
@@ -65,8 +71,8 @@ class User(BaseUserManager, BaseModel, DB.Model):
             # throw error message and do not save data
             return self.validate_required()
 
-        def __repr__(self):
-            return '<%(username)s obj>' % dict(username=self.username.capitalize())
+    def __repr__(self):
+        return '<%(username)s obj>' % dict(username=self.username.capitalize())
 
 
 class BlacklistToken(BaseModel, DB.Model):
@@ -84,16 +90,6 @@ class BlacklistToken(BaseModel, DB.Model):
     def __repr__(self):
         return '<id: token: {}'.format(self.token)
 
-    @staticmethod
-    def check_blacklisted_token(token):
-        blacklisted = BlacklistToken.query.filter_by(
-            token=str(token)).first()
-
-        if blacklisted:
-            return True
-
-        return False
-
 
 class ShoppingList(BaseModel, DB.Model):
     """Model used to store user shopping lists"""
@@ -103,7 +99,10 @@ class ShoppingList(BaseModel, DB.Model):
     owner_id = DB.Column(DB.Integer, DB.ForeignKey('users.id'))
     shopping_items = DB.relationship('ShoppingItem', backref='shopping_list',
                                      lazy='dynamic', cascade='all, delete-orphan')
-    timestamp = DB.Column(DB.DateTime, default=datetime.now())
+    timestamp = DB.Column(DB.DateTime, default=DB.func.current_timestamp())
+    date_modified = DB.Column(
+        DB.DateTime, default=DB.func.current_timestamp(),
+        onupdate=DB.func.current_timestamp())
 
     def __repr__(self):
         return '<%(name)s obj>' % dict(name=self.name.capitalize())
