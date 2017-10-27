@@ -1,4 +1,4 @@
-"""Base class for all tests"""
+"""Base class for all tests for the application configuration"""
 
 from flask_testing import TestCase
 
