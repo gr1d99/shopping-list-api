@@ -1,42 +1,12 @@
 # -*- coding: utf-8 -*-
 
 """Contains all Tests for system app user"""
-
-import collections
-from . import \
-    (DB, app_config, EmailExists, TestBase, User, UsernameExists)
+from app.models import User
+from .base import TestBase
 
 
 class TestUserModel(TestBase):
     """Tests main User model class"""
-
-    def __init__(self, *args, **kwargs):
-        super(TestUserModel, self).__init__(*args, **kwargs)
-        self.user = None
-        self.user_info = None
-        self._info = None
-
-    def setUp(self):
-        super(TestUserModel, self).setUp()
-        self.app.config.from_object(app_config.TestingConfig)
-        DB.init_app(self.app)
-
-        DB.session.commit()
-        DB.drop_all()
-        DB.create_all()
-
-        _info = collections.namedtuple('User', ['username', 'email', 'password'])
-        user_info = _info('giddy', 'giddy@email.com', 'gideonpassword')
-
-        self.user = User(username=user_info.username,
-                         email=user_info.email,
-                         password=user_info.password)
-        self.user_info = user_info
-        self._info = _info
-
-    def tearDown(self):
-        DB.session.remove()
-        DB.drop_all()
 
     def test_user_username(self):
         """
@@ -122,7 +92,7 @@ class TestUserModel(TestBase):
 
         An exception should be raised if there exists the same username.
         """
-        with self.assertRaises(UsernameExists):
+        with self.assertRaises(User.UsernameExists):
             self.user.save()  # save the user for the first time
             User.check_username(self.user_info.username)
 
@@ -132,7 +102,7 @@ class TestUserModel(TestBase):
 
         An exception should be raised if there exists the same email.
         """
-        with self.assertRaises(EmailExists):
+        with self.assertRaises(User.EmailExists):
             # save the first user
             User(username='anotheruser', email=self.user_info.email, password='anotheruserpass').save()
 
