@@ -18,7 +18,7 @@ import time
 from ddt import ddt, file_data
 from flask import json
 
-from . import account_created, User, BlacklistToken
+from . import account_created, User
 from .base import TestBase
 
 
@@ -44,8 +44,6 @@ class TestUserAuth(TestBase):
         # username and email we used to create user should be in
         # returned data.
         self.assertIn(account_created, resp.get_data().decode())
-        self.assertIn('token', resp.get_data().decode())
-        self.assertIn('refresh_token', resp.get_data().decode())
 
     def test_registration_without_username(self):
         """
@@ -391,3 +389,40 @@ class TestUserAuth(TestBase):
         data = json.loads(login_response.get_data().decode())
         self.assertStatus(login_response, 401)
         self.assertTrue(data['msg'] == 'Token has been revoked')
+
+    @file_data("test_data/valid_userinfo.json")
+    def test_token_refresh(self, info):
+        """
+            Test new token can be used after refresh.
+        """
+
+        # register user.
+        reg_resp = self.register_user(username=info[0], password=info[1], email=info[2])
+        _reg_response = json.loads(reg_resp.get_data(as_text=True))
+
+        # confirm registration response
+        self.assertTrue(reg_resp.status_code == 201)
+        self.assertIn(account_created, _reg_response['message'])
+
+        # login user
+        login_resp = self.login_user(username=info[0], password=info[1])
+        _login_resp = json.loads(login_resp.get_data(as_text=True))
+        old_auth_token = _login_resp['auth_token']
+
+        self.assert200(login_resp)
+        self.assertIn('auth_token', _login_resp)
+        self.assertIn('refresh_token', _login_resp)
+        refresh_token = _login_resp['refresh_token']
+
+        time.sleep(6)
+
+        refresh_resp = self.refresh_user_token(refresh_token)
+        _refresh_resp = json.loads(refresh_resp.get_data(as_text=True))
+        new_auth_token = _refresh_resp['auth_token']
+
+        self.assert200(refresh_resp)
+        self.assertIn('auth_token', _refresh_resp)
+
+        self.assertNotEqual(old_auth_token, new_auth_token)
+
+        get_user_details_resp = self.get_user_details(new_auth_token)
