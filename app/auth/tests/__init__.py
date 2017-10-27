@@ -1,5 +1,6 @@
 from app.conf import app_config
-from app.messages import account_created, password_changed
+from app.messages import (account_created, password_changed, incorrect_old_password, passwords_donot_match,
+                          incorrect_password_or_username, username_or_email_required)
 from app.models import User
 from app import API, APP, DB
 
@@ -24,11 +25,3 @@ REFRESH_USER_TOKEN_URL = "%(prefix)s%(next)s" % dict(prefix=BASE_PREFIX, next=RE
 
 INVALID_EMAIL_ERR = "Not a valid email address."
 REQUIRED_FIELDS_ERR = "Missing data for required field."
-
-
-__all__ = [
-    APP, account_created, app_config, password_changed,
-    CONTENT_TYPE, DB, INVALID_EMAIL_ERR, LOGIN_URL, LOGOUT_URL,
-    REFRESH_USER_TOKEN_URL, REGISTER_URL, RESET_PASSWORD_URL, REQUIRED_FIELDS_ERR,
-    User, UPDATE_USER_DETAILS_URL, USER_DETAILS_URL,
-]
