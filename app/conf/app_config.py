@@ -1,4 +1,5 @@
 import os
+import datetime
 
 
 class Config(object):
@@ -9,6 +10,7 @@ class Config(object):
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
     JWT_BLACKLIST_ENABLED = True
     JWT_BLACKLIST_TOKEN_CHECKS = ['access', 'refresh']
+    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(seconds=3600)
 
 
 class ProductionConfig(Config):
