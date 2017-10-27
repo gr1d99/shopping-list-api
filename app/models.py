@@ -6,10 +6,13 @@
             2. `ShoppingList`
             3. `ShoppingItem`
 """
+import datetime as dt
+import jwt
 
-from app import DB
-from .utils.date_helpers import datetime
+from app import APP, DB
+from .core.exceptions import UsernameExists, EmailExists
 from .db.base import BaseUserManager, BaseModel
+from .utils.date_helpers import datetime
 
 
 class User(BaseUserManager, BaseModel, DB.Model):
@@ -36,17 +39,17 @@ class User(BaseUserManager, BaseModel, DB.Model):
         self.authenticated = authenticated
         self.date_joined = date_joined
 
-    def check_email(self):
+    @staticmethod
+    def check_email(email):
         """Check if email exists and raise an exception."""
+        if User.query.filter_by(email=email).first():
+            raise EmailExists
 
-        if DB.session.query(User).filter_by(email=self.email).first():
-            raise User.EmailExists
-
-    def check_username(self):
+    @staticmethod
+    def check_username(username):
         """Check if username exists and raise an exception."""
-
-        if DB.session.query(User).filter_by(username=self.username).first():
-            raise User.UsernameExists
+        if User.query.filter_by(username=username).first():
+            raise UsernameExists
 
     def save(self):
         """
@@ -62,8 +65,31 @@ class User(BaseUserManager, BaseModel, DB.Model):
             # throw error message and do not save data
             return self.validate_required()
 
+
+class BlacklistToken(BaseModel, DB.Model):
+    """
+    Token model for storing JWT tokens
+    """
+    id = DB.Column(DB.Integer, primary_key=True)
+    token = DB.Column(DB.String(500), unique=True, nullable=False)
+    blacklisted_on = DB.Column(DB.DateTime, nullable=False)
+
+    def __init__(self, token):
+        self.token = token
+        self.blacklisted_on = dt.datetime.utcnow()
+
     def __repr__(self):
-        return '<%(user)s obj>' % dict(user=self.username.capitalize())
+        return '<id: token: {}'.format(self.token)
+
+    @staticmethod
+    def check_blacklisted_token(token):
+        blacklisted = BlacklistToken.query.filter_by(
+            token=str(token)).first()
+
+        if blacklisted:
+            return True
+
+        return False
 
 
 class ShoppingList(BaseModel, DB.Model):
