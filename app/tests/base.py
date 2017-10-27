@@ -7,7 +7,8 @@ from flask_testing import TestCase
 
 from . import \
     (app_config, APP, CONTENT_TYPE, DB, INVALID_EMAIL_ERR, LOGIN_URL, LOGOUT_URL,
-     REGISTER_URL, REQUIRED_FIELDS_ERR, UPDATE_USER_DETAILS_URL, USER_DETAILS_URL)
+     REFRESH_USER_TOKEN_URL, REGISTER_URL, REQUIRED_FIELDS_ERR, UPDATE_USER_DETAILS_URL,
+     USER_DETAILS_URL)
 
 
 class TestBase(TestCase):
@@ -102,3 +103,15 @@ class TestBase(TestCase):
 
         url = UPDATE_USER_DETAILS_URL
         return self.client.put(url, data=json.dumps(data), content_type=CONTENT_TYPE, headers=headers)
+
+    def refresh_user_token(self, token):
+        """
+         Helper method to make a PUT request to update user details.
+         """
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=token)
+        )
+
+        url = REFRESH_USER_TOKEN_URL
+        return self.client.post(url, content_type=CONTENT_TYPE, headers=headers)
+
