@@ -20,11 +20,12 @@ AUTH = HTTPBasicAuth()
 API = Api(APP, prefix="/api/v1/")
 jwt = JWTManager(APP)
 
-from app.auth import security
-from app.auth.urls import urls
 
-for url in urls:
-    API.add_resource(url.resource, url.route)
+from app.auth import security
+from app.auth.urls import auth_blueprint
+
+
+APP.register_blueprint(auth_blueprint)
 
 if __name__ == '__main__':
     APP.run()
