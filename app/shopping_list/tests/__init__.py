@@ -1,0 +1,15 @@
+from app import API
+
+
+BASE_PREFIX = API.prefix
+
+
+CREATE_SHOPPING_LIST_PREFIX = 'shopping-list/create'
+
+
+CREATE_SHOPPING_LIST_URL = BASE_PREFIX + CREATE_SHOPPING_LIST_PREFIX
+
+
+__all__ = [
+    CREATE_SHOPPING_LIST_URL,
+]
