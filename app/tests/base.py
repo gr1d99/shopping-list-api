@@ -70,28 +70,35 @@ class TestBase(TestCase):
         return self.client.post(
             REGISTER_URL, data=json.dumps(dict(details)), content_type=CONTENT_TYPE)
 
-    def logout_user(self, username):
+    def logout_user(self, token):
         """
         Helper method to logout user.
         """
 
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=token)
+        )
         url = LOGOUT_URL
-        return self.client.post(url,
-                                data=json.dumps(dict(username=username)),
-                                content_type=CONTENT_TYPE)
+        return self.client.delete(url, content_type=CONTENT_TYPE, headers=headers)
 
-    def get_user_details(self, username):
+    def get_user_details(self, token):
         """
         Helper method to make a POST request to fetch user details.
         """
 
-        return self.client.post(USER_DETAILS_URL, data=json.dumps(dict(username=username)),
-                                content_type=CONTENT_TYPE)
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=token)
+        )
 
-    def update_user_info(self, username, data):
+        return self.client.get(USER_DETAILS_URL, content_type=CONTENT_TYPE, headers=headers)
+
+    def update_user_info(self, token, data):
         """
          Helper method to make a PUT request to update user details.
          """
-        data.update({'username': username})
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=token)
+        )
+
         url = UPDATE_USER_DETAILS_URL
-        return self.client.put(url, data=json.dumps(data), content_type=CONTENT_TYPE)
+        return self.client.put(url, data=json.dumps(data), content_type=CONTENT_TYPE, headers=headers)
