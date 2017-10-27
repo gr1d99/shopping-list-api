@@ -13,10 +13,12 @@
 
     Current api version is v1.
 """
+import time
+
 from ddt import ddt, file_data
 from flask import json
 
-from . import account_created, User
+from . import account_created, User, BlacklistToken
 from .base import TestBase
 
 
@@ -37,40 +39,13 @@ class TestUserAuth(TestBase):
         # register user
         resp = self.register_user(username=info[0], password=info[1], email=info[2])
 
-        self.assertTrue(resp.status_code == 201)  # status_code 201 created.
+        self.assertStatus(resp, 201)  # status_code 201 created.
 
         # username and email we used to create user should be in
         # returned data.
-        self.assertIn(account_created,
-                      resp.get_data().decode())
-
-    @file_data("test_data/valid_userinfo.json")
-    def test_authenticated_login(self, info):
-        """
-        Test user cannot login again if authenticated.
-        """
-
-        # register user first
-        reg_resp = self.register_user(username=info[0], password=info[1], email=info[2])
-
-        # confirm registration response
-        self.assertTrue(reg_resp.status_code == 201)
-        reg_resp = reg_resp.get_data().decode()
-        self.assertIn(account_created, reg_resp)
-
-        # login user
-        first_resp = self.login_user(username=info[0], password=info[1])
-
-        self.assert200(first_resp)
-        self.assertIn('Logged in',
-                      first_resp.get_data().decode())
-
-        # call make request to login again
-        second_resp = self.login_user(username=info[0], password=info[1])
-
-        self.assert200(second_resp)
-        self.assertIn('Already logged in',
-                      second_resp.get_data().decode())
+        self.assertIn(account_created, resp.get_data().decode())
+        self.assertIn('token', resp.get_data().decode())
+        self.assertIn('refresh_token', resp.get_data().decode())
 
     def test_registration_without_username(self):
         """
@@ -144,7 +119,7 @@ class TestUserAuth(TestBase):
         second_reg_resp = self.\
             register_user(username=info[0], password=info[1], email="different@gmail.com")
 
-        self.assert400(second_reg_resp)
+        self.assertStatus(second_reg_resp, 202)
         self.assertIn('User with that username exists',
                       second_reg_resp.get_data().decode())
 
@@ -159,7 +134,7 @@ class TestUserAuth(TestBase):
 
         second_resp = self.register_user(username="newusername", password=info[1], email=info[2])
 
-        self.assert400(second_resp)
+        self.assertStatus(second_resp, 202)
         self.assertIn('User with that email exists', second_resp.get_data().decode())
 
     def test_login_without_username(self):
@@ -215,7 +190,11 @@ class TestUserAuth(TestBase):
         resp = self.login_user(username=info[0], password=info[1])
 
         self.assert200(resp)
+
+        # a response should be sent containing access token and refresh_token
         self.assertIn('Logged in', resp.get_data().decode())
+        self.assertIn('auth_token', resp.get_data().decode())
+        self.assertIn('refresh_token', resp.get_data().decode())
 
     @file_data("test_data/valid_userinfo.json")
     def test_view_account_details(self, info):
@@ -236,8 +215,10 @@ class TestUserAuth(TestBase):
         self.assert200(resp)
         self.assertIn('Logged in', resp.get_data().decode())
 
+        token = json.loads(resp.get_data().decode())['auth_token']
+
         # get user details
-        view_resp = self.get_user_details(username=info[0])
+        view_resp = self.get_user_details(token)
 
         # query user
         user = User.query.filter_by(username=info[0]).first()
@@ -250,37 +231,6 @@ class TestUserAuth(TestBase):
         self.assertIn(user.username, view_resp.get_data().decode())
         self.assertIn(user.email, view_resp.get_data().decode())
         self.assertIn(date_joined, view_resp.get_data().decode())
-
-    def test_view_details_with_non_existing_user(self):
-        """
-        Test a user who does not exist cannot view any details.
-        """
-
-        # get user details
-        view_resp = self.get_user_details(username="idontexist")
-
-        self.assertStatus(view_resp, 401)
-        self.assertIn('Please login or sign up first', view_resp.get_data(as_text=True))
-
-    @file_data("test_data/valid_userinfo.json")
-    def test_view_details_with_unauthenticated_user(self, info):
-        """
-        Test a user who is not authenticated cannot view any details.
-        """
-
-        # register user first
-        reg_resp = self.register_user(username=info[0], password=info[1], email=info[2])
-
-        # confirm registration response
-        self.assertTrue(reg_resp.status_code == 201)
-        self.assertIn(account_created, reg_resp.get_data(as_text=True))
-
-        # get user details
-        view_resp = self.get_user_details(username=info[0])
-        err = json.loads(view_resp.get_data(as_text=True))["message"]
-
-        self.assertIn("Please login", err)
-        self.assertStatus(view_resp, 401)
 
     @file_data("test_data/valid_userinfo.json")
     def test_update_user_details(self, info):
@@ -302,57 +252,20 @@ class TestUserAuth(TestBase):
         self.assertIn('Logged in', resp.get_data().decode())
 
         new_details = {
-            'new_username': 'new_admin',
+            'username': 'new_admin',
             'password': 'newpassword',
             'email': 'new_admin@email.com'
         }
 
         # make update request
-        update_resp = self.update_user_info(username=info[0], data=new_details)
+        token = json.loads(resp.get_data().decode())['auth_token']
+        update_resp = self.update_user_info(token=token, data=new_details)
 
+        data = json.loads(update_resp.get_data(as_text=True))['data']
         self.assert200(update_resp)
         self.assertIn("Account updated", update_resp.get_data().decode())
-
-    @file_data("test_data/valid_userinfo.json")
-    def test_unautheticated_update_request(self, info):
-        """
-        Test cannot update account without being authenticated.
-        """
-
-        # register user first
-        reg_resp = self.register_user(username=info[0], password=info[1], email=info[2])
-
-        # confirm registration response
-        self.assertTrue(reg_resp.status_code == 201)
-        self.assertIn(account_created, reg_resp.get_data().decode())
-
-        new_details = {
-            'username': 'updatedusername',
-            'password': 'updatedpassword',
-            'email': 'updated@email.com'
-        }
-
-        update_resp = self.update_user_info(username=info[0], data=new_details)
-
-        self.assert401(update_resp)
-        self.assertIn("Login first", update_resp.get_data().decode())
-
-    @file_data("test_data/valid_userinfo.json")
-    def test_update_with_none_existing_user(self, info):
-        """
-        Test non-existing user cannot update.
-        """
-
-        new_details = {
-            'username': 'updatedusername',
-            'password': 'updatedpassword',
-            'email': 'updated@email.com'
-        }
-
-        update_resp = self.update_user_info(username=info[0], data=new_details)
-
-        self.assert401(update_resp)
-        self.assertIn("Create account or login", update_resp.get_data().decode())
+        self.assertTrue(new_details.get('username') == data['username'])
+        self.assertTrue(new_details.get('email') == data['email'])
 
     @file_data("test_data/valid_userinfo.json")
     def test_update_with_existing_data(self, info):
@@ -371,7 +284,7 @@ class TestUserAuth(TestBase):
         reg_resp2 = self.register_user(username=target_username, password=info[1], email=target_email)
 
         # confirm first user registration response
-        self.assertTrue(reg_resp.status_code == 201)
+        self.assertStatus(reg_resp, 201)
         self.assertIn(account_created, reg_resp.get_data().decode())
 
         # confirm second user registration response
@@ -380,6 +293,7 @@ class TestUserAuth(TestBase):
 
         # login first user
         resp = self.login_user(username=info[0], password=info[1])
+        token = json.loads(resp.get_data().decode())['auth_token']
 
         # assert first user login response
         self.assert200(resp)
@@ -387,7 +301,7 @@ class TestUserAuth(TestBase):
 
         # details that the first user intends to update
         new_details2 = {
-            'new_username': target_username,  # used username.
+            'username': target_username,  # used username.
             'password': 'somepassword',
             'email': 'new_user1@email.com'
         }
@@ -399,9 +313,9 @@ class TestUserAuth(TestBase):
         }
 
         # make a PUT request
-        update_det2 = self.update_user_info(username=info[0], data=new_details2)
+        update_det2 = self.update_user_info(token=token, data=new_details2)
 
-        update_det3 = self.update_user_info(username=info[0], data=new_details3)
+        update_det3 = self.update_user_info(token=token, data=new_details3)
 
         # assertions
 
@@ -415,7 +329,7 @@ class TestUserAuth(TestBase):
     @file_data("test_data/valid_userinfo.json")
     def test_logout(self, info):
         """
-        Test user can logout.
+        Test user can logout successfully..
         """
 
         # register user first
@@ -435,7 +349,45 @@ class TestUserAuth(TestBase):
         self.assertIn('Logged in', _response['message'])
 
         # logout user
-        logout_resp = self.logout_user(username=info[0])
+        token = _response['auth_token']
+        logout_resp = self.logout_user(token)
 
         # assert response, response will be ok regardless
+        response = json.loads(
+            logout_resp.get_data().decode()
+        )
+        self.assertTrue(response['status'] == 'success')
+        self.assertTrue(response['message'] == 'Successfully logged out')
         self.assert200(logout_resp)
+
+    @file_data("test_data/valid_userinfo.json")
+    def test_cannot_use_auth_token_after_logout(self, info):
+        """
+            Test user cannot use auth_token after successful_logout.
+        """
+
+        # register user first
+        # register
+        reg_resp = self.register_user(username=info[0], password=info[1], email=info[2])
+        _reg_response = json.loads(reg_resp.get_data(as_text=True))
+
+        # confirm registration response
+        self.assertTrue(reg_resp.status_code == 201)
+        self.assertIn(account_created, _reg_response['message'])
+
+        # login user
+        resp = self.login_user(username=info[0], password=info[1])
+
+        self.assert200(resp)
+        _response = json.loads(resp.get_data(as_text=True))
+        self.assertIn('Logged in', _response['message'])
+
+        # logout user
+        token = _response['auth_token']
+
+        self.logout_user(token)
+
+        login_response = self.get_user_details(token)
+        data = json.loads(login_response.get_data().decode())
+        self.assertStatus(login_response, 401)
+        self.assertTrue(data['msg'] == 'Token has been revoked')
