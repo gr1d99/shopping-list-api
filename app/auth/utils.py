@@ -20,3 +20,13 @@ login_args = OrderedDict(
         ('password', fields.Str(required=True))
     ]
 )
+
+reset_password_args = OrderedDict(
+    [
+        ('username', fields.Str(required=False)),
+        ('email', fields.Str(message='Email required', required=False, validate=validate.Email())),
+        ('old_password', fields.Str(required=True, validate=validate.Length(min=6))),
+        ('new_password', fields.Str(required=True, validate=validate.Length(min=6))),
+        ('confirm', fields.Str(required=True, validate=validate.Length(min=6)))
+    ]
+)
