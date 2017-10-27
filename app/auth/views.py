@@ -1,14 +1,16 @@
 from flask import jsonify, make_response, request
 from flask_jwt_extended import \
-    (create_access_token, jwt_required, get_jwt_claims, get_jwt_identity,
+    (create_access_token, jwt_required, get_jwt_identity,
      create_refresh_token, jwt_refresh_token_required, get_raw_jwt)
 from flask_restful import Resource
 from webargs.flaskparser import use_args
 
 from ..messages \
-    import (username_exists, email_exists, account_created)
+    import (username_exists, email_exists, account_created, incorrect_password_or_username,
+            incorrect_old_password, passwords_donot_match, password_changed,
+            username_or_email_required)
 from ..models import User, BlacklistToken
-from .utils import login_args, registration_args
+from .utils import login_args, registration_args, reset_password_args
 
 
 class UserRegisterApi(Resource):
@@ -92,7 +94,7 @@ class UserLoginApi(Resource):
             if user is None or not user.verify_password(password):
                 return make_response(
                     jsonify(dict(
-                        message='Incorrect username or password!!',
+                        message=incorrect_password_or_username,
                         status='fail'
                     )), 401
                 )
@@ -208,10 +210,6 @@ class UserProfileApi(Resource):
                     if email != user.email:
                         user.email = email
 
-                    if password:
-                        if user.verify_password(password) is False:
-                            user.password = user.hash_password(password)
-
                     # if everything checks out correctly, we save the new details.
                     user.save()
 
@@ -261,6 +259,72 @@ class UserLogoutApi(Resource):
                 dict(status='success',
                      message="Successfully logged out"
                      )), 200)
+
+
+class ResetPasswordApi(Resource):
+    """
+    Resource class to handle client password reset.
+    """
+
+    @use_args(reset_password_args)
+    def post(self, data):
+        """
+        Handle POST requests.
+        """
+
+        username = data.get('username', None)
+        email = data.get('email', None)
+        old_password = data.get('old_password')
+        new_password = data.get('new_password')
+        confirm = data.get('confirm')
+
+        # set user instance to None initially because the user
+        # will provide either a username or email used to get
+        # user instance if it exists.
+        user = None
+
+        if username and email:
+            user = User.query.filter_by(username=username).first()
+
+        elif username and not email:
+            user = User.query.filter_by(username=username).first()
+
+        elif not username and email:
+            user = User.query.filter_by(email=email).first()
+
+        else:
+            return make_response(
+                jsonify(dict(
+                    status='fail',
+                    message=username_or_email_required
+                )), 401
+            )
+
+        if not user.verify_password(old_password):
+            return make_response(
+                jsonify(dict(
+                    status='fail',
+                    message=incorrect_old_password
+                )), 401
+            )
+
+        if new_password != confirm:
+            return make_response(
+                jsonify(dict(
+                    status='fail',
+                    message=passwords_donot_match
+                )), 401
+            )
+
+        user.password = user.hash_password(new_password)
+        user.save()
+
+        return make_response(
+            jsonify(dict(
+                status='success',
+                message=password_changed
+            )), 200
+        )
 
 
 class RefreshTokenApi(Resource):
