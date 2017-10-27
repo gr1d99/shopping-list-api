@@ -65,6 +65,9 @@ class User(BaseUserManager, BaseModel, DB.Model):
             # throw error message and do not save data
             return self.validate_required()
 
+        def __repr__(self):
+            return '<%(username)s obj>' % dict(username=self.username.capitalize())
+
 
 class BlacklistToken(BaseModel, DB.Model):
     """
