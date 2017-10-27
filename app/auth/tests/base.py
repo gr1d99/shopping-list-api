@@ -118,5 +118,6 @@ class TestBase(TestCase):
         A method to make a post request with user details in order to reset user password.
         """
 
+        data = json.dumps(data)
         url = RESET_PASSWORD_URL
-        return self.client.post(url, data=dict(data), content_type=CONTENT_TYPE)
+        return self.client.post(url, data=data, content_type=CONTENT_TYPE)
