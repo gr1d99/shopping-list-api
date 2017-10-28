@@ -10,7 +10,7 @@ from app import APP, DB
 from app.conf import app_config
 from app.auth.tests import LOGIN_URL, REGISTER_URL, LOGOUT_URL
 
-from . import CREATE_SHOPPING_LIST_URL
+from . import CREATE_SHOPPINGLIST_URL, GET_SHOPPINGLISTS_URL, GET_SHOPPINGLIST_DETAIL_URL, UPDATE_SHOPPINGLIST_URL
 
 
 class TestShoppingListBase(TestCase):
@@ -57,18 +57,23 @@ class TestShoppingListBase(TestCase):
         DB.session.remove()
         DB.drop_all()
 
-    def login_user(self, **cridentials):
+    def login_user(self):
         """
         Helper method to login user.
 
         Makes post request using user information initialized in
         the setUp method.
         """
+
+        cridentials = dict(
+            username=self.user.username,
+            password=self.user.password
+        )
 
         return self.client.post(
             LOGIN_URL, data=json.dumps(cridentials), content_type=self.content_type)
 
-    def register_user(self, **details):
+    def register_user(self):
         """
         Helper method to login user.
 
@@ -76,8 +81,14 @@ class TestShoppingListBase(TestCase):
         the setUp method.
         """
 
+        user_info = dict(
+            username=self.user.username,
+            password=self.user.password,
+            email=self.user.email
+        )
+
         return self.client.post(
-            REGISTER_URL, data=json.dumps(dict(details)), content_type=self.content_type)
+            REGISTER_URL, data=json.dumps(user_info), content_type=self.content_type)
 
     def logout_user(self, token):
         """
@@ -90,14 +101,61 @@ class TestShoppingListBase(TestCase):
         url = LOGOUT_URL
         return self.client.delete(url, content_type=self.content_type, headers=headers)
 
-    def create_shopping_list(self, token, **data):
+    def create_shoppinglist(self, token, **data):
         """
         Method to make a post request to create shopping list.
         """
 
-        url = CREATE_SHOPPING_LIST_URL
+        url = CREATE_SHOPPINGLIST_URL
         headers = dict(
             Authorization='Bearer %(token)s' % dict(token=token)
         )
         return self.client.post(url, data=json.dumps(dict(data)),
                                 content_type=self.content_type, headers=headers,)
+
+    def get_user_shoppinglists(self, token):
+        """
+        Method to make get request to fetch user shopping lists.
+        """
+
+        url = GET_SHOPPINGLISTS_URL
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=token)
+        )
+        return self.client.get(
+            url, content_type=self.content_type, headers=headers
+        )
+
+    def get_user_shoppinglist_detail(self, token, id):
+        """
+        Method to make get request and fetch specific shopping list based on provided id.
+        """
+
+        # append shoppinglist id at the end of url.
+        url = GET_SHOPPINGLIST_DETAIL_URL + str(id)
+
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=token)
+        )
+
+        return self.client.get(url, headers=headers, content_type=self.content_type)
+
+    def update_user_shoppinglist(self, token, id, new_info):
+        """
+        Method to make PUT request to update user shoppinglist.
+        :param token: user auth token
+        :param id: shopping list id
+        :param new_info: details to update
+        :return: response
+        """
+
+        url = UPDATE_SHOPPINGLIST_URL + str(id)
+
+        data = json.dumps(new_info)
+
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=token)
+        )
+
+        return self.client.put(url, data=data, headers=headers,
+                               content_type=self.content_type)
