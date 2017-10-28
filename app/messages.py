@@ -12,4 +12,13 @@ incorrect_password_or_username = 'Incorrect username or password'
 
 
 # shopping list and shopping items endpoints messages
-shopping_list_created = "Shopping created"
+shoppinglist_created = "Shopping list created"
+valid_integer_required = "Provide a valid id"
+shoppinglist_not_found = 'Shopping list not found'
+shoppinglist_updated = 'Shopping list updated'
+shoppinglist_name_exists = "There exists a shoppinglist with name " \
+                           "'%(name)s', try again with a different name"
+
+
+# server error message
+server_error = 'Server error, try again'
