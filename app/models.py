@@ -100,7 +100,7 @@ class ShoppingList(BaseModel, DB.Model):
     shopping_items = DB.relationship('ShoppingItem', backref='shopping_list',
                                      lazy='dynamic', cascade='all, delete-orphan')
     timestamp = DB.Column(DB.DateTime, default=DB.func.current_timestamp())
-    date_modified = DB.Column(
+    updated = DB.Column(
         DB.DateTime, default=DB.func.current_timestamp(),
         onupdate=DB.func.current_timestamp())
 
