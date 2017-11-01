@@ -9,6 +9,7 @@ username_or_email_required = 'You must provide a username or email'
 incorrect_old_password = 'Incorrect password provided'
 passwords_donot_match = 'Passwords do not match'
 incorrect_password_or_username = 'Incorrect username or password'
+user_not_found = "User not found, login and try again"
 
 
 # shopping list and shopping items endpoints messages
@@ -16,8 +17,13 @@ shoppinglist_created = "Shopping list created"
 valid_integer_required = "Provide a valid id"
 shoppinglist_not_found = 'Shopping list not found'
 shoppinglist_updated = 'Shopping list updated'
-shoppinglist_name_exists = "There exists a shoppinglist with name " \
-                           "'%(name)s', try again with a different name"
+shoppinglist_name_exists = "There exists a shoppinglist with the provided name exists, try again with a different name"
+shoppinglist_deleted = 'Shopping list deleted'
+
+shoppingitem_exists = 'There exists a shopping item with similar name, try again with'
+shoppingitem_created = 'Shopping item created'
+shoppingitem_not_found = 'Shopping item not found'
+shoppingitem_updated = 'Shopping item updated'
 
 
 # server error message
