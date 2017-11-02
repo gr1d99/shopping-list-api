@@ -6,7 +6,7 @@ from flask_testing import TestCase
 from . import \
     (app_config, APP, CONTENT_TYPE, DB, INVALID_EMAIL_ERR, LOGIN_URL, LOGOUT_URL,
      REFRESH_USER_TOKEN_URL, REGISTER_URL, RESET_PASSWORD_URL, REQUIRED_FIELDS_ERR,
-     UPDATE_USER_DETAILS_URL, USER_DETAILS_URL)
+     UPDATE_USER_DETAILS_URL, USER_DETAILS_URL, DELETE_CLIENT_ACCOUNT_URL)
 
 
 class TestBase(TestCase):
@@ -121,3 +121,16 @@ class TestBase(TestCase):
         data = json.dumps(data)
         url = RESET_PASSWORD_URL
         return self.client.post(url, data=data, content_type=CONTENT_TYPE)
+
+    def delete_user(self, token):
+        """
+        Makes DELETE request as client to delete user account.
+        :param token: client auth token.
+        :return: resonse.
+        """
+
+        url = DELETE_CLIENT_ACCOUNT_URL
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=token)
+        )
+        return self.client.delete(url, headers=headers, content_type=CONTENT_TYPE)
