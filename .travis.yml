@@ -7,6 +7,6 @@ services:
 before_script:
   - psql -c 'create database shl_test;' -U postgres
 script:
-  - nosetests --with-coverage tests/ app/auth/tests/ app/shopping_list/tests app/db/tests/
+  - nosetests --with-coverage tests/ app/auth/tests/ app/shopping_list/tests
 after_success:
   - coveralls
