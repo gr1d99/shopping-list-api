@@ -68,20 +68,6 @@ class User(BaseUserManager, BaseModel, DB.Model):
 
         return DB.session.query(User).filter_by(username=username).first()
 
-    def save(self):
-        """
-        Override the default save method to enable inspection of required fields
-        """
-
-        # if None is returned, continue and save data
-        if not self.validate_required():
-            # if there are no errors just call the original save method
-            return super(User, self).save()
-
-        else:
-            # throw error message and do not save data
-            return self.validate_required()
-
     def __repr__(self):
         return '<%(username)s obj>' % dict(username=self.username.capitalize())
 
