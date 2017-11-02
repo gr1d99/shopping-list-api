@@ -238,8 +238,25 @@ class UserProfileApi(Resource):
                 jsonify(dict(
                     status='fail',
                     message=e
-                )), 500
-            )
+                )), 500)
+
+    @jwt_required
+    def delete(self):
+        """
+        Handles DELETE request to remove/delete user from database.
+        :return: response
+        """
+
+        current_user = get_jwt_identity()
+
+        user = User.get_user(current_user)
+
+        user.delete()
+
+        BlacklistToken(token=get_raw_jwt()['jti']).save()
+
+        # return 204 response with nothing
+        return {}, 204
 
 
 class UserLogoutApi(Resource):
@@ -343,5 +360,5 @@ class RefreshTokenApi(Resource):
         return make_response(
             jsonify(dict(
                 access_token=create_refresh_token(identity=current_user)
-            )), 200
-        )
+            )), 200)
+
