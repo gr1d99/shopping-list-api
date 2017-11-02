@@ -22,6 +22,7 @@ RESET_PASSWORD_URL = "%(prefix)s%(next)s" % dict(prefix=BASE_PREFIX, next=RESET_
 USER_DETAILS_URL = "%(prefix)s%(next)s" % dict(prefix=BASE_PREFIX, next=USER_DETAILS_PREFIX)
 UPDATE_USER_DETAILS_URL = "%(prefix)s%(next)s" % dict(prefix=BASE_PREFIX, next=UPDATE_USER_DETAILS_PREFIX)
 REFRESH_USER_TOKEN_URL = "%(prefix)s%(next)s" % dict(prefix=BASE_PREFIX, next=REFRESH_TOKEN_PREFIX)
+DELETE_CLIENT_ACCOUNT_URL = BASE_PREFIX + USER_DETAILS_PREFIX
 
 INVALID_EMAIL_ERR = "Not a valid email address."
 REQUIRED_FIELDS_ERR = "Missing data for required field."
