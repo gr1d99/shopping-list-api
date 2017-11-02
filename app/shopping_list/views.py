@@ -34,28 +34,19 @@ class UserShoppingListsApi(Resource):
         """
         current_user = get_jwt_identity()
 
-        if current_user:
+        user = User.query.filter_by(username=current_user).first()
 
-            user = User.query.filter_by(username=current_user).first()
-
-            # create a list which contains shopping list id and shopping list name/
-            user_shopping_list = [{'id': shl.id, 'name': shl.name, 'is_active': shl.is_active}
-                                  for shl in user.shopping_lists.all()]
-
-            return make_response(
-                jsonify(dict(
-                    status='success',
-                    message=dict(
-                        shopping_lists=user_shopping_list
-                    )
-                ))
-            )
+        # create a list which contains shopping list id and shopping list name/
+        user_shopping_list = [{'id': shl.id, 'name': shl.name, 'is_active': shl.is_active}
+                              for shl in user.shopping_lists.all()]
 
         return make_response(
             jsonify(dict(
-                status='fail',
-                message=user_not_found
-            )), 404
+                status='success',
+                message=dict(
+                    shopping_lists=user_shopping_list
+                )
+            ))
         )
 
     @use_args(shoppinglist_args)
@@ -67,48 +58,40 @@ class UserShoppingListsApi(Resource):
 
         current_user = get_jwt_identity()
 
-        if current_user:
-            shl_name = data.get('name')
+        shl_name = data.get('name')
 
-            # check if shopping list exists
-            old_shl = ShoppingList.query.filter_by(name=shl_name).first()
+        # check if shopping list exists
+        old_shl = ShoppingList.query.filter_by(name=shl_name).first()
 
-            # if shopping list exists return bad request response.
-            if old_shl:
-
-                return make_response(
-                    jsonify(dict(
-                        status='fail',
-                        message=shoppinglist_name_exists
-                    )), 400
-                )
-
-            # get user instance.
-            user = User.query.filter_by(username=current_user).first()
-
-            # save shopping list.
-            ShoppingList(name=shl_name, owner_id=user.id).save()
-
-            # get saved shopping list instance and use in response sent to client.
-            shl = ShoppingList.query.filter_by(name=shl_name).first()
+        # if shopping list exists return bad request response.
+        if old_shl:
 
             return make_response(
                 jsonify(dict(
-                    status='success',
-                    message=shoppinglist_created,
-                    data=dict(
-                        id=shl.id,
-                        name=shl.name,
-                        created_on=shl.timestamp.strftime("%Y-%m-%d %H:%M:%S")
-                    )
-                )), 201
+                    status='fail',
+                    message=shoppinglist_name_exists
+                )), 400
             )
+
+        # get user instance.
+        user = User.query.filter_by(username=current_user).first()
+
+        # save shopping list.
+        ShoppingList(name=shl_name, owner_id=user.id).save()
+
+        # get saved shopping list instance and use in response sent to client.
+        shl = ShoppingList.query.filter_by(name=shl_name).first()
 
         return make_response(
             jsonify(dict(
-                status='fail',
-                message=user_not_found
-            )), 404
+                status='success',
+                message=shoppinglist_created,
+                data=dict(
+                    id=shl.id,
+                    name=shl.name,
+                    created_on=shl.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                )
+            )), 201
         )
 
 
@@ -128,72 +111,42 @@ class UserShoppingListDetailApi(Resource):
         """
         current_user = get_jwt_identity()
 
-        if current_user:
+        # get user instance.
+        user = User.query.filter_by(username=current_user).first()
 
-            # if by any chance the argument id bypasses url check it will not escape this block.
-            try:
-                int(id)
+        # get shopping list using provided id, if not found raise error 404 and
+        # return response to client.
+        try:
+            shopping_list = user.shopping_lists.filter_by(id=int(id)).first_or_404()
 
-            except ValueError as e:
-                AppLogger(self.__class__.__name__).logger.warning(e)
-                return make_response(
-                    jsonify(dict(
-                        status='fail',
-                        message=valid_integer_required
-                    )), 400
-                )
-
-            # get user instance.
-            user = User.query.filter_by(username=current_user).first()
-
-            if not user:
-                return make_response(
-                    jsonify(dict(
-                        staus='fail',
-                        message=user_not_found
-                    )), 400
-                )
-
-            # get shopping list using provided id, if not found raise error 404 and
-            # return response to client.
-            try:
-                shopping_list = user.shopping_lists.filter_by(id=int(id)).first_or_404()
-
-            except Exception as e:
-                AppLogger(self.__class__.__name__).logger.warning(e)
-                return make_response(
-                    jsonify(dict(
-                        status='fail',
-                        message=shoppinglist_not_found
-                    )), 404
-                )
-
-            # construct response for client.
-            response = OrderedDict(
-                [
-                    ('status', 'success'),
-                    ('message', OrderedDict(
-                        [
-                            ('id', shopping_list.id),
-                            ('owner', current_user),
-                            ('name', shopping_list.name),
-                            ('is_active', shopping_list.is_active),
-                            ('created_on', shopping_list.timestamp.strftime("%Y-%m-%d %H:%M:%S")),
-                            ('updated_on', shopping_list.updated.strftime("%Y-%m-%d %H:%M:%S"))
-                        ]
-                    )),
-                ]
-            )
-
+        except Exception as e:
+            AppLogger(self.__class__.__name__).logger.warning(e)
             return make_response(
-                jsonify(response), 200
+                jsonify(dict(
+                    status='fail',
+                    message=shoppinglist_not_found
+                )), 404
             )
+
+        # construct response for client.
+        response = OrderedDict(
+            [
+                ('status', 'success'),
+                ('message', OrderedDict(
+                    [
+                        ('id', shopping_list.id),
+                        ('owner', current_user),
+                        ('name', shopping_list.name),
+                        ('is_active', shopping_list.is_active),
+                        ('created_on', shopping_list.timestamp.strftime("%Y-%m-%d %H:%M:%S")),
+                        ('updated_on', shopping_list.updated.strftime("%Y-%m-%d %H:%M:%S"))
+                    ]
+                )),
+            ]
+        )
 
         return make_response(
-            jsonify(dict(
-                status='fail',
-                message=user_not_found
-            )), 404
+            jsonify(response), 200
         )
 
     @use_args(shoppinglist_update_args)
@@ -207,107 +160,77 @@ class UserShoppingListDetailApi(Resource):
         """
         current_user = get_jwt_identity()
 
-        if current_user:
+        # get user instance
+        user = User.query.filter_by(username=current_user).first()
 
-            try:
-                # make sure provided id can be converted to an integer.
-                int(id)
+        # new name provided by client
+        new_name = args.get('new_name', None)
+        is_active = args.get('is_active', None)
 
-            except ValueError as e:
-                AppLogger(self.__class__.__name__).logger.warning(e)
-                return make_response(
-                    jsonify(dict(
-                        status='fail',
-                        message=valid_integer_required
-                    )), 400
-                )
+        # if name is none there is no need to modify client resource.
+        if not new_name and is_active is None:
+            return make_response(
+                jsonify(dict(
+                    status='success',
+                )), 304
+            )
 
-            # get user instance
-            user = User.query.filter_by(username=current_user).first()
+        # check if shopping list exists, if not, return 404 response to client.
+        shopping_list = user.shopping_lists.filter_by(id=int(id)).first()
 
-            if not user:
-                return make_response(
-                    jsonify(dict(
-                        staus='fail',
-                        message=user_not_found
-                    )), 400
-                )
+        if not shopping_list:
+            return make_response(
+                jsonify(dict(
+                    status='fail',
+                    message=shoppinglist_not_found
+                )), 404
+            )
 
-            # new name provided by client
-            new_name = args.get('new_name', None)
-            is_active = args.get('is_active', None)
+        def response():
+            return make_response(
+                jsonify(dict(
+                    status='success',
+                    message=shoppinglist_updated,
+                    data=dict(
+                        name=shopping_list.name,
+                        is_active=shopping_list.is_active,
+                        created_on=shopping_list.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                        updated_on=shopping_list.updated.strftime("%Y-%m-%d %H:%M:%S")
+                    )
+                )), 200
+            )
 
-            # if name is none there is no need to modify client resource.
-            if not new_name and is_active is None:
-                return make_response(
-                    jsonify(dict(
-                        status='success',
-                    )), 304
-                )
-
-            # check if shopping list exists, if not, return 404 response to client.
-            shopping_list = user.shopping_lists.filter_by(id=int(id)).first()
-
-            if not shopping_list:
-                return make_response(
-                    jsonify(dict(
-                        status='fail',
-                        message=shoppinglist_not_found
-                    )), 404
-                )
-
-            def response():
-                return make_response(
-                    jsonify(dict(
-                        status='success',
-                        message=shoppinglist_updated,
-                        data=dict(
-                            name=shopping_list.name,
-                            is_active=shopping_list.is_active,
-                            created_on=shopping_list.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-                            updated_on=shopping_list.updated.strftime("%Y-%m-%d %H:%M:%S")
-                        )
-                    )), 200
-                )
-
-            # client may just want to update shoppinglist active status but
-            # not the name therefore we only make changes to what is required and return
-            # the response.
-            if is_active and not new_name:
-                shopping_list.is_active = True
-                shopping_list.save()
-                return response()
-
-            elif not is_active and not new_name:
-                shopping_list.is_active = False
-                shopping_list.save()
-                return response()
-
-            # check if shopping list with the same name exists.
-            shl = ShoppingList.query.filter_by(name=new_name).first()
-
-            # if shopping list exists and it is not owned by the client return bad request.
-            if shl and shl.owner_id is not user.id:
-                msg = shoppinglist_name_exists
-                return make_response(
-                    jsonify(dict(
-                        status='fail',
-                        message=msg
-                    )), 400
-                )
-
-            # make changes and save
-            shopping_list.name = new_name
+        # client may just want to update shoppinglist active status but
+        # not the name therefore we only make changes to what is required and return
+        # the response.
+        if is_active and not new_name:
+            shopping_list.is_active = True
             shopping_list.save()
-
             return response()
 
-        return make_response(
-            jsonify(dict(
-                status='fail',
-                message=user_not_found
-            )), 404
-        )
+        elif not is_active and not new_name:
+            shopping_list.is_active = False
+            shopping_list.save()
+            return response()
+
+        # check if shopping list with the same name exists.
+        shl = ShoppingList.query.filter_by(name=new_name).first()
+
+        # if shopping list exists and it is not owned by the client return bad request.
+        if shl and shl.owner_id is not user.id:
+            msg = shoppinglist_name_exists
+            return make_response(
+                jsonify(dict(
+                    status='fail',
+                    message=msg
+                )), 400
+            )
+
+        # make changes and save
+        shopping_list.name = new_name
+        shopping_list.save()
+
+        return response()
 
     @jwt_required
     def delete(self, id):
@@ -319,57 +242,27 @@ class UserShoppingListDetailApi(Resource):
 
         current_user = get_jwt_identity()
 
-        if current_user:
+        # get user instance.
+        user = User.query.filter_by(username=current_user).first()
 
-            try:
-                # make sure provided id can be converted to an integer.
-                int(id)
+        # delete shopping list from database block.
+        try:
+            instance = user.shopping_lists.filter_by(id=int(id)).first_or_404()
+            instance.delete()
+            return make_response(
+                jsonify(dict(
+                    status="success"
+                )), 204
+            )
 
-            except ValueError as e:
-                AppLogger(self.__class__.__name__).logger.warning(e)
-                return make_response(
-                    jsonify(dict(
-                        status='fail',
-                        message=valid_integer_required
-                    )), 400
-                )
-
-            # get user instance.
-            user = User.query.filter_by(username=current_user).first()
-
-            if not user:
-                return make_response(
-                    jsonify(dict(
-                        status='fail',
-                        message=user_not_found
-                    )), 404
-                )
-
-            # delete shopping list from database block.
-            try:
-                instance = user.shopping_lists.filter_by(id=int(id)).first_or_404()
-                instance.delete()
-                return make_response(
-                    jsonify(dict(
-                        status="success"
-                    )), 204
-                )
-
-            except Exception as e:
-                AppLogger(self.__class__.__name__).logger.warning(e)
-                return make_response(
-                    jsonify(dict(
-                        status='fail',
-                        message=shoppinglist_not_found
-                    )), 404
-                )
-
-        return make_response(
-            jsonify(dict(
-                status='fail',
-                message=user_not_found
-            )), 404
-        )
+        except Exception as e:
+            AppLogger(self.__class__.__name__).logger.warning(e)
+            return make_response(
+                jsonify(dict(
+                    status='fail',
+                    message=shoppinglist_not_found
+                )), 404
+            )
 
 
 # shoppingitems.
@@ -520,8 +413,6 @@ class ShoppingItemApi(Resource):
         price = args.get('price')
         bought = args.get('bought')
 
-        print(name, bought, price)
-
         # make sure that if name is provided then it should
         # not have a minimum of 3 characters.
         if name:
@@ -578,3 +469,47 @@ class ShoppingItemApi(Resource):
                     updated_on=shoppingitem.updated.strftime("%Y-%m-%d %H:%M:%S")
                 )
             )), 200)
+
+    @jwt_required
+    def delete(self, shoppinglistId, shoppingitemId):
+        """
+        Handles DELETE request from client to delete a single shoppingitem identified by
+        its id.
+        :param shoppinglistId: shoppinglist id.
+        :param shoppingitemId: shoppingitem id.
+        :return: response.
+        """
+
+        current_user = get_jwt_identity()
+
+        user = User.get_user(current_user)
+
+        # get shoppinglist
+        shoppinglist = user.shopping_lists.filter_by(id=shoppinglistId).first()
+
+        # check if shoppinglist exists.
+        if not shoppinglist:
+            return make_response(
+                jsonify(dict(
+                    status='fail',
+                    message=shoppinglist_not_found
+                )), 404
+            )
+
+        # get shoppingitem.
+        shoppingitem = shoppinglist.shopping_items.filter_by(id=shoppingitemId).first()
+
+        # check if shoppingitem exists.
+        if not shoppingitem:
+            return make_response(
+                jsonify(dict(
+                    status='fail',
+                    message=shoppingitem_not_found
+                )), 404
+            )
+
+        # delete shoppingitem.
+        shoppingitem.delete()
+
+        # return response to client.
+        return {}, 204
