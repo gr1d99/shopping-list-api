@@ -98,9 +98,9 @@ class TestShoppingList(TestShoppingListBase):
         # assert create shopping list response.
         self.assert400(second_create_response)
         self.assertIn('fail', 
-                      second_create_response.get_data(as_text=True).decode())
+                      second_create_response.get_data(as_text=True))
         self.assertIn(shoppinglist_name_exists, 
-                      second_create_response.get_data(as_text=True).decode())
+                      second_create_response.get_data(as_text=True))
 
     def test_cannot_create_shopping_list_without_authentication(self):
         """
@@ -152,7 +152,7 @@ class TestShoppingList(TestShoppingListBase):
 
         # data returned with the response
         get_shopping_lists_response_data = json.loads(
-            get_shopping_lists_response.get_data(as_text=True).decode()
+            get_shopping_lists_response.get_data(as_text=True)
         )
 
         # assertions
@@ -200,7 +200,7 @@ class TestShoppingList(TestShoppingListBase):
 
         # data returned with the response
         get_shopping_lists_response_data = json.loads(
-            get_shopping_lists_response.get_data(as_text=True).decode()
+            get_shopping_lists_response.get_data(as_text=True)
         )
 
         # assertions
@@ -224,7 +224,7 @@ class TestShoppingList(TestShoppingListBase):
 
         # data returned
         shopping_list_detail_response_data = json.loads(
-            shopping_list_detail_response.get_data(as_text=True).decode())
+            shopping_list_detail_response.get_data(as_text=True))
 
         self.assertTrue(
             shopping_list_detail_response_data['status'] == 'success')
@@ -281,12 +281,11 @@ class TestShoppingList(TestShoppingListBase):
 
         # make a get request to retrieve shopping list.
         get_shopping_lists_response = self.get_user_shoppinglists(
-            token=auth_token
-        )
+            token=auth_token)
 
         # data returned with the response
         get_shopping_lists_response_data = json.loads(
-            get_shopping_lists_response.get_data(as_text=True).decode()
+            get_shopping_lists_response.get_data(as_text=True)
         )
 
         # assertions
@@ -310,12 +309,13 @@ class TestShoppingList(TestShoppingListBase):
 
         # data returned
         shopping_list_detail_response_data = json.loads(
-            shopping_list_detail_response.get_data(as_text=True).decode())
+            shopping_list_detail_response.get_data(as_text=True))
 
         self.assertTrue(
             shopping_list_detail_response_data['status'] == 'fail')
 
         self.assertIn(shoppinglist_not_found, shopping_list_detail_response_data['message'])
+
 
     def test_user_can_update_shoppinglist(self):
 
@@ -335,7 +335,6 @@ class TestShoppingList(TestShoppingListBase):
         auth_token = json.loads(login_response.
                                 get_data(as_text=True).decode())['auth_token']
 
-
         # new info
         new_info = dict(
             new_name='updated_first_list',
@@ -347,13 +346,13 @@ class TestShoppingList(TestShoppingListBase):
             token=auth_token, name='myfirst_list')
 
         # get id of created shoppinglist from response.
-        id = json.loads(create_shoppinglist_response.get_data(as_text=True).decode())['data']['id']
+        id = json.loads(create_shoppinglist_response.get_data(as_text=True))['data']['id']
 
         update_shoppinglist_response = self.update_user_shoppinglist(token=auth_token, id=id, new_info=new_info)
 
         # get data from response
         update_shoppinglist_response_data = json.loads(
-            update_shoppinglist_response.get_data(as_text=True).decode()
+            update_shoppinglist_response.get_data(as_text=True)
         )
 
         # assert response
@@ -404,7 +403,7 @@ class TestShoppingList(TestShoppingListBase):
 
         # get data from response
         update_shoppinglist_response_data = json.loads(
-            update_shoppinglist_response.get_data(as_text=True).decode()
+            update_shoppinglist_response.get_data(as_text=True)
         )
 
         # assert response
@@ -447,7 +446,7 @@ class TestShoppingList(TestShoppingListBase):
         )
 
         # get id of created shoppinglist from response.
-        id = json.loads(create_shoppinglist_response.get_data(as_text=True).decode())['data']['id']
+        id = json.loads(create_shoppinglist_response.get_data(as_text=True))['data']['id']
 
         update_shoppinglist_response = self.update_user_shoppinglist \
             (token=auth_token, id=id, new_info=new_info)
@@ -492,7 +491,7 @@ class TestShoppingList(TestShoppingListBase):
         )
 
         # get id of created shoppinglist from response.
-        id = json.loads(create_shoppinglist_response.get_data(as_text=True).decode())['data']['id']
+        id = json.loads(create_shoppinglist_response.get_data(as_text=True))['data']['id']
 
         # make DELETE request to server
         delete_response = self.delete_shoppinglist(token=auth_token, id=id)
@@ -547,7 +546,7 @@ class TestShoppingList(TestShoppingListBase):
         # get id of user one shoppinglist and use it with user two to try and
         # delete it.
         id = json.loads(
-            user_one_create_shoppinglist_response.get_data(as_text=True).decode()
+            user_one_create_shoppinglist_response.get_data(as_text=True)
         )['data']['id']
         
         # make delete request with user two.
@@ -556,5 +555,5 @@ class TestShoppingList(TestShoppingListBase):
         # assert response.
         self.assertStatus(delete_response, 404)
         self.assertTrue(shoppinglist_not_found == json.loads(
-            delete_response.get_data(as_text=True).decode()
+            delete_response.get_data(as_text=True)
         )['message'])
