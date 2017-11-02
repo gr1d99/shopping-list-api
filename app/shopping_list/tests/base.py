@@ -10,7 +10,7 @@ from app import APP, DB
 from app.conf import app_config
 from app.auth.tests import LOGIN_URL, REGISTER_URL, LOGOUT_URL
 
-from . import PREFIX_ONE, PREFIX_TWO, CREATE_SHOPPINITEMS_URL, UPDATE_SHOPPINGITEMS_URL
+from . import PREFIX_ONE, PREFIX_TWO, CREATE_SHOPPINITEMS_URL, UPDATE_SHOPPINGITEMS_URL, DELETE_SHOPPINGITEMS_URL
 
 
 class TestShoppingListBase(TestCase):
@@ -268,5 +268,18 @@ class TestShoppingItemsBase(TestShoppingListBase):
         data = json.dumps(
             data)
 
-        print(url, data)
         return self.client.put(url, data=data, headers=headers, content_type=self.content_type)
+
+    def delete_shoppingitem(self, token, shoppinglistId, shoppingitemId):
+        """
+        Makes DELETE request as a client to delete associated shopping item.
+        :param token: user auth token.
+        :param id: shopping item id.
+        :return: response
+        """
+
+        url = DELETE_SHOPPINGITEMS_URL % dict(shl_id=shoppinglistId, shi_id=shoppingitemId)
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=token)
+        )
+        return self.client.delete(url, headers=headers, content_type=self.content_type)
