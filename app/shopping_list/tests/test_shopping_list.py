@@ -37,7 +37,7 @@ class TestShoppingList(TestShoppingListBase):
 
         # get auth token
         auth_token = json.loads(login_response.
-                                get_data(as_text=True).decode())['auth_token']
+                                get_data(as_text=True))['auth_token']
 
         # use auth_token to create shopping list.
         create_shl_response = self.create_shoppinglist(
@@ -64,12 +64,12 @@ class TestShoppingList(TestShoppingListBase):
         self.assertTrue(create_shl_response_data['data']['name'] == shl.name)
         self.assertTrue(create_shl_response_data['data']['created_on'] == shl.timestamp.strftime('%Y-%m-%d %H:%M:%S'))
         self.assertEqual(user.id, shl.owner_id)
-        
+
     def test_shoppinglist_with_duplicate_name(self):
         """
         Test user cannot create shopping lists with the same names.
         """
-        
+
         # register user
         resgistration_response = self.register_user()
 
@@ -84,22 +84,22 @@ class TestShoppingList(TestShoppingListBase):
 
         # get auth token
         auth_token = json.loads(login_response.
-                                get_data(as_text=True).decode())['auth_token']
+                                get_data(as_text=True))['auth_token']
 
         # create first shopping list.
         self.create_shoppinglist(
             token=auth_token, name=self.shopping_list.name
         )
-        
+
         second_create_response = self.create_shoppinglist(
             token=auth_token, name=self.shopping_list.name
         )
 
         # assert create shopping list response.
         self.assert400(second_create_response)
-        self.assertIn('fail', 
+        self.assertIn('fail',
                       second_create_response.get_data(as_text=True))
-        self.assertIn(shoppinglist_name_exists, 
+        self.assertIn(shoppinglist_name_exists,
                       second_create_response.get_data(as_text=True))
 
     def test_cannot_create_shopping_list_without_authentication(self):
@@ -132,7 +132,7 @@ class TestShoppingList(TestShoppingListBase):
 
         # get auth token
         auth_token = json.loads(login_response.
-                                get_data(as_text=True).decode())['auth_token']
+                                get_data(as_text=True))['auth_token']
 
         # shopping list name
         shl_list = [
@@ -180,7 +180,7 @@ class TestShoppingList(TestShoppingListBase):
 
         # get auth token
         auth_token = json.loads(login_response.
-                                get_data(as_text=True).decode())['auth_token']
+                                get_data(as_text=True))['auth_token']
 
         # shopping list name
         shl_list = [
@@ -266,7 +266,7 @@ class TestShoppingList(TestShoppingListBase):
 
         # get auth token
         auth_token = json.loads(login_response.
-                                get_data(as_text=True).decode())['auth_token']
+                                get_data(as_text=True))['auth_token']
 
         # shopping list name
         shl_list = [
@@ -316,7 +316,6 @@ class TestShoppingList(TestShoppingListBase):
 
         self.assertIn(shoppinglist_not_found, shopping_list_detail_response_data['message'])
 
-
     def test_user_can_update_shoppinglist(self):
 
         # register user
@@ -333,7 +332,7 @@ class TestShoppingList(TestShoppingListBase):
 
         # get auth token
         auth_token = json.loads(login_response.
-                                get_data(as_text=True).decode())['auth_token']
+                                get_data(as_text=True))['auth_token']
 
         # new info
         new_info = dict(
@@ -363,7 +362,7 @@ class TestShoppingList(TestShoppingListBase):
         self.assertIn(
             shoppinglist_updated, update_shoppinglist_response_data['message']
         )
-        
+
     def test_cannot_update_not_owned_shoppinglist(self):
 
         # register user
@@ -380,7 +379,7 @@ class TestShoppingList(TestShoppingListBase):
 
         # get auth token
         auth_token = json.loads(login_response.
-                                get_data(as_text=True).decode())['auth_token']
+                                get_data(as_text=True))['auth_token']
 
         # shopping list name
         name = 'myfirst_list'
@@ -394,7 +393,7 @@ class TestShoppingList(TestShoppingListBase):
         create_shoppinglist_response = self.create_shoppinglist(
             token=auth_token, name=name
         )
-        
+
         # use random id that we know it does not exist.
         id = 100009
 
@@ -414,7 +413,7 @@ class TestShoppingList(TestShoppingListBase):
         self.assertIn(
             shoppinglist_not_found, update_shoppinglist_response_data['message']
         )
-        
+
     def test_cannot_update_without_new_name(self):
         # register user
         resgistration_response = self.register_user()
@@ -430,7 +429,7 @@ class TestShoppingList(TestShoppingListBase):
 
         # get auth token
         auth_token = json.loads(login_response.
-                                get_data(as_text=True).decode())['auth_token']
+                                get_data(as_text=True))['auth_token']
 
         # shopping list name
         name = 'myfirst_list'
@@ -456,7 +455,7 @@ class TestShoppingList(TestShoppingListBase):
         # self.assertTrue(
         #     update_shoppinglist_response_data['status'] == 'fail'
         # )
- 
+
     def test_delete_shoppinglist(self):
         """
         Test user can delete shoppinglist instance using its id.
@@ -475,7 +474,7 @@ class TestShoppingList(TestShoppingListBase):
 
         # get auth token
         auth_token = json.loads(login_response.
-                                get_data(as_text=True).decode())['auth_token']
+                                get_data(as_text=True))['auth_token']
 
         # shopping list name
         name = 'myfirst_list'
@@ -521,10 +520,10 @@ class TestShoppingList(TestShoppingListBase):
 
         # get auth tokens
         user_one_auth_token = json.loads(login_one_response.
-                                         get_data(as_text=True).decode())['auth_token']
-        
+                                         get_data(as_text=True))['auth_token']
+
         user_two_auth_token = json.loads(login_two_response.
-                                         get_data(as_text=True).decode())['auth_token']
+                                         get_data(as_text=True))['auth_token']
         
         # assert tokens are not equal.
         self.assertTrue(user_one_auth_token != user_two_auth_token)
