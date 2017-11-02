@@ -45,7 +45,7 @@ class TestUserAuth(TestBase):
 
         # username and email we used to create user should be in
         # returned data.
-        self.assertIn(account_created, resp.get_data().decode())
+        self.assertIn(account_created, resp.get_data(as_text=True))
 
     def test_registration_without_username(self):
         """
@@ -121,7 +121,7 @@ class TestUserAuth(TestBase):
 
         self.assertStatus(second_reg_resp, 202)
         self.assertIn('User with that username exists',
-                      second_reg_resp.get_data().decode())
+                      second_reg_resp.get_data(as_text=True))
 
     @file_data("test_data/valid_userinfo.json")
     def test_register_with_existing_email(self, info):
@@ -135,7 +135,7 @@ class TestUserAuth(TestBase):
         second_resp = self.register_user(username="newusername", password=info[1], email=info[2])
 
         self.assertStatus(second_resp, 202)
-        self.assertIn('User with that email exists', second_resp.get_data().decode())
+        self.assertIn('User with that email exists', second_resp.get_data(as_text=True))
 
     def test_login_without_username(self):
         """
@@ -171,7 +171,7 @@ class TestUserAuth(TestBase):
         resp = self.login_user(username="someuser", password="somepassword")
 
         self.assert401(resp)
-        self.assertIn(incorrect_password_or_username, resp.get_data().decode())
+        self.assertIn(incorrect_password_or_username, resp.get_data(as_text=True))
 
     @file_data("test_data/valid_userinfo.json")
     def test_user_can_login(self, info):
@@ -184,7 +184,7 @@ class TestUserAuth(TestBase):
 
         # confirm registration response
         self.assertTrue(reg_resp.status_code == 201)
-        self.assertIn(account_created, reg_resp.get_data().decode())
+        self.assertIn(account_created, reg_resp.get_data(as_text=True))
 
         # login user
         resp = self.login_user(username=info[0], password=info[1])
@@ -192,9 +192,9 @@ class TestUserAuth(TestBase):
         self.assert200(resp)
 
         # a response should be sent containing access token and refresh_token
-        self.assertIn('Logged in', resp.get_data().decode())
-        self.assertIn('auth_token', resp.get_data().decode())
-        self.assertIn('refresh_token', resp.get_data().decode())
+        self.assertIn('Logged in', resp.get_data(as_text=True))
+        self.assertIn('auth_token', resp.get_data(as_text=True))
+        self.assertIn('refresh_token', resp.get_data(as_text=True))
 
     @file_data("test_data/valid_userinfo.json")
     def test_view_account_details(self, info):
@@ -207,15 +207,15 @@ class TestUserAuth(TestBase):
 
         # confirm registration response
         self.assertTrue(reg_resp.status_code == 201)
-        self.assertIn(account_created, reg_resp.get_data().decode())
+        self.assertIn(account_created, reg_resp.get_data(as_text=True))
 
         # login user
         resp = self.login_user(username=info[0], password=info[1])
 
         self.assert200(resp)
-        self.assertIn('Logged in', resp.get_data().decode())
+        self.assertIn('Logged in', resp.get_data(as_text=True))
 
-        token = json.loads(resp.get_data().decode())['auth_token']
+        token = json.loads(resp.get_data(as_text=True))['auth_token']
 
         # get user details
         view_resp = self.get_user_details(token)
@@ -228,9 +228,9 @@ class TestUserAuth(TestBase):
 
         # assert response and data
         self.assert200(view_resp)
-        self.assertIn(user.username, view_resp.get_data().decode())
-        self.assertIn(user.email, view_resp.get_data().decode())
-        self.assertIn(date_joined, view_resp.get_data().decode())
+        self.assertIn(user.username, view_resp.get_data(as_text=True))
+        self.assertIn(user.email, view_resp.get_data(as_text=True))
+        self.assertIn(date_joined, view_resp.get_data(as_text=True))
 
     @file_data("test_data/valid_userinfo.json")
     def test_update_user_details(self, info):
@@ -243,13 +243,13 @@ class TestUserAuth(TestBase):
 
         # confirm registration response
         self.assertTrue(reg_resp.status_code == 201)
-        self.assertIn(account_created, reg_resp.get_data().decode())
+        self.assertIn(account_created, reg_resp.get_data(as_text=True))
 
         # login user
         resp = self.login_user(username=info[0], password=info[1])
 
         self.assert200(resp)
-        self.assertIn('Logged in', resp.get_data().decode())
+        self.assertIn('Logged in', resp.get_data(as_text=True))
 
         new_details = {
             'username': 'new_admin',
@@ -258,12 +258,12 @@ class TestUserAuth(TestBase):
         }
 
         # make update request
-        token = json.loads(resp.get_data().decode())['auth_token']
+        token = json.loads(resp.get_data(as_text=True))['auth_token']
         update_resp = self.update_user_info(token=token, data=new_details)
 
         data = json.loads(update_resp.get_data(as_text=True))['data']
         self.assert200(update_resp)
-        self.assertIn("Account updated", update_resp.get_data().decode())
+        self.assertIn("Account updated", update_resp.get_data(as_text=True))
         self.assertTrue(new_details.get('username') == data['username'])
         self.assertTrue(new_details.get('email') == data['email'])
 
@@ -285,19 +285,19 @@ class TestUserAuth(TestBase):
 
         # confirm first user registration response
         self.assertStatus(registration1_response, 201)
-        self.assertIn(account_created, registration2_response.get_data().decode())
+        self.assertIn(account_created, registration2_response.get_data(as_text=True))
 
         # confirm second user registration response
         self.assertTrue(registration1_response.status_code == 201)
-        self.assertIn(account_created, registration2_response.get_data().decode())
+        self.assertIn(account_created, registration2_response.get_data(as_text=True))
 
         # login first user
         login1_resp = self.login_user(username=info[0], password=info[1])
-        token = json.loads(login1_resp.get_data().decode())['auth_token']
+        token = json.loads(login1_resp.get_data(as_text=True))['auth_token']
 
         # assert first user login response
         self.assert200(login1_resp)
-        self.assertIn('Logged in', login1_resp.get_data().decode())
+        self.assertIn('Logged in', login1_resp.get_data(as_text=True))
 
         # details that the first user intends to update
         new_details2 = {
@@ -320,9 +320,9 @@ class TestUserAuth(TestBase):
         self.assertStatus(update_det2, 400)
         self.assertStatus(update_det3, 400)
         self.assertIn("User with %(uname)s exists" % dict(uname=target_username),
-                      update_det2.get_data().decode())
+                      update_det2.get_data(as_text=True))
         self.assertIn("User with %(email)s exists" % dict(email=target_email),
-                      update_det3.get_data().decode())
+                      update_det3.get_data(as_text=True))
 
     @file_data("test_data/valid_userinfo.json")
     def test_logout(self, info):
@@ -330,8 +330,7 @@ class TestUserAuth(TestBase):
         Test user can logout successfully..
         """
 
-        # register user first
-        # register
+        # register user.
         reg_resp = self.register_user(username=info[0], password=info[1], email=info[2])
         _reg_response = json.loads(reg_resp.get_data(as_text=True))
 
@@ -352,7 +351,7 @@ class TestUserAuth(TestBase):
 
         # assert response, response will be ok regardless
         response = json.loads(
-            logout_resp.get_data().decode()
+            logout_resp.get_data(as_text=True)
         )
         self.assertTrue(response['status'] == 'success')
         self.assertTrue(response['message'] == 'Successfully logged out')
@@ -386,7 +385,7 @@ class TestUserAuth(TestBase):
         self.logout_user(token)
 
         login_response = self.get_user_details(token)
-        data = json.loads(login_response.get_data().decode())
+        data = json.loads(login_response.get_data(as_text=True))
         self.assertStatus(login_response, 401)
         self.assertTrue(data['msg'] == 'Token has been revoked')
 
@@ -463,7 +462,7 @@ class TestUserAuth(TestBase):
         )
 
         # get data returned
-        reset_response_data = json.loads(reset_response.get_data(as_text=True).decode())
+        reset_response_data = json.loads(reset_response.get_data(as_text=True))
 
         # assert reset password response
         self.assert200(reset_response)
@@ -476,7 +475,7 @@ class TestUserAuth(TestBase):
             password=new_password
         )
 
-        login2_response_data = json.loads(login2_response.get_data(as_text=True).decode())
+        login2_response_data = json.loads(login2_response.get_data(as_text=True))
 
         # assert login after reset
         self.assert200(login_response)
@@ -518,7 +517,7 @@ class TestUserAuth(TestBase):
         )
 
         # get data returned
-        reset_response_data = json.loads(reset_response.get_data(as_text=True).decode())
+        reset_response_data = json.loads(reset_response.get_data(as_text=True))
 
         # assert reset password response
         self.assert401(reset_response)
@@ -560,7 +559,7 @@ class TestUserAuth(TestBase):
         )
 
         # get data returned
-        reset_response_data = json.loads(reset_response.get_data(as_text=True).decode())
+        reset_response_data = json.loads(reset_response.get_data(as_text=True))
 
         # assert reset password response
         self.assert200(reset_response)
@@ -602,7 +601,7 @@ class TestUserAuth(TestBase):
         )
 
         # get data returned
-        reset_response_data = json.loads(reset_response.get_data(as_text=True).decode())
+        reset_response_data = json.loads(reset_response.get_data(as_text=True))
 
         # assert reset password response
         self.assert200(reset_response)
@@ -644,7 +643,7 @@ class TestUserAuth(TestBase):
         )
 
         # get data returned
-        reset_response_data = json.loads(reset_response.get_data(as_text=True).decode())
+        reset_response_data = json.loads(reset_response.get_data(as_text=True))
 
         # assert reset password response
         self.assert401(reset_response)
@@ -686,10 +685,38 @@ class TestUserAuth(TestBase):
         )
 
         # get data returned
-        reset_response_data = json.loads(reset_response.get_data(as_text=True).decode())
+        reset_response_data = json.loads(reset_response.get_data(as_text=True))
 
         # assert reset password response
         self.assert401(reset_response)
         self.assertTrue(reset_response_data['status'] == 'fail')
         self.assertTrue(reset_response_data['message'] == passwords_donot_match)
 
+    @file_data("test_data/valid_userinfo.json")
+    def test_delete_account(self, info):
+        """
+        Test client can delete his/her account permanently.
+        """
+
+        # register user.
+        reg_resp = self.register_user(username=info[0], password=info[1], email=info[2])
+        _reg_response = json.loads(reg_resp.get_data(as_text=True))
+
+        # confirm registration response
+        self.assertTrue(reg_resp.status_code == 201)
+        self.assertIn(account_created, _reg_response['message'])
+
+        # login user
+        resp = self.login_user(username=info[0], password=info[1])
+
+        self.assert200(resp)
+        _response = json.loads(resp.get_data(as_text=True))
+        self.assertIn('Logged in', _response['message'])
+
+        # logout user
+        token = _response['auth_token']
+
+        # make delete request.
+        delete_response = self.delete_user(token=token)
+
+        self.assertStatus(delete_response, 204)
