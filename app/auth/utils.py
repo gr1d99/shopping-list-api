@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+
+"""
+Contains authentication resource endpoints argument parsers.
+"""
+
 from collections import OrderedDict
 
 from webargs import fields, validate
