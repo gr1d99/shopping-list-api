@@ -4,13 +4,14 @@ Contains TestShoppingList Base class for all shopping list funtionalities.
 import collections
 
 from flask import json
+from flask_restful import url_for
 from flask_testing import TestCase
 
 from app import APP, DB
 from app.conf import app_config
 from app.auth.tests import LOGIN_URL, REGISTER_URL, LOGOUT_URL
 
-from . import PREFIX_ONE, PREFIX_TWO, CREATE_SHOPPINITEMS_URL, UPDATE_SHOPPINGITEMS_URL, DELETE_SHOPPINGITEMS_URL
+from . import ALL_SHOPPINGITEMS_URL, PREFIX_ONE, PREFIX_TWO, CREATE_SHOPPINGITEMS_URL, UPDATE_SHOPPINGITEMS_URL, DELETE_SHOPPINGITEMS_URL
 
 
 class TestShoppingListBase(TestCase):
@@ -213,6 +214,21 @@ class TestShoppingListBase(TestCase):
 
         return self.client.delete(url, headers=headers, content_type=self.content_type)
 
+    def search_shoppinglist(self, token, keyword):
+        """
+        Method to make search shopping lists.
+        :param token: user auth token.
+        :param keyword: word used to make search.
+        :return: response.
+        """
+
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=token)
+        )
+
+        url = url_for('shoppinglist_search', q=keyword)
+        return self.client.get(url, content_type=self.content_type, headers=headers)
+
 
 class TestShoppingItemsBase(TestShoppingListBase):
     def setUp(self):
@@ -234,7 +250,7 @@ class TestShoppingItemsBase(TestShoppingListBase):
         headers = dict(
             Authorization='Bearer %(token)s' % dict(token=token)
         )
-        url = CREATE_SHOPPINITEMS_URL % (dict(id=shoppinglistId))
+        url = CREATE_SHOPPINGITEMS_URL % dict(id=shoppinglistId)
         return self.client.post(url, data=data, headers=headers, content_type=self.content_type)
 
     def get_shoppingitems(self, token, shoppinglistId):
@@ -248,7 +264,7 @@ class TestShoppingItemsBase(TestShoppingListBase):
         headers = dict(
             Authorization='Bearer %(token)s' % dict(token=token)
         )
-        url = CREATE_SHOPPINITEMS_URL % (dict(id=shoppinglistId))
+        url = CREATE_SHOPPINGITEMS_URL % (dict(id=shoppinglistId))
         return self.client.get(url, headers=headers, content_type=self.content_type)
 
     def update_shoppingitem(self, token, shoppinglistId, shoppingitemId, data):
