@@ -1,6 +1,7 @@
 """
-Contains TestShoppingList Base class for all shopping list funtionalities.
+Contains TestShoppingList Base class for all shopping list functionalities.
 """
+
 import collections
 
 from flask import json
@@ -73,8 +74,11 @@ class TestShoppingListBase(TestCase):
             password=self.user.password
         )
 
-        return self.client.post(
-            LOGIN_URL, data=json.dumps(cridentials), content_type=self.content_type)
+        url = url_for('user_login')
+
+        data = json.dumps(cridentials)
+
+        return self.client.post(url, data=data, content_type=self.content_type)
 
     def login_user_two(self):
         """
