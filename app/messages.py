@@ -34,3 +34,6 @@ invalid_limit = 'limit parameter should be an integer'
 invalid_page = 'page parameter should be an integer'
 negative_limit = 'limit parameter should be an integer greater than 0'
 negative_page = 'page parameter should be an integer greater than 0'
+
+# search messages.
+search_not_found = "Your search did not match any shoppings, try again."
