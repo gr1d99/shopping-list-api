@@ -28,3 +28,9 @@ shoppingitem_updated = 'Shopping item updated'
 
 # server error message
 server_error = 'Server error, try again'
+
+# url params error messages
+invalid_limit = 'limit parameter should be an integer'
+invalid_page = 'page parameter should be an integer'
+negative_limit = 'limit parameter should be an integer greater than 0'
+negative_page = 'page parameter should be an integer greater than 0'
