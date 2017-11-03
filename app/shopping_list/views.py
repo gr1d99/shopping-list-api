@@ -12,14 +12,14 @@ from webargs import validate
 from webargs.flaskparser import use_args
 
 from .utils import \
-    (search_args, shoppinglist_args, shoppinglist_update_args, shoppingitem_create_args,
+    (prep_keyword, search_args, shoppinglist_args, shoppinglist_update_args, shoppingitem_create_args,
      shoppingitem_update_args, urlmaker)
 from ..conf.settings import MAX_ITEMS_PER_PAGE
 from ..core.loggers import AppLogger
 from ..messages import \
     (shoppingitem_created, shoppingitem_exists, shoppingitem_not_found, shoppingitem_updated,
      shoppinglist_created, shoppinglist_not_found, shoppinglist_name_exists,
-     shoppinglist_updated, invalid_limit, invalid_page, negative_page, negative_limit)
+     shoppinglist_updated, invalid_limit, invalid_page, negative_page, negative_limit, search_not_found)
 from ..models import User, ShoppingList, ShoppingItem
 
 
@@ -673,3 +673,36 @@ class SearchShoppingListApi(Resource):
         Handles GET request to search for shoppinglist.
         """
 
+        response = {}
+
+        page = args.get('page', 1)
+        limit = args.get('limit', MAX_ITEMS_PER_PAGE)
+
+        current_user = get_jwt_identity()
+
+        user = User.get_user(current_user)
+
+        _term = args.get('q')
+
+        term = prep_keyword(_term)
+
+        shoppinglists = user.shopping_lists.filter(ShoppingList.name.ilike(term)).paginate(page, limit)
+
+        if any(shoppinglists.items):
+            response.setdefault('total_pages', shoppinglists.pages)
+            results = [shl.name for shl in shoppinglists.items]
+            response.setdefault('results', results)
+
+            if shoppinglists.has_prev:
+                previous_page = urlmaker(request, shoppinglists.prev_num, limit)
+                response.setdefault('previous_page', previous_page)
+
+            if shoppinglists.has_next:
+                next_page = urlmaker(request, shoppinglists.next_num, limit)
+                response.setdefault('next_page', next_page)
+
+        else:
+            response.setdefault('message', search_not_found)
+            response.setdefault('results', [])
+
+        return make_response(jsonify(response), 200)
