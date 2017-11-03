@@ -7,9 +7,8 @@
             3. `ShoppingItem`
 """
 import datetime as dt
-import jwt
 
-from app import APP, DB
+from app import DB
 from .core.exceptions import UsernameExists, EmailExists
 from .db.base import BaseUserManager, BaseModel
 from .utils.date_helpers import datetime
