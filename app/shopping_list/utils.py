@@ -63,4 +63,11 @@ class MakePaginationUrls(object):
 
         return url
 
+
+def prep_keyword(keyword):
+    operator = '%'
+    _term = '%(op)s%(kw)s%(op)s'
+    term = _term % dict(op=operator, kw=keyword)
+    return term
+
 urlmaker = MakePaginationUrls
