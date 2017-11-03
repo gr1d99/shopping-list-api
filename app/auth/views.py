@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+
+"""
+App module containing client authentication and account management resources.
+"""
+
 from flask import jsonify, make_response, request
 from flask_jwt_extended import \
     (create_access_token, jwt_required, get_jwt_identity,
@@ -5,17 +11,15 @@ from flask_jwt_extended import \
 from flask_restful import Resource
 from webargs.flaskparser import use_args
 
-from ..messages \
-    import (username_exists, email_exists, account_created, incorrect_password_or_username,
-            incorrect_old_password, passwords_donot_match, password_changed,
-            username_or_email_required)
-from ..models import User, BlacklistToken
+from app.core.loggers import AppLogger
 from .utils import login_args, registration_args, reset_password_args
+from ..messages import *
+from ..models import User, BlacklistToken
 
 
 class UserRegisterApi(Resource):
     """
-    A resource to handle user registration.
+    A resource to handle client registration.
 
     Only accepts POST request.
     """
@@ -31,7 +35,6 @@ class UserRegisterApi(Resource):
         password = str(data.get('password'))
 
         try:
-
             # create user instance
             user = User(username=username, password=password, email=email)
 
@@ -57,7 +60,7 @@ class UserRegisterApi(Resource):
                         status='fail'
                     )), 202)
 
-            # if username and email are okey call the save method.
+            # if username and email are okay call the save method.
             user.save()
 
             return make_response(
@@ -67,6 +70,7 @@ class UserRegisterApi(Resource):
                 )), 201)
 
         except Exception as e:
+            AppLogger(self.__class__.__name__).logger.error(e)
             return make_response(
                 jsonify(dict(status='fail', message=e)), 500
             )
@@ -74,17 +78,18 @@ class UserRegisterApi(Resource):
 
 class UserLoginApi(Resource):
     """
-    A resource to handle user login.
+    A resource to handle client login.
 
-    Only accepts post requests
+    Only accepts post requests.
     """
 
     @use_args(login_args)
     def post(self, data):
         """
         Handle POST request.
-        :param data: username and password
+        :param data: username and password.
         """
+
         username = data.get('username')
         password = str(data.get('password'))
 
@@ -99,6 +104,7 @@ class UserLoginApi(Resource):
                     )), 401
                 )
 
+            # verify client password.
             if user.verify_password(password):
                 token = create_access_token(identity=username)
                 refresh_token = create_refresh_token(identity=username)
@@ -112,26 +118,26 @@ class UserLoginApi(Resource):
                     )), 200)
 
         except Exception as e:
+            AppLogger(self.__class__.__name__).logger.error(e)
             return make_response(
-                jsonify(dict(status='fail', message=e)), 500
-            )
+                jsonify(dict(status='fail', message=e)), 500)
 
 
 class UserProfileApi(Resource):
     """
-    A resource to handle retrieval and updating of user account.
+    A resource to handle retrieval and updating of client account.
     """
+
     @jwt_required
     def get(self):
         """
         A method to handle get request.
         """
 
-        # get current user identity
+        # get current client identity.
         current_user = get_jwt_identity()
 
-        # if current user exists query details and send response back
-        # to client.
+        # if current client exists query details and send response back.
         if current_user:
             user = User.query.filter_by(username=current_user).first()
 
@@ -140,18 +146,18 @@ class UserProfileApi(Resource):
                              data=dict(username=user.username,
                                        email=user.email,
                                        date_joined=user.date_joined)
-                             )), 200
-            )
+                             )), 200)
 
     @jwt_required
     def put(self):
         """
         Handles PUT request to update user details.
         """
+
         try:
             current_user = get_jwt_identity()
             if current_user:
-                # query user
+                # query user.
                 user = User.query.filter_by(username=current_user).first()
 
                 if user:
@@ -159,7 +165,7 @@ class UserProfileApi(Resource):
                     email = request.json.get('email', None)
                     password = request.json.get('password', None)
 
-                    # use if else statement to check if user
+                    # use if else statement to check if client
                     # has provided any data. if not we will
                     # not return any errors, instead we will
                     # not make any update.
@@ -233,7 +239,7 @@ class UserProfileApi(Resource):
                 )
 
         except Exception as e:
-            print(e)
+            AppLogger(self.__class__.__name__).logger.error(e)
             return make_response(
                 jsonify(dict(
                     status='fail',
@@ -243,7 +249,7 @@ class UserProfileApi(Resource):
     @jwt_required
     def delete(self):
         """
-        Handles DELETE request to remove/delete user from database.
+        Handles DELETE request to remove/delete client from database.
         :return: response
         """
 
@@ -261,13 +267,15 @@ class UserProfileApi(Resource):
 
 class UserLogoutApi(Resource):
     """
-    Resource to logout users and blacklist tokens.
+    Resource to logout client and blacklist tokens.
     """
+
     @jwt_required
     def delete(self):
         """
         Make delete request.
         """
+
         jti = get_raw_jwt()['jti']
         BlacklistToken(token=jti).save()
 
@@ -361,4 +369,3 @@ class RefreshTokenApi(Resource):
             jsonify(dict(
                 access_token=create_refresh_token(identity=current_user)
             )), 200)
-
