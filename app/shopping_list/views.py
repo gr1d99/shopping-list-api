@@ -5,24 +5,25 @@ Contains all Resources to manage crud operations of user shopping lists
 and shopping items.
 """
 
-from collections import OrderedDict
-
-from flask import abort, jsonify, make_response
+from flask import jsonify, make_response, request
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from webargs import ValidationError, validate
+from webargs import validate
 from webargs.flaskparser import use_args
 
-from .utils import shoppinglist_args, shoppinglist_update_args, shoppingitem_create_args, shoppingitem_update_args
+from .utils import \
+    (search_args, shoppinglist_args, shoppinglist_update_args, shoppingitem_create_args,
+     shoppingitem_update_args, urlmaker)
+from ..conf.settings import MAX_ITEMS_PER_PAGE
 from ..core.loggers import AppLogger
 from ..messages import \
     (shoppingitem_created, shoppingitem_exists, shoppingitem_not_found, shoppingitem_updated,
-     shoppinglist_created, shoppinglist_not_found, shoppinglist_deleted, shoppinglist_name_exists,
-     shoppinglist_updated, user_not_found, valid_integer_required)
+     shoppinglist_created, shoppinglist_not_found, shoppinglist_name_exists,
+     shoppinglist_updated, invalid_limit, invalid_page, negative_page, negative_limit)
 from ..models import User, ShoppingList, ShoppingItem
 
 
-class UserShoppingListsApi(Resource):
+class ShoppingListsApi(Resource):
     """
     Resource to handle fetching of specific user shopping lists.
     """
@@ -32,21 +33,100 @@ class UserShoppingListsApi(Resource):
         """
         Handle GET request and takes user authentication token.
         """
+        response = {}
+
+        has_page = False
+        has_limit = False
+
+        page = None
+        limit = None
+
+        prev_page_url = None
+        next_page_url = None
+
+        def params_error(error):
+            return make_response(
+                jsonify(dict(
+                    status='fail',
+                    message=error
+                )), 400
+            )
+
         current_user = get_jwt_identity()
 
         user = User.query.filter_by(username=current_user).first()
 
-        # create a list which contains shopping list id and shopping list name/
-        user_shopping_list = [{'id': shl.id, 'name': shl.name, 'is_active': shl.is_active}
-                              for shl in user.shopping_lists.all()]
+        args = request.args
+
+        if 'page' in args:
+            has_page = True
+            page = args.get('page', 1)
+
+            try:
+                page = int(page)
+
+            except ValueError:
+                return params_error(invalid_page)
+
+            if page < 0:
+                return params_error(negative_page)
+
+        if 'limit' in args:
+            limit = args.get('limit')
+            has_limit = True
+
+            try:
+                limit = int(limit)
+
+            except ValueError:
+                return params_error(invalid_limit)
+
+            if limit < 0:
+                return params_error(negative_limit)
+
+        if any([has_limit, has_page]):
+
+            if not limit:
+                limit = MAX_ITEMS_PER_PAGE
+
+            paginated = user.shopping_lists.paginate(page=page, per_page=limit, error_out=False)
+
+            if paginated.has_prev:
+                prev_page_url = urlmaker(request, paginated.prev_num, limit).make_url()
+
+            if paginated.has_next:
+                next_page_url = urlmaker(request, paginated.next_num, limit).make_url()
+
+            output = [{
+                'id': shl.id,
+                'name': shl.name,
+                'is_active': shl.is_active} for shl in paginated.items]
+
+            response.setdefault('total_pages', paginated.pages)
+
+            response.setdefault('shopping_lists', output)
+
+            if prev_page_url:
+                response.setdefault('previous page', prev_page_url)
+
+            if next_page_url:
+                response.setdefault('next page', next_page_url)
+
+        else:
+            shoppinglists = user.shopping_lists.all()
+
+            output = [{
+                'id': shl.id,
+                'name': shl.name,
+                'is_active': shl.is_active} for shl in shoppinglists]
+
+            response.setdefault('shopping_lists', output)
 
         return make_response(
             jsonify(dict(
                 status='success',
-                message=dict(
-                    shopping_lists=user_shopping_list
-                )
-            ))
+                message=response
+            )), 200
         )
 
     @use_args(shoppinglist_args)
@@ -95,7 +175,7 @@ class UserShoppingListsApi(Resource):
         )
 
 
-class UserShoppingListDetailApi(Resource):
+class ShoppingListDetailApi(Resource):
     """
     Resource that handles specific user shopping list and accepts
     http methods GET, PUT and DELETE only. This resource also accepts
@@ -109,6 +189,26 @@ class UserShoppingListDetailApi(Resource):
         :param id: id of shopping list.
         :return: json data.
         """
+
+        data = {}
+
+        has_page = False
+        has_limit = False
+
+        page = None
+        limit = None
+
+        prev_page_url = None
+        next_page_url = None
+
+        def params_error(error):
+            return make_response(
+                jsonify(dict(
+                    status='fail',
+                    message=error
+                )), 400
+            )
+
         current_user = get_jwt_identity()
 
         # get user instance.
@@ -117,7 +217,7 @@ class UserShoppingListDetailApi(Resource):
         # get shopping list using provided id, if not found raise error 404 and
         # return response to client.
         try:
-            shopping_list = user.shopping_lists.filter_by(id=int(id)).first_or_404()
+            shoppinglist = user.shopping_lists.filter_by(id=int(id)).first_or_404()
 
         except Exception as e:
             AppLogger(self.__class__.__name__).logger.warning(e)
@@ -128,25 +228,72 @@ class UserShoppingListDetailApi(Resource):
                 )), 404
             )
 
-        # construct response for client.
-        response = OrderedDict(
-            [
-                ('status', 'success'),
-                ('message', OrderedDict(
-                    [
-                        ('id', shopping_list.id),
-                        ('owner', current_user),
-                        ('name', shopping_list.name),
-                        ('is_active', shopping_list.is_active),
-                        ('created_on', shopping_list.timestamp.strftime("%Y-%m-%d %H:%M:%S")),
-                        ('updated_on', shopping_list.updated.strftime("%Y-%m-%d %H:%M:%S"))
-                    ]
-                )),
-            ]
-        )
+        args = request.args
 
+        if 'page' in args:
+            has_page = True
+            page = args.get('page', 1)
+
+            try:
+                page = int(page)
+
+            except ValueError:
+                return params_error(invalid_page)
+
+            if page < 0:
+                return params_error(negative_page)
+
+        if 'limit' in args:
+            limit = args.get('limit')
+            has_limit = True
+
+            try:
+                limit = int(limit)
+
+            except ValueError:
+                return params_error(invalid_limit)
+
+            if limit < 0:
+                return params_error(negative_limit)
+
+        if any([has_limit, has_page]):
+
+            if not limit:
+                limit = MAX_ITEMS_PER_PAGE
+
+            paginated = shoppinglist.shopping_items.paginate(page=page, per_page=limit, error_out=False)
+
+            if paginated.has_prev:
+                prev_page_url = urlmaker(request, paginated.prev_num, limit).make_url()
+
+            if paginated.has_next:
+                next_page_url = urlmaker(request, paginated.next_num, limit).make_url()
+
+            output = [{'name': item.name} for item in paginated.items]
+
+            data.setdefault('total pages', paginated.pages)
+
+            data.setdefault('shopping items', output)
+
+            if prev_page_url:
+                data.setdefault('previous page', prev_page_url)
+
+            if next_page_url:
+                data.setdefault('next page', next_page_url)
+
+        else:
+            items = [item.name for item in shoppinglist.shopping_items.all()]
+            data.setdefault('shopping items', items)
+
+        data.setdefault('id', shoppinglist.id)
+        data.setdefault('name', shoppinglist.name)
+        data.setdefault('created_on', shoppinglist.timestamp.strftime("%Y-%m-%d %H:%M:%S"))
+        data.setdefault('updated_on', shoppinglist.updated.strftime("%Y-%m-%d %H:%M:%S"))
         return make_response(
-            jsonify(response), 200
+            jsonify(dict(
+                status='success',
+                message=data
+            )), 200
         )
 
     @use_args(shoppinglist_update_args)
@@ -265,10 +412,9 @@ class UserShoppingListDetailApi(Resource):
             )
 
 
-# shoppingitems.
-class ShoppingItemApi(Resource):
+class ShoppingItemDetailApi(Resource):
     """
-    Resource to manage POST request.
+    Handles CRUD functionality for a single shopping item for a specific user.
     """
 
     @jwt_required
@@ -513,3 +659,17 @@ class ShoppingItemApi(Resource):
 
         # return response to client.
         return {}, 204
+
+
+class SearchShoppingListApi(Resource):
+    """
+    Search shopping lists names using provided keywords
+    """
+
+    @use_args(search_args)
+    @jwt_required
+    def get(self, args):
+        """
+        Handles GET request to search for shoppinglist.
+        """
+
