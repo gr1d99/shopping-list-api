@@ -1,6 +1,9 @@
 import collections
 
+from flask import jsonify, make_response
 from webargs import fields, validate
+
+from ..messages import invalid_limit, invalid_page, negative_limit, negative_page
 
 shoppinglist_args = collections.OrderedDict(
     [
@@ -30,3 +33,34 @@ shoppingitem_update_args = collections.OrderedDict(
         ('bought', fields.Bool(required=False))
     ]
 )
+
+pagination_args = collections.OrderedDict(
+    [
+        ('page', fields.Int(required=False)),
+        ('limit', fields.Int(required=False))
+    ]
+)
+
+search_args = collections.OrderedDict(
+    [
+        ('q', fields.Str(required=True, location='querystring')),
+    ]
+)
+
+
+class MakePaginationUrls(object):
+    def __init__(self, request, page, limit):
+        self.request = request
+        self.page = page
+        self.limit = limit
+
+    def make_url(self):
+        _url = "%(base)s?page=%(page)s&limit=%(limit)s"
+
+        url = _url % dict(base=self.request.base_url,
+                          page=self.page,
+                          limit=self.limit)
+
+        return url
+
+urlmaker = MakePaginationUrls
