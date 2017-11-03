@@ -583,4 +583,14 @@ class TestShoppingList(TestShoppingListBase):
             self.create_shoppinglist(token=auth_token, name=shopping)
 
         # search for shoppinglists starting with `B`
-        search_response = self.search_shoppinglist(token=auth_token, keyword='B')
+        search_response = self.search_shoppinglist(token=auth_token, keyword='b')
+
+        # get results.
+        search_response_data = json.loads(
+            search_response.get_data(as_text=True))
+
+        print(search_response_data)
+
+        self.assert200(search_response)
+        self.assertTrue(
+            len(search_response_data['results']) == 2)
