@@ -44,6 +44,8 @@ pagination_args = collections.OrderedDict(
 search_args = collections.OrderedDict(
     [
         ('q', fields.Str(required=True, location='querystring')),
+        ('page', fields.Int(required=False, location='querystring')),
+        ('limit', fields.Int(required=False, location='querystring')),
     ]
 )
 
