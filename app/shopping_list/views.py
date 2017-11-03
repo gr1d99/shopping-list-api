@@ -684,6 +684,13 @@ class SearchShoppingListApi(Resource):
 
         _term = args.get('q')
 
+        if _term == '':
+            return make_response(
+                jsonify(dict(
+                    message="please provide a value"
+                )), 400
+            )
+
         term = prep_keyword(_term)
 
         shoppinglists = user.shopping_lists.filter(ShoppingList.name.ilike(term)).paginate(page, limit)
@@ -694,11 +701,11 @@ class SearchShoppingListApi(Resource):
             response.setdefault('results', results)
 
             if shoppinglists.has_prev:
-                previous_page = urlmaker(request, shoppinglists.prev_num, limit)
+                previous_page = urlmaker(request, shoppinglists.prev_num, limit).make_url()
                 response.setdefault('previous_page', previous_page)
 
             if shoppinglists.has_next:
-                next_page = urlmaker(request, shoppinglists.next_num, limit)
+                next_page = urlmaker(request, shoppinglists.next_num, limit).make_url()
                 response.setdefault('next_page', next_page)
 
         else:
