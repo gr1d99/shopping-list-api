@@ -1,4 +1,8 @@
-import collections
+# -*- coding: utf-8 -*-
+
+"""
+Contains authentication url definations.
+"""
 
 from flask import Blueprint
 
@@ -6,21 +10,12 @@ from app import API
 
 auth_blueprint = Blueprint('auth', __name__)
 
-
 from .views import (RefreshTokenApi, ResetPasswordApi, UserRegisterApi,
                     UserLoginApi, UserLogoutApi, UserProfileApi)
 
-url = collections.namedtuple('url', ['route', 'resource'])
-
-auth_urls = [
-    url('auth/users', UserProfileApi),
-    url('auth/register', UserRegisterApi),
-    url('auth/login', UserLoginApi),
-    url('auth/logout', UserLogoutApi),
-    url('auth/refresh-token', RefreshTokenApi),
-    url('auth/reset-password', ResetPasswordApi),
-]
-
-
-for url in auth_urls:
-    API.add_resource(url.resource, url.route)
+API.add_resource(UserProfileApi, 'auth/users', endpoint="user_detail")
+API.add_resource(UserRegisterApi, 'auth/register', endpoint="user_register")
+API.add_resource(UserLoginApi, 'auth/login', endpoint="user_login")
+API.add_resource(UserLogoutApi, 'auth/logout', endpoint="user_logout")
+API.add_resource(RefreshTokenApi, 'auth/refresh-token', endpoint="token_refresh")
+API.add_resource(ResetPasswordApi, 'auth/reset-password', endpoint="password_reset")
