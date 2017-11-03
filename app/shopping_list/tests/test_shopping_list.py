@@ -234,10 +234,6 @@ class TestShoppingList(TestShoppingListBase):
         )
 
         self.assertTrue(
-            shopping_list_detail_response_data['message'].get('owner') == self.user.username
-        )
-
-        self.assertTrue(
             shopping_list_detail_response_data['message'].get('name') == shl.name
         )
 
@@ -460,6 +456,7 @@ class TestShoppingList(TestShoppingListBase):
         """
         Test user can delete shoppinglist instance using its id.
         """
+
         # register user
         resgistration_response = self.register_user()
 
@@ -556,3 +553,34 @@ class TestShoppingList(TestShoppingListBase):
         self.assertTrue(shoppinglist_not_found == json.loads(
             delete_response.get_data(as_text=True)
         )['message'])
+
+    def test_search(self):
+        """
+        Test client can search shoppinglists using names.
+        """
+
+        # register user
+        resgistration_response = self.register_user()
+
+        # assert registration response.
+        self.assertStatus(resgistration_response, 201)
+
+        # login created user.
+        login_response = self.login_user()
+
+        # assert login response.
+        self.assert200(login_response)
+
+        # get auth token
+        auth_token = json.loads(login_response.
+                                get_data(as_text=True))['auth_token']
+
+        # create shopping lists.
+        shoppinglists = [
+            'Birthday', 'School', 'Breakfast', 'Lunch', 'Camping']
+
+        for shopping in shoppinglists:
+            self.create_shoppinglist(token=auth_token, name=shopping)
+
+        # search for shoppinglists starting with `B`
+        search_response = self.search_shoppinglist(token=auth_token, keyword='B')
