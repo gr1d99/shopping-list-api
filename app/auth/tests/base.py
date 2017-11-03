@@ -1,12 +1,12 @@
 import collections
 from flask import json
+from flask_restful import url_for
 from flask_testing import TestCase
 
+from app import APP, DB
 
-from . import \
-    (app_config, APP, CONTENT_TYPE, DB, INVALID_EMAIL_ERR, LOGIN_URL, LOGOUT_URL,
-     REFRESH_USER_TOKEN_URL, REGISTER_URL, RESET_PASSWORD_URL, REQUIRED_FIELDS_ERR,
-     UPDATE_USER_DETAILS_URL, USER_DETAILS_URL, DELETE_CLIENT_ACCOUNT_URL)
+from app.conf import app_config
+from app.messages import *
 
 
 class TestBase(TestCase):
@@ -15,9 +15,10 @@ class TestBase(TestCase):
         super(TestBase, self).__init__(*args, **kwargs)
         # initialize to None because it is not defined in the
         # TestCase init
+        self.content_type = 'application/json'
         self.user_info = None
-        self.require_field_err = REQUIRED_FIELDS_ERR
-        self.invalid_email_err = INVALID_EMAIL_ERR
+        self.require_field_err = data_required
+        self.invalid_email_err = invalid_email
 
     def create_app(self):
         return APP
@@ -55,8 +56,11 @@ class TestBase(TestCase):
         the setUp method.
         """
 
-        return self.client.post(
-            LOGIN_URL, data=json.dumps(cridentials), content_type=CONTENT_TYPE)
+        data = json.dumps(cridentials)
+
+        url = url_for('user_login')
+
+        return self.client.post(url, data=data, content_type=self.content_type)
 
     def register_user(self, **details):
         """
@@ -66,8 +70,11 @@ class TestBase(TestCase):
         the setUp method.
         """
 
-        return self.client.post(
-            REGISTER_URL, data=json.dumps(dict(details)), content_type=CONTENT_TYPE)
+        data = json.dumps(details)
+
+        url = url_for('user_register')
+
+        return self.client.post(url, data=data, content_type=self.content_type)
 
     def logout_user(self, token):
         """
@@ -77,8 +84,10 @@ class TestBase(TestCase):
         headers = dict(
             Authorization='Bearer %(token)s' % dict(token=token)
         )
-        url = LOGOUT_URL
-        return self.client.delete(url, content_type=CONTENT_TYPE, headers=headers)
+
+        url = url_for('user_logout')
+
+        return self.client.delete(url, content_type=self.content_type, headers=headers)
 
     def get_user_details(self, token):
         """
@@ -86,32 +95,38 @@ class TestBase(TestCase):
         """
 
         headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token)
-        )
+            Authorization='Bearer %(token)s' % dict(token=token))
 
-        return self.client.get(USER_DETAILS_URL, content_type=CONTENT_TYPE, headers=headers)
+        url = url_for('user_detail')
+
+        return self.client.get(url, content_type=self.content_type, headers=headers)
 
     def update_user_info(self, token, data):
         """
          Helper method to make a PUT request to update user details.
          """
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token)
-        )
 
-        url = UPDATE_USER_DETAILS_URL
-        return self.client.put(url, data=json.dumps(data), content_type=CONTENT_TYPE, headers=headers)
+        data = json.dumps(data)
+
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=token))
+
+        url = url_for('user_detail')
+
+        return self.client.put(url, data=data, content_type=self.content_type, headers=headers)
 
     def refresh_user_token(self, token):
         """
          Helper method to make a PUT request to update user details.
          """
+
         headers = dict(
             Authorization='Bearer %(token)s' % dict(token=token)
         )
 
-        url = REFRESH_USER_TOKEN_URL
-        return self.client.post(url, content_type=CONTENT_TYPE, headers=headers)
+        url = url_for('token_refresh')
+
+        return self.client.post(url, content_type=self.content_type, headers=headers)
 
     def reset_password(self, **data):
         """
@@ -119,8 +134,10 @@ class TestBase(TestCase):
         """
 
         data = json.dumps(data)
-        url = RESET_PASSWORD_URL
-        return self.client.post(url, data=data, content_type=CONTENT_TYPE)
+
+        url = url_for('password_reset')
+
+        return self.client.post(url, data=data, content_type=self.content_type)
 
     def delete_user(self, token):
         """
@@ -129,8 +146,9 @@ class TestBase(TestCase):
         :return: resonse.
         """
 
-        url = DELETE_CLIENT_ACCOUNT_URL
+        url = url_for('user_detail')
+
         headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token)
-        )
-        return self.client.delete(url, headers=headers, content_type=CONTENT_TYPE)
+            Authorization='Bearer %(token)s' % dict(token=token))
+
+        return self.client.delete(url, headers=headers, content_type=self.content_type)
