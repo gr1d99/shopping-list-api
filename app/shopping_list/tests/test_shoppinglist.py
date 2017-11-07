@@ -521,20 +521,20 @@ class TestShoppingList(TestShoppingListBase):
 
         user_two_auth_token = json.loads(login_two_response.
                                          get_data(as_text=True))['auth_token']
-        
+
         # assert tokens are not equal.
         self.assertTrue(user_one_auth_token != user_two_auth_token)
-        
+
         # create shoppinglists.
-        
+
         user_one_create_shoppinglist_response = self.create_shoppinglist(
             token=user_one_auth_token, name='shl one'
         )
-        
+
         user_two_create_shoppinglist_response = self.create_shoppinglist(
             token=user_two_auth_token, name='shl two'
         )
-                
+
         # assert shoppinglist creations.
         self.assertStatus(user_one_create_shoppinglist_response, 201)
         self.assertStatus(user_two_create_shoppinglist_response, 201)
@@ -544,7 +544,7 @@ class TestShoppingList(TestShoppingListBase):
         id = json.loads(
             user_one_create_shoppinglist_response.get_data(as_text=True)
         )['data']['id']
-        
+
         # make delete request with user two.
         delete_response = self.delete_shoppinglist(user_two_auth_token, id=id)
 
@@ -588,8 +588,6 @@ class TestShoppingList(TestShoppingListBase):
         # get results.
         search_response_data = json.loads(
             search_response.get_data(as_text=True))
-
-        print(search_response_data)
 
         self.assert200(search_response)
         self.assertTrue(
