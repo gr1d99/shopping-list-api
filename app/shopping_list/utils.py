@@ -1,9 +1,18 @@
+# -*- coding: utf-8 -*-
+
+"""
+Contain helper argument parsers and classes for resources.
+"""
+
 import collections
 
-from flask import jsonify, make_response
 from webargs import fields, validate
 
-from ..messages import invalid_limit, invalid_page, negative_limit, negative_page
+__all__ = [
+    'detail_args', 'limit_args', 'pagination_args', 'prep_keyword',
+    'shoppingitem_update_args', 'search_args', 'shoppingitem_create_args',
+    'shoppinglist_args', 'shoppinglist_update_args', 'urlmaker'
+]
 
 shoppinglist_args = collections.OrderedDict(
     [
@@ -50,13 +59,36 @@ search_args = collections.OrderedDict(
 )
 
 
+limit_args = collections.OrderedDict(
+    [
+        ('page', fields.Int(required=False, location='querystring')),
+        ('limit', fields.Int(required=False, location='querystring')),
+    ]
+)
+
+detail_args = collections.OrderedDict(
+    [
+        ('id', fields.Int(required=True, location='query'))
+    ]
+)
+
+
 class MakePaginationUrls(object):
+    """
+    Generates previous page or next page urls.
+    """
+
     def __init__(self, request, page, limit):
         self.request = request
         self.page = page
         self.limit = limit
 
     def make_url(self):
+        """
+        Method to generate urls.
+        :return: url.
+        """
+
         _url = "%(base)s?page=%(page)s&limit=%(limit)s"
 
         url = _url % dict(base=self.request.base_url,
@@ -67,6 +99,12 @@ class MakePaginationUrls(object):
 
 
 def prep_keyword(keyword):
+    """
+    prepares keywords used for search.
+    :param keyword: raw text.
+    :return: formatted text.
+    """
+
     operator = '%'
     _term = '%(op)s%(kw)s%(op)s'
     term = _term % dict(op=operator, kw=keyword)
