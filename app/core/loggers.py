@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+
+"""
+Custom logger class to log errors and warnings of app during runtime.
+"""
+
 import os
 import logging
 
@@ -7,7 +13,15 @@ log_file = os.path.join(BASE_DIR, 'errors.log')
 
 
 class AppLogger(object):
+    """
+    Logger class.
+    """
     def __init__(self, name):
+        """
+        Initialize logger file handlers, formatters and streaming of logs.
+        :param name: name of the context within which the log is executed.
+        """
+
         self.logger = logging.Logger(name)
         self.logger.setLevel(logging.DEBUG)
 
