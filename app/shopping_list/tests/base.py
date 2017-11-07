@@ -1,5 +1,5 @@
 """
-Contains TestShoppingList Base class for all shopping list functionalities.
+Contains Base classes for all shopping list and shopping item functionalities.
 """
 
 import collections
@@ -8,11 +8,9 @@ from flask import json
 from flask_restful import url_for
 from flask_testing import TestCase
 
-from app import APP, DB
+from app import API, APP, DB
 from app.conf import app_config
-from app.auth.tests import LOGIN_URL, REGISTER_URL, LOGOUT_URL
-
-from . import ALL_SHOPPINGITEMS_URL, PREFIX_ONE, PREFIX_TWO, CREATE_SHOPPINGITEMS_URL, UPDATE_SHOPPINGITEMS_URL, DELETE_SHOPPINGITEMS_URL
+from app.shopping_list import views
 
 
 class TestShoppingListBase(TestCase):
@@ -22,7 +20,17 @@ class TestShoppingListBase(TestCase):
 
     def __init__(self, *args, **kwargs):
         super(TestShoppingListBase, self).__init__(*args, **kwargs)
+
         self.content_type = 'application/json'
+
+        # test data
+        _ = collections.namedtuple('User', ['username', 'password', 'email'])
+        __ = collections.namedtuple('ShoppingList', ['name', ])
+
+        self.user = _('gideon', 'gideonpassword', 'gideon@gmail.com')
+        self.user_two = _('user_two', "user_two_password", "user_two@gmail.com")
+        self.shopping_list = __('testshoppinglist')
+        self.shopping_list_two = __('testshoppinglisttwo')
 
     def create_app(self):
         """
@@ -33,7 +41,7 @@ class TestShoppingListBase(TestCase):
 
     def setUp(self):
         """
-        A method to prep app for testing.
+        Prep app for testing.
         """
 
         # update app configuration to testing.
@@ -43,15 +51,6 @@ class TestShoppingListBase(TestCase):
         DB.session.commit()
         DB.drop_all()
         DB.create_all()
-
-        # test data
-        _ = collections.namedtuple('User', ['username', 'password', 'email'])
-        __ = collections.namedtuple('ShoppingList', ['name', ])
-
-        self.user = _('gideon', 'gideonpassword', 'gideon@gmail.com')
-        self.user_two = _('user_two', "user_two_password", "user_two@gmail.com")
-        self.shopping_list = __('testshoppinglist')
-        self.shopping_list_two = __('testshoppinglisttwo')
 
     def tearDown(self):
         """
@@ -63,82 +62,77 @@ class TestShoppingListBase(TestCase):
 
     def login_user(self):
         """
-        Helper method to login user.
+        Helper method to login client.
 
-        Makes post request using user information initialized in
+        Makes post request using client information initialized in
         the setUp method.
         """
 
         cridentials = dict(
             username=self.user.username,
-            password=self.user.password
-        )
-
-        url = url_for('user_login')
+            password=self.user.password)
 
         data = json.dumps(cridentials)
-
+        url = url_for('user_login')
         return self.client.post(url, data=data, content_type=self.content_type)
 
     def login_user_two(self):
         """
-        Helper method to login user.
+        Helper method to login another client..
 
-        Makes post request using user information initialized in
+        Makes post request using client information initialized in
         the setUp method.
         """
 
         cridentials = dict(
             username=self.user_two.username,
-            password=self.user_two.password
-        )
+            password=self.user_two.password)
 
-        return self.client.post(
-            LOGIN_URL, data=json.dumps(cridentials), content_type=self.content_type)
+        data = json.dumps(cridentials)
+        url = url_for('user_login')
+
+        return self.client.post(url, data=data, content_type=self.content_type)
 
     def register_user(self):
         """
-        Helper method to login user.
-
-        Makes post request using user information initialized in
-        the setUp method.
+        Helper method to register client.
         """
 
         user_info = dict(
             username=self.user.username,
             password=self.user.password,
-            email=self.user.email
-        )
+            email=self.user.email)
 
-        return self.client.post(
-            REGISTER_URL, data=json.dumps(user_info), content_type=self.content_type)
+        data = json.dumps(user_info)
+        url = url_for('user_register')
+
+        return self.client.post(url, data=data, content_type=self.content_type)
 
     def register_second_user(self):
         """
-        Helper method to register another user.
-
-        Makes post request using user information initialized in
-        the setUp method.
+        Helper method to register another client.
         """
 
         user_info = dict(
             username=self.user_two.username,
             password=self.user_two.password,
-            email=self.user_two.email
-        )
+            email=self.user_two.email)
 
-        return self.client.post(
-            REGISTER_URL, data=json.dumps(user_info), content_type=self.content_type)
+        data = json.dumps(user_info)
+        url = url_for('user_register')
+
+        return self.client.post(url, data=data, content_type=self.content_type)
 
     def logout_user(self, token):
         """
-        Helper method to logout user.
+        Helper method to logout client.
         """
 
         headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token)
-        )
-        url = LOGOUT_URL
+            Authorization='Bearer %(token)s' % dict(token=token))
+
+        url = url_for('user_logout')
+
         return self.client.delete(url, content_type=self.content_type, headers=headers)
 
     def create_shoppinglist(self, token, **data):
@@ -146,27 +140,21 @@ class TestShoppingListBase(TestCase):
         Method to make a post request to create shopping list.
         """
 
-        url = PREFIX_ONE
         headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token)
-        )
-
+            Authorization='Bearer %(token)s' % dict(token=token))
         data = json.dumps(data)
-        return self.client.post(url, data=data,
-                                content_type=self.content_type, headers=headers)
+        url = url_for('shoppinglist_list')
+        return self.client.post(url, data=data, content_type=self.content_type, headers=headers)
 
     def get_user_shoppinglists(self, token):
         """
         Method to make get request to fetch user shopping lists.
         """
 
-        url = PREFIX_ONE
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token)
-        )
-        return self.client.get(
-            url, content_type=self.content_type, headers=headers
-        )
+        headers = dict(Authorization='Bearer %(token)s' % dict(token=token))
+        url = url_for('shoppinglist_list')
+
+        return self.client.get(url, content_type=self.content_type, headers=headers)
 
     def get_user_shoppinglist_detail(self, token, id):
         """
@@ -174,11 +162,9 @@ class TestShoppingListBase(TestCase):
         """
 
         # append shoppinglist id at the end of url.
-        url = PREFIX_TWO + str(id)
+        url = url_for('shoppinglist_detail', id=id)
 
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token)
-        )
+        headers = dict(Authorization='Bearer %(token)s' % dict(token=token))
 
         return self.client.get(url, headers=headers, content_type=self.content_type)
 
@@ -191,16 +177,12 @@ class TestShoppingListBase(TestCase):
         :return: response
         """
 
-        url = PREFIX_TWO + str(id)
-
         data = json.dumps(new_info)
-
         headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token)
-        )
+            Authorization='Bearer %(token)s' % dict(token=token))
+        url = url_for('shoppinglist_detail', id=id)
 
-        return self.client.put(url, data=data, headers=headers,
-                               content_type=self.content_type)
+        return self.client.put(url, data=data, headers=headers, content_type=self.content_type)
 
     def delete_shoppinglist(self, token, id):
         """
@@ -210,11 +192,9 @@ class TestShoppingListBase(TestCase):
         :return: response from server.
         """
 
-        url = PREFIX_TWO + str(id)
-
         headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token)
-        )
+            Authorization='Bearer %(token)s' % dict(token=token))
+        url = url_for('shoppinglist_detail', id=id)
 
         return self.client.delete(url, headers=headers, content_type=self.content_type)
 
@@ -227,16 +207,18 @@ class TestShoppingListBase(TestCase):
         """
 
         headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token)
-        )
+            Authorization='Bearer %(token)s' % dict(token=token))
 
         url = url_for('shoppinglist_search', q=keyword)
         return self.client.get(url, content_type=self.content_type, headers=headers)
 
 
 class TestShoppingItemsBase(TestShoppingListBase):
-    def setUp(self):
-        super(TestShoppingItemsBase, self).setUp()
+    """
+    Base class for shopping items tests.
+    """
+    def __init__(self, *args, **kwargs):
+        super(TestShoppingItemsBase, self).__init__(*args, **kwargs)
         _testdata = collections.namedtuple('ShoppingItem', ['name', 'price', 'bought'])
         self.testdata_1 = _testdata('bread', 90.0, False)
         self.testdata_2 = _testdata('blueband', 100.5, False)
@@ -252,9 +234,9 @@ class TestShoppingItemsBase(TestShoppingListBase):
 
         data = json.dumps(data)
         headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token)
-        )
-        url = CREATE_SHOPPINGITEMS_URL % dict(id=shoppinglistId)
+            Authorization='Bearer %(token)s' % dict(token=token))
+        url = url_for('shoppingitem_detail', shoppinglistId=shoppinglistId)
+
         return self.client.post(url, data=data, headers=headers, content_type=self.content_type)
 
     def get_shoppingitems(self, token, shoppinglistId):
@@ -266,9 +248,9 @@ class TestShoppingItemsBase(TestShoppingListBase):
         """
 
         headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token)
-        )
-        url = CREATE_SHOPPINGITEMS_URL % (dict(id=shoppinglistId))
+            Authorization='Bearer %(token)s' % dict(token=token))
+        url = url_for('shoppingitem_detail', shoppinglistId=shoppinglistId)
+
         return self.client.get(url, headers=headers, content_type=self.content_type)
 
     def update_shoppingitem(self, token, shoppinglistId, shoppingitemId, data):
@@ -281,12 +263,10 @@ class TestShoppingItemsBase(TestShoppingListBase):
         :return: response.
         """
 
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token)
-        )
-        url = UPDATE_SHOPPINGITEMS_URL % dict(shl_id=shoppinglistId, shi_id=shoppingitemId)
-        data = json.dumps(
-            data)
+        headers = dict(Authorization='Bearer %(token)s' % dict(token=token))
+        data = json.dumps(data)
+        url = url_for('shoppingitem_edit',
+                      shoppinglistId=shoppinglistId, shoppingitemId=shoppingitemId)
 
         return self.client.put(url, data=data, headers=headers, content_type=self.content_type)
 
@@ -298,8 +278,8 @@ class TestShoppingItemsBase(TestShoppingListBase):
         :return: response
         """
 
-        url = DELETE_SHOPPINGITEMS_URL % dict(shl_id=shoppinglistId, shi_id=shoppingitemId)
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token)
-        )
+        headers = dict(Authorization='Bearer %(token)s' % dict(token=token))
+        url = url_for('shoppingitem_edit',
+                      shoppinglistId=shoppinglistId, shoppingitemId=shoppingitemId)
+
         return self.client.delete(url, headers=headers, content_type=self.content_type)
