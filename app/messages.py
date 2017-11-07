@@ -2,10 +2,10 @@ __all__ = [
     'account_created', 'data_required', 'email_not_provided', 'email_exists', 'incorrect_old_password',
     'incorrect_password_or_username', 'invalid_email', 'invalid_limit', 'invalid_page', 'negative_limit',
     'negative_page', 'password_changed', 'passwords_donot_match', 'password_not_provided',
-    'search_not_found', 'server_error', 'shoppingitem_exists', 'shoppingitem_not_found',
-    'shoppingitem_updated', 'shoppinglist_created', 'shoppinglist_deleted', 'shoppinglist_not_found',
-    'shoppinglist_updated', 'username_exists', 'user_not_found', 'username_not_provided',
-    'username_or_email_required', 'valid_integer_required'
+    'search_not_found', 'server_error', 'shoppingitem_created', 'shoppingitem_exists',
+    'shoppingitem_not_found', 'shoppingitem_updated', 'shoppinglist_created', 'shoppinglist_deleted',
+    'shoppinglist_name_exists', 'shoppinglist_not_found', 'shoppinglist_updated', 'username_exists',
+    'user_not_found', 'username_not_provided', 'username_or_email_required', 'valid_integer_required'
 ]
 
 username_not_provided = 'Provide a username'
