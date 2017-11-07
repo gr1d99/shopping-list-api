@@ -11,16 +11,17 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from webargs import validate
 from webargs.flaskparser import use_args
 
-from .utils import \
-    (prep_keyword, search_args, shoppinglist_args, shoppinglist_update_args, shoppingitem_create_args,
-     shoppingitem_update_args, urlmaker)
+from .utils import *
 from ..conf.settings import MAX_ITEMS_PER_PAGE
 from ..core.loggers import AppLogger
-from ..messages import \
-    (shoppingitem_created, shoppingitem_exists, shoppingitem_not_found, shoppingitem_updated,
-     shoppinglist_created, shoppinglist_not_found, shoppinglist_name_exists,
-     shoppinglist_updated, invalid_limit, invalid_page, negative_page, negative_limit, search_not_found)
+from ..messages import *
 from ..models import User, ShoppingList, ShoppingItem
+
+
+__all__ = [
+    'ShoppingListsApi', 'ShoppingListDetailApi',
+    'SearchShoppingListApi', 'ShoppingItemDetailApi'
+]
 
 
 class ShoppingListsApi(Resource):
@@ -28,23 +29,20 @@ class ShoppingListsApi(Resource):
     Resource to handle fetching of specific user shopping lists.
     """
 
+    @use_args(limit_args)
     @jwt_required
-    def get(self):
+    def get(self, args):
         """
         Handle GET request and takes user authentication token.
         """
-        response = {}
-
-        has_page = False
-        has_limit = False
-
-        page = None
-        limit = None
-
-        prev_page_url = None
-        next_page_url = None
 
         def params_error(error):
+            """
+            A function to return errors found in query parameters.
+            :param error: error message.
+            :return: error response.
+            """
+
             return make_response(
                 jsonify(dict(
                     status='fail',
@@ -53,49 +51,30 @@ class ShoppingListsApi(Resource):
             )
 
         current_user = get_jwt_identity()
-
         user = User.query.filter_by(username=current_user).first()
 
-        args = request.args
+        response = {}
 
-        if 'page' in args:
-            has_page = True
-            page = args.get('page', 1)
+        page = args.get('page', 1)
+        limit = args.get('limit', MAX_ITEMS_PER_PAGE)
 
-            try:
-                page = int(page)
-
-            except ValueError:
-                return params_error(invalid_page)
+        if any([page, limit]):
 
             if page < 0:
                 return params_error(negative_page)
 
-        if 'limit' in args:
-            limit = args.get('limit')
-            has_limit = True
-
-            try:
-                limit = int(limit)
-
-            except ValueError:
-                return params_error(invalid_limit)
-
             if limit < 0:
                 return params_error(negative_limit)
-
-        if any([has_limit, has_page]):
-
-            if not limit:
-                limit = MAX_ITEMS_PER_PAGE
 
             paginated = user.shopping_lists.paginate(page=page, per_page=limit, error_out=False)
 
             if paginated.has_prev:
                 prev_page_url = urlmaker(request, paginated.prev_num, limit).make_url()
+                response.setdefault('previous page', prev_page_url)
 
             if paginated.has_next:
                 next_page_url = urlmaker(request, paginated.next_num, limit).make_url()
+                response.setdefault('next page', next_page_url)
 
             output = [{
                 'id': shl.id,
@@ -105,12 +84,6 @@ class ShoppingListsApi(Resource):
             response.setdefault('total_pages', paginated.pages)
 
             response.setdefault('shopping_lists', output)
-
-            if prev_page_url:
-                response.setdefault('previous page', prev_page_url)
-
-            if next_page_url:
-                response.setdefault('next page', next_page_url)
 
         else:
             shoppinglists = user.shopping_lists.all()
@@ -182,37 +155,36 @@ class ShoppingListDetailApi(Resource):
     an integer id in associated urls.
     """
 
+    @use_args(limit_args)
     @jwt_required
-    def get(self, id):
+    def get(self, query_args, id=None):
         """
         Handles GET request to fetch specific shopping list requested by client.
         :param id: id of shopping list.
         :return: json data.
         """
 
+        current_user = get_jwt_identity()
+
+        # get user instance.
+        user = User.query.filter_by(username=current_user).first()
+
         data = {}
 
-        has_page = False
-        has_limit = False
-
-        page = None
-        limit = None
-
-        prev_page_url = None
-        next_page_url = None
-
         def params_error(error):
+            """
+            A function to abort and return appropriate error response
+            when the query parameters contain errors.
+            :param error: error message.
+            :return: error response.
+            """
+
             return make_response(
                 jsonify(dict(
                     status='fail',
                     message=error
                 )), 400
             )
-
-        current_user = get_jwt_identity()
-
-        # get user instance.
-        user = User.query.filter_by(username=current_user).first()
 
         # get shopping list using provided id, if not found raise error 404 and
         # return response to client.
@@ -228,58 +200,33 @@ class ShoppingListDetailApi(Resource):
                 )), 404
             )
 
-        args = request.args
+        page = query_args.get('page', 1)
+        limit = query_args.get('limit', MAX_ITEMS_PER_PAGE)
 
-        if 'page' in args:
-            has_page = True
-            page = args.get('page', 1)
-
-            try:
-                page = int(page)
-
-            except ValueError:
-                return params_error(invalid_page)
+        if any([page, limit]):
 
             if page < 0:
                 return params_error(negative_page)
 
-        if 'limit' in args:
-            limit = args.get('limit')
-            has_limit = True
-
-            try:
-                limit = int(limit)
-
-            except ValueError:
-                return params_error(invalid_limit)
-
             if limit < 0:
                 return params_error(negative_limit)
 
-        if any([has_limit, has_page]):
-
-            if not limit:
-                limit = MAX_ITEMS_PER_PAGE
-
-            paginated = shoppinglist.shopping_items.paginate(page=page, per_page=limit, error_out=False)
+            paginated = shoppinglist.\
+                shopping_items.paginate(page=page, per_page=limit, error_out=False)
 
             if paginated.has_prev:
                 prev_page_url = urlmaker(request, paginated.prev_num, limit).make_url()
+                data.setdefault('previous page', prev_page_url)
 
             if paginated.has_next:
                 next_page_url = urlmaker(request, paginated.next_num, limit).make_url()
+                data.setdefault('next page', next_page_url)
 
             output = [{'name': item.name} for item in paginated.items]
 
             data.setdefault('total pages', paginated.pages)
 
             data.setdefault('shopping items', output)
-
-            if prev_page_url:
-                data.setdefault('previous page', prev_page_url)
-
-            if next_page_url:
-                data.setdefault('next page', next_page_url)
 
         else:
             items = [item.name for item in shoppinglist.shopping_items.all()]
@@ -517,7 +464,7 @@ class ShoppingItemDetailApi(Resource):
 
     @use_args(shoppingitem_update_args)
     @jwt_required
-    def put(self, args, shoppinglistId, shoppingitemId):
+    def put(self, args, shoppinglistId, shoppingitemId=None):
         """
         Handles PUT request from client and updates specified shoppingitem.
         :param args: new data.
@@ -693,7 +640,8 @@ class SearchShoppingListApi(Resource):
 
         term = prep_keyword(_term)
 
-        shoppinglists = user.shopping_lists.filter(ShoppingList.name.ilike(term)).paginate(page, limit)
+        shoppinglists = user.\
+            shopping_lists.filter(ShoppingList.name.ilike(term)).paginate(page, limit)
 
         if any(shoppinglists.items):
             response.setdefault('total_pages', shoppinglists.pages)
