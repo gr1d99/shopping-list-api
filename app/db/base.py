@@ -19,8 +19,8 @@ class BaseModel(DB.Model):
     Base class for all models.
     Contains common methods used by all models.
     """
-    __abstract__ = True
 
+    __abstract__ = True
     # ----Attach custom exceptions to class----- #
     #       we will never have to import
     #        these exceptions to where
@@ -39,6 +39,7 @@ class BaseModel(DB.Model):
         """
         Calls protected method to populate the database with data.
         """
+
         return self._save()
 
     def _save(self):
