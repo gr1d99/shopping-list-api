@@ -23,11 +23,11 @@ jwt = JWTManager(APP)
 
 from app.auth import security
 from app.auth.urls import auth_blueprint
-from app.shopping_list.urls import shopping_list_blueprint
+from app.shopping_list.urls import SHOPPINGLIST
 
 
 APP.register_blueprint(auth_blueprint)
-APP.register_blueprint(shopping_list_blueprint)
+APP.register_blueprint(SHOPPINGLIST)
 
 if __name__ == '__main__':
     APP.run()
