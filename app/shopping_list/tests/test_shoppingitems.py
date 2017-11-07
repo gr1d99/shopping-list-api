@@ -1,8 +1,6 @@
 from flask import json
 from .base import TestShoppingItemsBase
-from ...messages import \
-    (shoppingitem_created, shoppingitem_exists, shoppingitem_not_found,
-     shoppingitem_updated, shoppinglist_not_found)
+from ...messages import *
 from ...models import ShoppingItem, ShoppingList
 
 
@@ -376,14 +374,8 @@ class TestShoppingItems(TestShoppingItemsBase):
         # register user.
         reg_response = self.register_user()
 
-        # assert registration response.
-        self.assertStatus(reg_response, 201)  # created.
-
         # login user.
         login_response = self.login_user()
-
-        # assert login response.
-        self.assertStatus(login_response, 200)
 
         # get auth token from login
         auth_token = json.loads(
@@ -401,17 +393,15 @@ class TestShoppingItems(TestShoppingItemsBase):
 
         # get response.
         update_response = self.update_shoppingitem(
-            token=auth_token, shoppinglistId=shoppinglistId, shoppingitemId=shoppingitemId, data=new_data)
+            token=auth_token, shoppinglistId=shoppinglistId,
+            shoppingitemId=shoppingitemId, data=new_data)
 
         # response data.
-        update_response_data = json.loads(
-            update_response.get_data(as_text=True))
+        update_response_data = json.loads(update_response.get_data(as_text=True))
 
         self.assert404(update_response)
-        self.assertTrue(
-            update_response_data['status'] == 'fail')
-        self.assertTrue(
-            update_response_data['message'] == shoppinglist_not_found)
+        self.assertTrue(update_response_data['status'] == 'fail')
+        self.assertTrue(update_response_data['message'] == shoppinglist_not_found)
 
     def test_cannot_update_not_owned_shoppingitem(self):
         """
@@ -421,14 +411,8 @@ class TestShoppingItems(TestShoppingItemsBase):
         # register user.
         reg_response = self.register_user()
 
-        # assert registration response.
-        self.assertStatus(reg_response, 201)  # created.
-
         # login user.
         login_response = self.login_user()
-
-        # assert login response.
-        self.assertStatus(login_response, 200)
 
         # get auth token from login
         auth_token = json.loads(
@@ -480,17 +464,11 @@ class TestShoppingItems(TestShoppingItemsBase):
         Test client should not update shopping item name that is used by another shoppingitem.
         """
 
-        # register user.
+        # register client.
         reg_response = self.register_user()
 
-        # assert registration response.
-        self.assertStatus(reg_response, 201)  # created.
-
-        # login user.
+        # login client.
         login_response = self.login_user()
-
-        # assert login response.
-        self.assertStatus(login_response, 200)
 
         # get auth token from login
         auth_token = json.loads(
@@ -536,7 +514,8 @@ class TestShoppingItems(TestShoppingItemsBase):
 
         # get response.
         update_response = self.update_shoppingitem(
-            token=auth_token, shoppinglistId=shoppinglistId, shoppingitemId=shoppingitemId, data=new_data)
+            token=auth_token, shoppinglistId=shoppinglistId,
+            shoppingitemId=shoppingitemId, data=new_data)
 
         # response data.
         update_response_data = json.loads(
@@ -544,10 +523,8 @@ class TestShoppingItems(TestShoppingItemsBase):
 
         # assertions.
         self.assert400(update_response)
-        self.assertTrue(
-            update_response_data['status'] == 'fail')
-        self.assertTrue(
-            update_response_data['message'] == shoppingitem_exists)
+        self.assertTrue(update_response_data['status'] == 'fail')
+        self.assertTrue(update_response_data['message'] == shoppingitem_exists)
 
     def test_cannot_update_shoppingitem_name_with_characters_less_than_three(self):
         """
@@ -617,17 +594,11 @@ class TestShoppingItems(TestShoppingItemsBase):
         Test client should delete shoppingitem successfully.
         """
 
-        # register user.
+        # register client.
         reg_response = self.register_user()
 
-        # assert registration response.
-        self.assertStatus(reg_response, 201)  # created.
-
-        # login user.
+        # login client.
         login_response = self.login_user()
-
-        # assert login response.
-        self.assertStatus(login_response, 200)
 
         # get auth token from login
         auth_token = json.loads(
@@ -672,9 +643,6 @@ class TestShoppingItems(TestShoppingItemsBase):
 
         # register user.
         reg_response = self.register_user()
-
-        # assert registration response.
-        self.assertStatus(reg_response, 201)  # created.
 
         # login user.
         login_response = self.login_user()
