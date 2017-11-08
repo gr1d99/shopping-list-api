@@ -4,7 +4,7 @@
 Contains application main instances and configurations.
 """
 
-from flask import Flask
+from flask import Flask, redirect
 from flask_bcrypt import Bcrypt
 from flask_httpauth import HTTPBasicAuth
 from flask_jwt_extended import JWTManager
@@ -28,6 +28,12 @@ from app.shopping_list.urls import SHOPPINGLIST
 
 APP.register_blueprint(auth_blueprint)
 APP.register_blueprint(SHOPPINGLIST)
+
+
+@APP.route('/')
+def index():
+    return redirect('https://app.swaggerhub.com/apis/gr1d99/shoppinglist-api/1.0')
+
 
 if __name__ == '__main__':
     APP.run()
