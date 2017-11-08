@@ -11,6 +11,7 @@ class Config(object):
     JWT_BLACKLIST_ENABLED = True
     JWT_BLACKLIST_TOKEN_CHECKS = ['access', 'refresh']
     JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(seconds=36000)
+    HOST = '0.0.0.0'
 
 
 class ProductionConfig(Config):
