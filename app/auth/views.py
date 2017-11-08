@@ -12,7 +12,7 @@ from flask_restful import Resource
 from webargs.flaskparser import use_args
 
 from app.core.loggers import AppLogger
-from .utils import login_args, registration_args, reset_password_args
+from .utils import login_args, registration_args, reset_password_args, update_account_args
 from ..messages import *
 from ..models import User, BlacklistToken
 
@@ -47,7 +47,7 @@ class UserRegisterApi(Resource):
                     jsonify(dict(
                         message=username_exists,
                         status='fail'
-                    )), 202)
+                    )), 409)
 
             try:
                 # check if email exists.
@@ -58,7 +58,7 @@ class UserRegisterApi(Resource):
                     jsonify(dict(
                         message=email_exists,
                         status='fail'
-                    )), 202)
+                    )), 409)
 
             # if username and email are okay call the save method.
             user.save()
@@ -148,8 +148,9 @@ class UserProfileApi(Resource):
                                        date_joined=user.date_joined)
                              )), 200)
 
+    @use_args(update_account_args)
     @jwt_required
-    def put(self):
+    def put(self, args):
         """
         Handles PUT request to update user details.
         """
@@ -161,9 +162,9 @@ class UserProfileApi(Resource):
                 user = User.query.filter_by(username=current_user).first()
 
                 if user:
-                    new_username = request.json.get('username', None)
-                    email = request.json.get('email', None)
-                    password = request.json.get('password', None)
+                    new_username = args.get('username', None)
+                    email = args.get('email', None)
+                    password = args.get('password', None)
 
                     # use if else statement to check if client
                     # has provided any data. if not we will
@@ -303,19 +304,61 @@ class ResetPasswordApi(Resource):
         new_password = data.get('new_password')
         confirm = data.get('confirm')
 
+        def change_password():
+            if not user.verify_password(old_password):
+                return make_response(
+                    jsonify(dict(
+                        status='fail',
+                        message=incorrect_old_password
+                    )), 401
+                )
+
+            if new_password != confirm:
+                return make_response(
+                    jsonify(dict(
+                        status='fail',
+                        message=passwords_donot_match
+                    )), 401
+                )
+
+            user.password = user.hash_password(new_password)
+            user.save()
+
+            return make_response(
+                jsonify(dict(
+                    status='success',
+                    message=password_changed
+                )), 200
+            )
+
+        def invalid_details():
+            return make_response(
+                jsonify(dict(
+                    status='fail',
+                    mesaage=user_not_found
+                )), 401
+            )
+
         # set user instance to None initially because the user
         # will provide either a username or email used to get
         # user instance if it exists.
-        user = None
 
-        if username and email:
-            user = User.query.filter_by(username=username).first()
+        if any([username, email]):
+            if username:
+                user = User.query.filter_by(username=username).first()
 
-        elif username and not email:
-            user = User.query.filter_by(username=username).first()
+                if not user:
+                    return invalid_details()
 
-        elif not username and email:
-            user = User.query.filter_by(email=email).first()
+                return change_password()
+
+            if email:
+                user = User.query.filter_by(email=email).first()
+
+                if not user:
+                    return invalid_details()
+
+                return change_password()
 
         else:
             return make_response(
@@ -324,32 +367,6 @@ class ResetPasswordApi(Resource):
                     message=username_or_email_required
                 )), 401
             )
-
-        if not user.verify_password(old_password):
-            return make_response(
-                jsonify(dict(
-                    status='fail',
-                    message=incorrect_old_password
-                )), 401
-            )
-
-        if new_password != confirm:
-            return make_response(
-                jsonify(dict(
-                    status='fail',
-                    message=passwords_donot_match
-                )), 401
-            )
-
-        user.password = user.hash_password(new_password)
-        user.save()
-
-        return make_response(
-            jsonify(dict(
-                status='success',
-                message=password_changed
-            )), 200
-        )
 
 
 class RefreshTokenApi(Resource):
