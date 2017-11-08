@@ -20,6 +20,13 @@ registration_args = OrderedDict(
     ]
 )
 
+update_account_args = OrderedDict(
+    [
+        ('username', fields.Str(required=False)),
+        ('email', fields.Str(message='Email required', required=True, validate=validate.Email())),
+    ]
+)
+
 login_args = OrderedDict(
     [
         ('username', fields.Str(required=True)),
