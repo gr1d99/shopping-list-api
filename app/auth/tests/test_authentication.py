@@ -123,7 +123,7 @@ class TestUserAuth(TestBase):
         second_reg_resp = self.\
             register_user(username=info[0], password=info[1], email="different@gmail.com")
 
-        self.assertStatus(second_reg_resp, 202)
+        self.assertStatus(second_reg_resp, 409)
         self.assertIn(
             'User with that username exists', second_reg_resp.get_data(as_text=True))
 
@@ -140,7 +140,7 @@ class TestUserAuth(TestBase):
         second_resp = self.register_user(
             username="newusername", password=info[1], email=info[2])
 
-        self.assertStatus(second_resp, 202)
+        self.assertStatus(second_resp, 409)
         self.assertIn('User with that email exists', second_resp.get_data(as_text=True))
 
     def test_login_without_username(self):
@@ -256,18 +256,11 @@ class TestUserAuth(TestBase):
         reg_resp = self.register_user(
             username=info[0], password=info[1], email=info[2])
 
-        # confirm registration response
-        self.assertTrue(
-            reg_resp.status_code == 201)
-
         self.assertIn(
             account_created, reg_resp.get_data(as_text=True))
 
         # login user
         resp = self.login_user(username=info[0], password=info[1])
-
-        self.assert200(resp)
-        self.assertIn('Logged in', resp.get_data(as_text=True))
 
         new_details = {
             'username': 'new_admin',
