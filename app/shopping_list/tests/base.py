@@ -8,9 +8,8 @@ from flask import json
 from flask_restful import url_for
 from flask_testing import TestCase
 
-from app import API, APP, DB
+from app import APP, DB
 from app.conf import app_config
-from app.shopping_list import views
 
 
 class TestShoppingListBase(TestCase):
@@ -198,20 +197,6 @@ class TestShoppingListBase(TestCase):
 
         return self.client.delete(url, headers=headers, content_type=self.content_type)
 
-    def search_shoppinglist(self, token, keyword):
-        """
-        Method to make search shopping lists.
-        :param token: user auth token.
-        :param keyword: word used to make search.
-        :return: response.
-        """
-
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token))
-
-        url = url_for('shoppinglist_search', q=keyword)
-        return self.client.get(url, content_type=self.content_type, headers=headers)
-
 
 class TestShoppingItemsBase(TestShoppingListBase):
     """
@@ -235,7 +220,7 @@ class TestShoppingItemsBase(TestShoppingListBase):
         data = json.dumps(data)
         headers = dict(
             Authorization='Bearer %(token)s' % dict(token=token))
-        url = url_for('shoppingitem_detail', shoppinglistId=shoppinglistId)
+        url = url_for('shoppingitem_create', shoppinglistId=shoppinglistId)
 
         return self.client.post(url, data=data, headers=headers, content_type=self.content_type)
 
@@ -250,6 +235,22 @@ class TestShoppingItemsBase(TestShoppingListBase):
         headers = dict(
             Authorization='Bearer %(token)s' % dict(token=token))
         url = url_for('shoppingitem_detail', shoppinglistId=shoppinglistId)
+
+        return self.client.get(url, headers=headers, content_type=self.content_type)
+
+    def get_shoppingitem_detail(self, token, shoppinglistId, shoppingitemId):
+        """
+        Makes GET request as client to retrieve specific shoppingitem.
+        :param token: user auth token.
+        :param shoppinglistId: ID of shoppinglist..
+        :param shoppingitemId: ID of shoppingitem.
+        :return: response.
+        """
+
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=token))
+        url = url_for('shoppingitem_edit', shoppinglistId=shoppinglistId,
+                      shoppingitemId=shoppingitemId)
 
         return self.client.get(url, headers=headers, content_type=self.content_type)
 
@@ -283,3 +284,53 @@ class TestShoppingItemsBase(TestShoppingListBase):
                       shoppinglistId=shoppinglistId, shoppingitemId=shoppingitemId)
 
         return self.client.delete(url, headers=headers, content_type=self.content_type)
+
+
+class TestSearchAndPagination(TestShoppingItemsBase):
+    """
+    Base test case class for testing search functionality and pagination.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(TestSearchAndPagination, self).__init__(*args, **kwargs)
+        self.shoppinglists = ['Birthday', 'School', 'Breakfast', 'Lunch', 'Camping']
+
+    def init(self, use_limit=False, per_page=False,
+             limit=None, page=None):
+        # register and authenticate client.
+        self.register_user()
+        login_resp = self.login_user()
+
+        # get auth token.
+        token = json.loads(login_resp.get_data(as_text=True))['auth_token']
+
+        # create shoppinglists.
+        for shl in self.shoppinglists:
+            self.create_shoppinglist(token=token, name=shl)
+
+        if any([use_limit, per_page]):
+            if use_limit and per_page:
+                return token, limit, page
+
+            if use_limit and not per_page:
+                return token, limit
+
+            if not use_limit and per_page:
+                return token, page
+
+        return token
+
+    def search_shoppinglist(self, token, keyword, limit=None, page=None):
+        """
+        Method to make search shopping lists.
+        :param token: user auth token.
+        :param keyword: word used to make search.
+        :return: response.
+        """
+
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=token))
+
+        url = url_for('shoppinglist_search', q=keyword, limit=limit, page=page)
+        return self.client.get(url, content_type=self.content_type, headers=headers)
+
