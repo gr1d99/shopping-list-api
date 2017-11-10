@@ -123,7 +123,7 @@ class ShoppingListsApi(Resource):
                 jsonify(dict(
                     status='fail',
                     message=shoppinglist_name_exists
-                )), 400
+                )), 409
             )
 
         # get user instance.
@@ -155,36 +155,19 @@ class ShoppingListDetailApi(Resource):
     an integer id in associated urls.
     """
 
-    @use_args(limit_args)
     @jwt_required
-    def get(self, query_args, id=None):
+    def get(self, id=None):
         """
         Handles GET request to fetch specific shopping list requested by client.
         :param id: id of shopping list.
         :return: json data.
         """
-
         current_user = get_jwt_identity()
 
         # get user instance.
         user = User.query.filter_by(username=current_user).first()
 
         data = {}
-
-        def params_error(error):
-            """
-            A function to abort and return appropriate error response
-            when the query parameters contain errors.
-            :param error: error message.
-            :return: error response.
-            """
-
-            return make_response(
-                jsonify(dict(
-                    status='fail',
-                    message=error
-                )), 400
-            )
 
         # get shopping list using provided id, if not found raise error 404 and
         # return response to client.
@@ -200,42 +183,18 @@ class ShoppingListDetailApi(Resource):
                 )), 404
             )
 
-        page = query_args.get('page', 1)
-        limit = query_args.get('limit', MAX_ITEMS_PER_PAGE)
-
-        if any([page, limit]):
-
-            if page < 0:
-                return params_error(negative_page)
-
-            if limit < 0:
-                return params_error(negative_limit)
-
-            paginated = shoppinglist.\
-                shopping_items.paginate(page=page, per_page=limit, error_out=False)
-
-            if paginated.has_prev:
-                prev_page_url = urlmaker(request, paginated.prev_num, limit).make_url()
-                data.setdefault('previous page', prev_page_url)
-
-            if paginated.has_next:
-                next_page_url = urlmaker(request, paginated.next_num, limit).make_url()
-                data.setdefault('next page', next_page_url)
-
-            output = [{'name': item.name} for item in paginated.items]
-
-            data.setdefault('total pages', paginated.pages)
-
-            data.setdefault('shopping items', output)
-
-        else:
-            items = [item.name for item in shoppinglist.shopping_items.all()]
-            data.setdefault('shopping items', items)
+        # filter bought items and those not bought.
+        bought = shoppinglist.shopping_items.filter_by(bought=True).count()
+        not_bought = shoppinglist.shopping_items.filter_by(bought=False).count()
 
         data.setdefault('id', shoppinglist.id)
         data.setdefault('name', shoppinglist.name)
         data.setdefault('created_on', shoppinglist.timestamp.strftime("%Y-%m-%d %H:%M:%S"))
         data.setdefault('updated_on', shoppinglist.updated.strftime("%Y-%m-%d %H:%M:%S"))
+        data.setdefault('total shoppingitems', shoppinglist.shopping_items.count())
+        data.setdefault('bought shoppingitems', bought)
+        data.setdefault('not bought shoppingitems', not_bought)
+
         return make_response(
             jsonify(dict(
                 status='success',
@@ -317,7 +276,7 @@ class ShoppingListDetailApi(Resource):
                 jsonify(dict(
                     status='fail',
                     message=msg
-                )), 400
+                )), 409
             )
 
         # make changes and save
@@ -359,25 +318,41 @@ class ShoppingListDetailApi(Resource):
             )
 
 
-class ShoppingItemDetailApi(Resource):
+class ShoppingItemListApi(Resource):
     """
-    Handles CRUD functionality for a single shopping item for a specific user.
+    Handles retrieving of client shoppingitems list.
     """
 
+    @use_args(limit_args)
     @jwt_required
-    def get(self, shoppinglistId):
+    def get(self, query_args, shoppinglistId=None):
         """
         Method to handle GET request from client and retun client shoppingitems.
+        :param query_args: limit and page arguments.
         :param shoppinglistId: shoppinglist id.
         :return: response.
         """
+
+        def params_error(error):
+            """
+            A function to return errors found in query parameters.
+            :param error: error message.
+            :return: error response.
+            """
+
+            return make_response(
+                jsonify(dict(
+                    status='fail',
+                    message=error
+                )), 400
+            )
+
+        data = {}
 
         current_user = get_jwt_identity()
 
         # user instance
         user = User.query.filter_by(username=current_user).first()
-
-        shoppinglistId = shoppinglistId
 
         # get shoppinglist instance
         shoppinglist = ShoppingList.get(shoppinglistId, user.id)
@@ -390,17 +365,99 @@ class ShoppingItemDetailApi(Resource):
                 )), 404
             )
 
-        shoppingitems = [{'id': item.id, 'name': item.name}
-                         for item in shoppinglist.shopping_items.all()]
+        page = query_args.get('page', 1)
+        limit = query_args.get('limit', MAX_ITEMS_PER_PAGE)
 
+        if any([page, limit]):
+
+            if page < 0:
+                return params_error(negative_page)
+
+            if limit < 0:
+                return params_error(negative_limit)
+
+            paginated = shoppinglist. \
+                shopping_items.paginate(page=page, per_page=limit, error_out=False)
+
+            if paginated.has_prev:
+                prev_page_url = urlmaker(request, paginated.prev_num, limit).make_url()
+                data.setdefault('previous page', prev_page_url)
+
+            if paginated.has_next:
+                next_page_url = urlmaker(request, paginated.next_num, limit).make_url()
+                data.setdefault('next page', next_page_url)
+
+            output = [{'name': item.name} for item in paginated.items]
+
+            data.setdefault('total_pages', paginated.pages)
+
+            data.setdefault('shopping_items', output)
+
+        else:
+            items = [item.name for item in shoppinglist.shopping_items.all()]
+            data.setdefault('shopping_items', items)
+
+        data.setdefault('total_items', shoppinglist.shopping_items.count())
         return make_response(
             jsonify(dict(
                 status='success',
-                message='Total items %(count)s' % dict(count=len(shoppingitems)),
-                data=dict(
-                    shoppinglist=shoppinglist.name,
-                    shoppingitems=shoppingitems
-                )
+                message=data
+            )), 200
+        )
+
+
+class ShoppingItemDetailApi(Resource):
+    """
+    Handles CRUD functionality for a single shopping item for a specific user.
+    """
+
+    @use_args(limit_args)
+    @jwt_required
+    def get(self, query_args, shoppinglistId, shoppingitemId=None):
+        """
+        Method to handle GET request from client and retun client shoppingitems.
+        :param query_args: limit and page arguments.
+        :param shoppinglistId: shoppinglist id.
+        :return: response.
+        """
+
+        data = {}
+
+        current_user = get_jwt_identity()
+
+        # user instance
+        user = User.query.filter_by(username=current_user).first()
+
+        # get shoppinglist instance.
+        shoppinglist = ShoppingList.get(shoppinglistId, user.id)
+
+        if not shoppinglist:
+            return make_response(
+                jsonify(dict(
+                    status='fail',
+                    message=shoppinglist_not_found
+                )), 404
+            )
+
+        shoppingitem = \
+            shoppinglist.shopping_items.filter_by(id=shoppingitemId).first()
+
+        if not shoppingitem:
+            return make_response(
+                jsonify(dict(
+                    status='fail',
+                    message=shoppingitem_not_found
+                )), 404
+            )
+
+        data.setdefault('id', shoppingitem.id)
+        data.setdefault('name', shoppingitem.name)
+        data.setdefault('created_on', shoppingitem.timestamp.strftime("%Y-%m-%d %H:%M:%S"))
+        data.setdefault('updated_on', shoppingitem.updated.strftime("%Y-%m-%d %H:%M:%S"))
+        return make_response(
+            jsonify(dict(
+                status='success',
+                message=data
             )), 200
         )
 
@@ -408,7 +465,7 @@ class ShoppingItemDetailApi(Resource):
     @jwt_required
     def post(self, args, shoppinglistId):
         """
-        Handles post request to create shoppingitem.
+        Handles post request to create shoppingitem object.
         :return:
         """
 
@@ -659,5 +716,7 @@ class SearchShoppingListApi(Resource):
         else:
             response.setdefault('message', search_not_found)
             response.setdefault('results', [])
+
+        response.setdefault('items_in_page', len(shoppinglists.items))
 
         return make_response(jsonify(response), 200)
