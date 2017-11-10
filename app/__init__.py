@@ -23,7 +23,7 @@ jwt = JWTManager(APP)
 
 from app.auth import security
 from app.auth.urls import auth_blueprint
-from app.shopping_list.urls import SHOPPINGLIST
+from app.shoppinglist.urls import SHOPPINGLIST
 
 
 APP.register_blueprint(auth_blueprint)
