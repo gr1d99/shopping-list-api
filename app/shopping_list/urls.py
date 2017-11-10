@@ -9,7 +9,7 @@ from flask import Blueprint
 from app import API
 
 from .views import \
-    (ShoppingListsApi, ShoppingListDetailApi,
+    (ShoppingListsApi, ShoppingListDetailApi, ShoppingItemListApi,
      ShoppingItemDetailApi, SearchShoppingListApi)
 
 SHOPPINGLIST = Blueprint('shopping_list', __name__)
@@ -21,8 +21,12 @@ API.add_resource(
     ShoppingListDetailApi, 'shopping-lists/<int:id>', endpoint='shoppinglist_detail')
 
 API.add_resource(
-    ShoppingItemDetailApi, 'shopping-lists/<int:shoppinglistId>/shopping-items',
+    ShoppingItemListApi, 'shopping-lists/<int:shoppinglistId>/shopping-items',
     endpoint='shoppingitem_detail')
+
+API.add_resource(
+    ShoppingItemDetailApi, 'shopping-lists/<int:shoppinglistId>/shopping-items',
+    endpoint='shoppingitem_create')
 
 API.add_resource(
     ShoppingItemDetailApi, 'shopping-lists/<int:shoppinglistId>/shopping-items/<int:shoppingitemId>',
