@@ -133,10 +133,8 @@ class ShoppingListsApi(Resource):
         user = User.query.filter_by(username=current_user).first()
 
         # save shopping list.
-        ShoppingList(name=name, owner_id=user.id, description=description).save()
-
-        # get saved shopping list instance and use in response sent to client.
-        shl = ShoppingList.query.filter_by(name=name).first()
+        shl = ShoppingList(name=name, owner_id=user.id, description=description)
+        shl.save()
 
         return make_response(
             jsonify(dict(
