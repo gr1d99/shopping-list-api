@@ -145,7 +145,8 @@ class UserProfileApi(Resource):
                 jsonify(dict(status='success',
                              data=dict(username=user.username,
                                        email=user.email,
-                                       date_joined=user.date_joined)
+                                       date_joined=user.date_joined.strftime("%Y-%m-%d %H:%M:%S"),
+                                       updated=user.updated.strftime("%Y-%m-%d %H:%M:%S"))
                              )), 200)
 
     @use_args(update_account_args)
@@ -157,24 +158,19 @@ class UserProfileApi(Resource):
 
         try:
             current_user = get_jwt_identity()
-            if current_user:
-                # query user.
-                user = User.query.filter_by(username=current_user).first()
+            # query user.
+            user = User.query.filter_by(username=current_user).first()
 
-                if user:
-                    new_username = args.get('username', None)
-                    email = args.get('email', None)
-                    password = args.get('password', None)
+            new_username = args.get('username')
+            email = args.get('email')
 
-                    # use if else statement to check if client
-                    # has provided any data. if not we will
-                    # not return any errors, instead we will
-                    # not make any update.
-                    if not new_username:
-                        new_username = user.username
+            if any([new_username, email]):
 
-                    if not email:
-                        email = user.email
+                # use if else statement to check if client
+                # has provided any data. if not we will
+                # not return any errors, instead we will
+                # not make any update.
+                if new_username:
 
                     # check if username is not equal to the current one used
                     # by the user.
@@ -184,6 +180,7 @@ class UserProfileApi(Resource):
                             # check if there exists a user with the username
                             # provided by the user.
                             User.check_username(new_username)
+                            user.username = new_username
 
                         except user.UsernameExists:
                             # return a response informing the user of the conflict.
@@ -193,14 +190,16 @@ class UserProfileApi(Resource):
                                         message="User with %(uname)s exists" % dict(uname=new_username),
                                         status='fail'
                                     )),
-                                400)
+                                409)
 
+                if email:
                     # check if supplied email is not equal to current email
                     # used by the user.
                     if user.email != email:
 
                         try:
                             User.check_email(email)
+                            user.email = email
 
                         except user.EmailExists:
                             return make_response(
@@ -209,42 +208,33 @@ class UserProfileApi(Resource):
                                         message="User with %(email)s exists" % dict(email=email),
                                         status='fail'
                                     )),
-                                400)
+                                409)
 
-                    if new_username != user.username:
-                        user.username = new_username
+                # if everything checks out correctly, we save the new details.
+                user.save()
 
-                    if email != user.email:
-                        user.email = email
-
-                    # if everything checks out correctly, we save the new details.
-                    user.save()
-
-                    BlacklistToken(token=get_raw_jwt()['jti']).save()
-
-                    return make_response(
-                        jsonify(dict(
-                            message="Account updated",
-                            data=dict(
-                                username=user.username,
-                                email=user.email,
-                                date_joined=user.date_joined),
-                            status='success'
-                        )), 200)
+                BlacklistToken(token=get_raw_jwt()['jti']).save()
 
                 return make_response(
                     jsonify(dict(
-                        message='login again',
-                        status='fail'
-                    )), 400
-                )
+                        message="Account updated",
+                        data=dict(
+                            username=user.username,
+                            email=user.email,
+                            date_joined=user.date_joined.strftime("%Y-%m-%d %H:%M:%S"),
+                            updated=user.updated.strftime("%Y-%m-%d %H:%M:%S")),
+                        status='success'
+                    )), 200)
+
+            else:
+                return {}, 304
 
         except Exception as e:
             AppLogger(self.__class__.__name__).logger.error(e)
             return make_response(
                 jsonify(dict(
                     status='fail',
-                    message=e
+                    message=e.args
                 )), 500)
 
     @jwt_required
