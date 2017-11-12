@@ -2,7 +2,11 @@ sudo: false
 language: python
 python:
   - 3.6.2
+services:
+  - postgresql
+before_script:
+  - psql -c 'create database shl_test;' -U postgres
 script:
-  - nosetests --with-coverage tests
+  - nosetests -sv --with-coverage tests/ app/auth/tests/ app/shoppinglist/tests
 after_success:
   - coveralls

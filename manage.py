@@ -1,10 +1,10 @@
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
-from main import app, db
+from app import APP, DB
 
 
-manager = Manager(app)
-migrate = Migrate(app, db)
+manager = Manager(APP)
+migrate = Migrate(APP, DB)
 manager.add_command('db', MigrateCommand)
 
 if __name__ == '__main__':
