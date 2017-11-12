@@ -120,7 +120,7 @@ class UserLoginApi(Resource):
         except Exception as e:
             AppLogger(self.__class__.__name__).logger.error(e)
             return make_response(
-                jsonify(dict(status='fail', message=e)), 500)
+                jsonify(dict(status='fail', message=e.args)), 500)
 
 
 class UserProfileApi(Resource):
