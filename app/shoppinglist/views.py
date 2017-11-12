@@ -79,6 +79,7 @@ class ShoppingListsApi(Resource):
             output = [{
                 'id': shl.id,
                 'name': shl.name,
+                'description': shl.description,
                 'is_active': shl.is_active} for shl in paginated.items]
 
             response.setdefault('total_pages', paginated.pages)
@@ -91,6 +92,7 @@ class ShoppingListsApi(Resource):
             output = [{
                 'id': shl.id,
                 'name': shl.name,
+                'description': shl.description,
                 'is_active': shl.is_active} for shl in shoppinglists]
 
             response.setdefault('shopping_lists', output)
@@ -111,10 +113,11 @@ class ShoppingListsApi(Resource):
 
         current_user = get_jwt_identity()
 
-        shl_name = data.get('name')
+        name = data.get('name')
+        description = data.get('description')
 
         # check if shopping list exists
-        old_shl = ShoppingList.query.filter_by(name=shl_name).first()
+        old_shl = ShoppingList.query.filter_by(name=name).first()
 
         # if shopping list exists return bad request response.
         if old_shl:
@@ -130,10 +133,10 @@ class ShoppingListsApi(Resource):
         user = User.query.filter_by(username=current_user).first()
 
         # save shopping list.
-        ShoppingList(name=shl_name, owner_id=user.id).save()
+        ShoppingList(name=name, owner_id=user.id, description=description).save()
 
         # get saved shopping list instance and use in response sent to client.
-        shl = ShoppingList.query.filter_by(name=shl_name).first()
+        shl = ShoppingList.query.filter_by(name=name).first()
 
         return make_response(
             jsonify(dict(
@@ -189,6 +192,7 @@ class ShoppingListDetailApi(Resource):
 
         data.setdefault('id', shoppinglist.id)
         data.setdefault('name', shoppinglist.name)
+        data.setdefault('description', shoppinglist.description)
         data.setdefault('created_on', shoppinglist.timestamp.strftime("%Y-%m-%d %H:%M:%S"))
         data.setdefault('updated_on', shoppinglist.updated.strftime("%Y-%m-%d %H:%M:%S"))
         data.setdefault('total shoppingitems', shoppinglist.shopping_items.count())
@@ -480,6 +484,7 @@ class ShoppingItemDetailApi(Resource):
         # get shoppingitems data.
         name = args.get('name')
         price = args.get('price')
+        quantity = args.get('quantity')
         bought = args.get('bought')
 
         # check if item with similar name exists within the shoppinglist itself.
@@ -497,7 +502,7 @@ class ShoppingItemDetailApi(Resource):
         instance = ShoppingList.get(shoppinglistId=shl_id, ownerId=user.id)
 
         # create shoppingitem instance.
-        item = ShoppingItem(name=name, price=price, bought=bought)
+        item = ShoppingItem(name=name, price=price, quantity=quantity, bought=bought)
 
         # save item
         item.save()
@@ -514,7 +519,9 @@ class ShoppingItemDetailApi(Resource):
                     id=item.id,
                     name=item.name,
                     price=item.price,
-                    bought=item.bought
+                    quantity=item.quantity,
+                    bought=item.bought,
+                    total_amount=item.total_amount()
                 )
             )), 201
         )
@@ -561,6 +568,7 @@ class ShoppingItemDetailApi(Resource):
 
         name = args.get('name')
         price = args.get('price')
+        quantity = args.get('quantity')
         bought = args.get('bought')
 
         # make sure that if name is provided then it should
@@ -600,6 +608,9 @@ class ShoppingItemDetailApi(Resource):
         if price:
             shoppingitem.price = price
 
+        if quantity:
+            shoppingitem.quantity = quantity
+
         # set new bought flag
         if bought:
             shoppingitem.bought = bought
@@ -615,7 +626,9 @@ class ShoppingItemDetailApi(Resource):
                 data=dict(
                     name=shoppingitem.name,
                     price=shoppingitem.price,
+                    quantity=shoppingitem.quantity,
                     bought=shoppingitem.bought,
+                    total_amount=shoppingitem.total_amount(),
                     updated_on=shoppingitem.updated.strftime("%Y-%m-%d %H:%M:%S")
                 )
             )), 200)
@@ -702,8 +715,14 @@ class SearchShoppingListApi(Resource):
 
         if any(shoppinglists.items):
             response.setdefault('total_pages', shoppinglists.pages)
-            results = [shl.name for shl in shoppinglists.items]
-            response.setdefault('results', results)
+            results = [
+                {shl.name:
+                     {'shoppingitems':
+                          [item.name for item in shl.shopping_items.all()]
+                      }
+                 } for shl in shoppinglists.items]
+
+            response.setdefault('shoppinglists', results)
 
             if shoppinglists.has_prev:
                 previous_page = urlmaker(request, shoppinglists.prev_num, limit).make_url()
