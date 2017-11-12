@@ -441,6 +441,9 @@ class TestUserAuth(TestBase):
 
         get_user_details_resp = self.get_user_details(new_auth_token)
 
+        # client should be able to use new auth_token.
+        self.assert200(get_user_details_resp)
+
     @file_data("test_data/valid_userinfo.json")
     def test_update_password(self, info):
         """
