@@ -36,6 +36,7 @@ class TestShoppingItems(TestShoppingItemsBase):
         data = dict(
             name=self.testdata_1.name,
             price=self.testdata_1.price,
+            quantity=self.testdata_1.quantity,
             bought=self.testdata_1.bought)
 
         # shopping item response.
@@ -85,6 +86,7 @@ class TestShoppingItems(TestShoppingItemsBase):
         data = dict(
             name=self.testdata_1.name,
             price=self.testdata_1.price,
+            quantity=self.testdata_1.quantity,
             bought=self.testdata_1.bought)
 
         # create first shoppingitem.
@@ -142,6 +144,7 @@ class TestShoppingItems(TestShoppingItemsBase):
         data = dict(
             name=self.testdata_1.name,
             price=self.testdata_1.price,
+            quantity=self.testdata_1.quantity,
             bought=self.testdata_1.bought)
 
         # create shoppingitems.
@@ -279,7 +282,7 @@ class TestShoppingItems(TestShoppingItemsBase):
             create_response.get_data(as_text=True))['data']['id']
 
         # create shoppingitem.
-        data = dict(name='Cake', price=1000.90, bought=True)
+        data = dict(name='Cake', price=1000.90, quantity=2, bought=True)
 
         shoppingitem_create_response = \
             self.create_shoppingitem(auth_token, shoppinglistId, data=data)
@@ -366,6 +369,7 @@ class TestShoppingItems(TestShoppingItemsBase):
         data = dict(
             name=self.testdata_1.name,
             price=self.testdata_1.price,
+            quantity=self.testdata_1.quantity,
             bought=self.testdata_1.bought)
 
         # create shoppingitem.
@@ -524,11 +528,13 @@ class TestShoppingItems(TestShoppingItemsBase):
         data_1 = dict(
             name=self.testdata_1.name,
             price=self.testdata_1.price,
+            quantity=self.testdata_1.quantity,
             bought=self.testdata_1.bought)
 
         data_2 = dict(
             name=self.testdata_2.name,
             price=self.testdata_2.price,
+            quantity=self.testdata_2.quantity,
             bought=self.testdata_2.bought)
 
         # create shoppingitems.
@@ -547,6 +553,7 @@ class TestShoppingItems(TestShoppingItemsBase):
         new_data = dict(
             name=self.testdata_1.name,
             price=1000.00,
+            quantity=12,
             bought=True)
 
         # get response.
@@ -565,7 +572,8 @@ class TestShoppingItems(TestShoppingItemsBase):
 
     def test_cannot_update_shoppingitem_name_with_characters_less_than_three(self):
         """
-        Test client should not update shoppingitem name with a name that has a minium of three characters.
+        Test client should not update shoppingitem name with a name that
+        has a minimum of three characters.
         """
 
         # register client.
@@ -591,6 +599,7 @@ class TestShoppingItems(TestShoppingItemsBase):
         data = dict(
             name=self.testdata_1.name,
             price=self.testdata_1.price,
+            quantity=self.testdata_1.quantity,
             bought=self.testdata_1.bought)
 
         # create shoppingitem.
@@ -605,11 +614,13 @@ class TestShoppingItems(TestShoppingItemsBase):
         new_data = dict(
             name='nw',  # <- short name
             price=1000.00,
+            quantity=12,
             bought=True)
 
         # get response.
         update_response = self.update_shoppingitem(
-            token=auth_token, shoppinglistId=shoppinglistId, shoppingitemId=shoppingitemId, data=new_data)
+            token=auth_token, shoppinglistId=shoppinglistId,
+            shoppingitemId=shoppingitemId, data=new_data)
 
         # response data.
         update_response_data = json.loads(
@@ -648,6 +659,7 @@ class TestShoppingItems(TestShoppingItemsBase):
         data = dict(
             name=self.testdata_1.name,
             price=self.testdata_1.price,
+            quantity=self.testdata_1.quantity,
             bought=self.testdata_1.bought)
 
         # create shoppingitem.
