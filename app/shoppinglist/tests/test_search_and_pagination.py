@@ -20,12 +20,12 @@ class TestSearch(TestSearchAndPagination):
 
         # get data.
         results = json.loads(
-            search_response.get_data(as_text=True))['results']
+            search_response.get_data(as_text=True))['shoppinglists']
 
         self.assert200(search_response)
 
         for r in results:
-            self.assertIn(query, r)
+            self.assertIn(query, r.keys()[0])
 
     def test_limit_results(self):
         """
