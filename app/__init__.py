@@ -14,7 +14,7 @@ from app.conf import app_config
 
 APP = Flask(__name__)
 BCRYPT = Bcrypt(APP)
-APP.config.from_object(app_config.DevelopmentConfig)
+APP.config.from_object(app_config.ProductionConfig)
 DB = SQLAlchemy(APP)
 AUTH = HTTPBasicAuth()
 API = Api(APP, prefix="/api/v1.0/")
