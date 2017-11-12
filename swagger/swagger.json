@@ -1,0 +1,649 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "description" : "allows users to record their shopping lists",
+    "version" : "1.0",
+    "title" : "shoppinglist"
+  },
+  "host" : "04d01669.ngrok.io",
+  "basePath" : "/api/v1",
+  "schemes" : [ "http" ],
+  "paths" : {
+    "/auth/register" : {
+      "post" : {
+        "tags" : [ "Auth" ],
+        "summary" : "Create user object",
+        "description" : "User details should be sent in json format only.",
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "description" : "Created user object",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/User"
+          }
+        } ],
+        "responses" : {
+          "201" : {
+            "description" : "user account created"
+          },
+          "401" : {
+            "description" : "authorization required"
+          },
+          "409" : {
+            "description" : "username or email exists"
+          },
+          "422" : {
+            "description" : "missing data"
+          },
+          "500" : {
+            "description" : "server error"
+          }
+        }
+      }
+    },
+    "/auth/login" : {
+      "post" : {
+        "tags" : [ "Auth" ],
+        "summary" : "Login user object",
+        "description" : "Takes username and password and returns access tokens: 'auth_token, refresh_token'",
+        "operationId" : "username",
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "description" : "Created user object",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/body"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful login"
+          },
+          "401" : {
+            "description" : "username and password do not match"
+          },
+          "422" : {
+            "description" : "missing data"
+          },
+          "500" : {
+            "description" : "server error"
+          }
+        }
+      }
+    },
+    "/auth/logout" : {
+      "delete" : {
+        "tags" : [ "Auth" ],
+        "summary" : "Blacklists user auth_token",
+        "description" : "Logs out user object by blacklisting user auth_token",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "User object logged out"
+          },
+          "422" : {
+            "description" : "Invalid auth token"
+          }
+        },
+        "security" : [ {
+          "Bearer" : [ ]
+        } ]
+      }
+    },
+    "/auth/reset-password" : {
+      "post" : {
+        "tags" : [ "Auth" ],
+        "summary" : "Resets user object password",
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/body_1"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "password changed successfully"
+          },
+          "422" : {
+            "description" : "invalid or missing data"
+          }
+        }
+      }
+    },
+    "/auth/users" : {
+      "get" : {
+        "tags" : [ "Auth" ],
+        "summary" : "Retrieve user object",
+        "description" : "Takes username and password and returns access tokens: 'auth_token, refresh_token'",
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation"
+          },
+          "422" : {
+            "description" : "Bad authorization header"
+          },
+          "500" : {
+            "description" : "server error"
+          }
+        },
+        "security" : [ {
+          "Bearer" : [ ]
+        } ]
+      },
+      "put" : {
+        "tags" : [ "Auth" ],
+        "summary" : "Updates user object",
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "description" : "Update user account",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/body_2"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful update of user account"
+          },
+          "304" : {
+            "description" : "user object not modified"
+          },
+          "409" : {
+            "description" : "username or email exists"
+          },
+          "422" : {
+            "description" : "Bad authorization header or invalid email"
+          },
+          "500" : {
+            "description" : "server error"
+          }
+        },
+        "security" : [ {
+          "Bearer" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "Auth" ],
+        "summary" : "deletes user object",
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "parameters" : [ ],
+        "responses" : {
+          "204" : {
+            "description" : "User object deleted successfully"
+          },
+          "422" : {
+            "description" : "Bad authorization header"
+          }
+        },
+        "security" : [ {
+          "Bearer" : [ ]
+        } ]
+      }
+    },
+    "/shopping-lists" : {
+      "get" : {
+        "tags" : [ "Shoppinglists" ],
+        "summary" : "retrieve all shoppinglists",
+        "parameters" : [ {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "number of results to produce",
+          "required" : false,
+          "type" : "integer"
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "page number",
+          "required" : false,
+          "type" : "integer"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successfully fetched all shopping lists"
+          }
+        },
+        "security" : [ {
+          "Bearer" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Shoppinglists" ],
+        "summary" : "creates shoppinglist object",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/ShoppingList"
+          }
+        } ],
+        "responses" : {
+          "201" : {
+            "description" : "shoppinglist created successfully"
+          },
+          "401" : {
+            "description" : "Authorization header required"
+          },
+          "409" : {
+            "description" : "shopping list already exists"
+          },
+          "422" : {
+            "description" : "unprocessed header or missing shoppinglist name"
+          }
+        },
+        "security" : [ {
+          "Bearer" : [ ]
+        } ]
+      }
+    },
+    "/shopping-lists/{ID}" : {
+      "get" : {
+        "tags" : [ "Shoppinglists" ],
+        "summary" : "Retrieve a single shoppinglist object",
+        "parameters" : [ {
+          "name" : "ID",
+          "in" : "path",
+          "description" : "shoppinglist object ID",
+          "required" : true,
+          "type" : "integer"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "shoppinglist object retrieved"
+          },
+          "401" : {
+            "description" : "missing authorization header"
+          },
+          "404" : {
+            "description" : "shoppinglist object not found"
+          }
+        },
+        "security" : [ {
+          "Bearer" : [ ]
+        } ]
+      },
+      "put" : {
+        "tags" : [ "Shoppinglists" ],
+        "summary" : "update shoppinglist object",
+        "parameters" : [ {
+          "name" : "ID",
+          "in" : "path",
+          "required" : true,
+          "type" : "integer"
+        }, {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/body_3"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "shoppinglist object updated"
+          },
+          "304" : {
+            "description" : "shoppinglist object not modified"
+          },
+          "401" : {
+            "description" : "missing authorization header"
+          },
+          "404" : {
+            "description" : "shoppinglist object not found"
+          },
+          "409" : {
+            "description" : "shoppinglist object exists"
+          }
+        },
+        "security" : [ {
+          "Bearer" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "Shoppinglists" ],
+        "summary" : "deletes shoppinglist object",
+        "parameters" : [ {
+          "name" : "ID",
+          "in" : "path",
+          "description" : "shoppinglist object ID",
+          "required" : true,
+          "type" : "integer"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "shoppinglist object deleted"
+          },
+          "404" : {
+            "description" : "shoppinglist object not found"
+          }
+        },
+        "security" : [ {
+          "Bearer" : [ ]
+        } ]
+      }
+    },
+    "/shopping-lists/{shoppinglistId}/shopping-items" : {
+      "get" : {
+        "tags" : [ "Shoppinglists" ],
+        "summary" : "retrieve all shoppingitems objects",
+        "parameters" : [ {
+          "name" : "shoppinglistId",
+          "in" : "path",
+          "description" : "shoppinglist object ID",
+          "required" : true,
+          "type" : "integer"
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "limit the number of shoppingitems objects",
+          "required" : false,
+          "type" : "integer"
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "jump to page number according to the results returned",
+          "required" : false,
+          "type" : "integer"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "shoppingitems objects retrieved"
+          },
+          "401" : {
+            "description" : "missing authorization header"
+          },
+          "404" : {
+            "description" : "shoppinglist object not found"
+          }
+        },
+        "security" : [ {
+          "Bearer" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Shoppinglists" ],
+        "summary" : "create shoppingitem object",
+        "parameters" : [ {
+          "name" : "shoppinglistId",
+          "in" : "path",
+          "description" : "ID of shoppinglist object",
+          "required" : true,
+          "type" : "integer"
+        }, {
+          "in" : "body",
+          "name" : "body",
+          "description" : "details of shoppingitem object",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/ShoppingItem"
+          }
+        } ],
+        "responses" : {
+          "201" : {
+            "description" : "shoppingitem object created"
+          },
+          "401" : {
+            "description" : "missing authorization header"
+          },
+          "404" : {
+            "description" : "shoppinglist object not found"
+          }
+        },
+        "security" : [ {
+          "Bearer" : [ ]
+        } ]
+      }
+    },
+    "/shopping-lists/{shoppinglistId}/shopping-items/{shoppingitemId}" : {
+      "get" : {
+        "tags" : [ "Shoppinglists" ],
+        "summary" : "retrieve single shoppingitem object",
+        "parameters" : [ {
+          "name" : "shoppinglistId",
+          "in" : "path",
+          "description" : "shoppinglist object ID",
+          "required" : true,
+          "type" : "integer"
+        }, {
+          "name" : "shoppingitemId",
+          "in" : "path",
+          "description" : "shoppingitem object ID",
+          "required" : true,
+          "type" : "integer"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "shoppingitem object retrieved"
+          },
+          "401" : {
+            "description" : "authorization header required"
+          },
+          "404" : {
+            "description" : "shoppingitem object not found"
+          }
+        },
+        "security" : [ {
+          "Bearer" : [ ]
+        } ]
+      },
+      "put" : {
+        "tags" : [ "Shoppinglists" ],
+        "summary" : "update shoppingitem object",
+        "parameters" : [ {
+          "name" : "shoppinglistId",
+          "in" : "path",
+          "description" : "shoppinglist object ID",
+          "required" : true,
+          "type" : "integer"
+        }, {
+          "name" : "shoppingitemId",
+          "in" : "path",
+          "description" : "shoppingitem object ID",
+          "required" : true,
+          "type" : "integer"
+        }, {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/ShoppingItem"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "shoppingitem object updated"
+          },
+          "401" : {
+            "description" : "Authorization header required"
+          },
+          "404" : {
+            "description" : "shoppinglist or shoppingitem object not found"
+          }
+        },
+        "security" : [ {
+          "Bearer" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "Shoppinglists" ],
+        "summary" : "delete shoppingitem object",
+        "parameters" : [ {
+          "name" : "shoppinglistId",
+          "in" : "path",
+          "description" : "shoppinglist object ID",
+          "required" : true,
+          "type" : "integer"
+        }, {
+          "name" : "shoppingitemId",
+          "in" : "path",
+          "description" : "shoppingitem object ID",
+          "required" : true,
+          "type" : "integer"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "shoppingitem object deleted"
+          },
+          "401" : {
+            "description" : "authorization header required"
+          },
+          "404" : {
+            "description" : "shoppinglist or shoppingitem object not found"
+          }
+        },
+        "security" : [ {
+          "Bearer" : [ ]
+        } ]
+      }
+    },
+    "/shopping-lists/search" : {
+      "get" : {
+        "tags" : [ "Search" ],
+        "summary" : "search shoppinglists objects",
+        "description" : "search and retrieves shoppinglist objects that match the query keyword",
+        "parameters" : [ {
+          "name" : "q",
+          "in" : "query",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "number of results to produce",
+          "required" : false,
+          "type" : "integer"
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "page number",
+          "required" : false,
+          "type" : "integer"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "search results found"
+          },
+          "401" : {
+            "description" : "authorization header required"
+          }
+        },
+        "security" : [ {
+          "Bearer" : [ ]
+        } ]
+      }
+    }
+  },
+  "securityDefinitions" : {
+    "Bearer" : {
+      "type" : "apiKey",
+      "name" : "Authorization",
+      "in" : "header"
+    }
+  },
+  "definitions" : {
+    "User" : {
+      "properties" : {
+        "username" : {
+          "type" : "string"
+        },
+        "email" : {
+          "type" : "string"
+        },
+        "password" : {
+          "type" : "string"
+        }
+      }
+    },
+    "ShoppingList" : {
+      "properties" : {
+        "name" : {
+          "type" : "string"
+        },
+        "description" : {
+          "type" : "string"
+        }
+      }
+    },
+    "ShoppingItem" : {
+      "properties" : {
+        "name" : {
+          "type" : "string"
+        },
+        "price" : {
+          "type" : "number",
+          "format" : "double"
+        },
+        "quantity" : {
+          "type" : "number",
+          "format" : "double"
+        },
+        "bought" : {
+          "type" : "boolean"
+        }
+      }
+    },
+    "body" : {
+      "properties" : {
+        "username" : {
+          "type" : "string"
+        },
+        "password" : {
+          "type" : "string"
+        }
+      }
+    },
+    "body_1" : {
+      "properties" : {
+        "username" : {
+          "type" : "string"
+        },
+        "email" : {
+          "type" : "string"
+        },
+        "old_password" : {
+          "type" : "string"
+        },
+        "new_password" : {
+          "type" : "string"
+        },
+        "confirm" : {
+          "type" : "string"
+        }
+      }
+    },
+    "body_2" : {
+      "properties" : {
+        "username" : {
+          "type" : "string"
+        },
+        "email" : {
+          "type" : "string"
+        }
+      }
+    },
+    "body_3" : {
+      "properties" : {
+        "new_name" : {
+          "type" : "string"
+        }
+      }
+    }
+  }
+}
