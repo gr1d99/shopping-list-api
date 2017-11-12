@@ -374,5 +374,5 @@ class RefreshTokenApi(Resource):
         current_user = get_jwt_identity()
         return make_response(
             jsonify(dict(
-                access_token=create_refresh_token(identity=current_user)
+                access_token=create_access_token(identity=current_user)
             )), 200)
