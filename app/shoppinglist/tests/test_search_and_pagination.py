@@ -25,7 +25,7 @@ class TestSearch(TestSearchAndPagination):
         self.assert200(search_response)
 
         for r in results:
-            self.assertIn(query, r.keys()[0])
+            self.assertIn(query, ', '.join(r.keys()))
 
     def test_limit_results(self):
         """
