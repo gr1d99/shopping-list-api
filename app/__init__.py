@@ -17,7 +17,7 @@ BCRYPT = Bcrypt(APP)
 APP.config.from_object(app_config.DevelopmentConfig)
 DB = SQLAlchemy(APP)
 AUTH = HTTPBasicAuth()
-API = Api(APP, prefix="/api/v1/")
+API = Api(APP, prefix="/api/v1.0/")
 jwt = JWTManager(APP)
 
 
