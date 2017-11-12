@@ -6,12 +6,13 @@
             2. `ShoppingList`
             3. `ShoppingItem`
 """
-import datetime as dt
+import pytz
+from datetime import datetime
 
 from app import DB
+from app.conf.settings import TIME_ZONE
 from .core.exceptions import UsernameExists, EmailExists
 from .db.base import BaseUserManager, BaseModel
-from .utils.date_helpers import datetime
 
 
 class User(BaseUserManager, BaseModel, DB.Model):
@@ -27,16 +28,17 @@ class User(BaseUserManager, BaseModel, DB.Model):
     email = DB.Column(DB.String(30), unique=True, nullable=False)
     shopping_lists = DB.relationship('ShoppingList', backref='user',
                                      lazy='dynamic', cascade='all, delete-orphan')
-    authenticated = DB.Column(DB.Boolean, default=False)
-    date_joined = DB.Column(DB.DateTime, default=datetime.now())
+    date_joined = DB.Column(DB.DateTime(timezone=True),
+                            default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now())
+    updated = DB.Column(DB.DateTime(timezone=True),
+                        default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now(),
+                        onupdate=datetime.now(tz=pytz.timezone(TIME_ZONE)).now())
 
-    def __init__(self, username, password, email, authenticated=False, date_joined=None):
+    def __init__(self, username, password, email):
         """Initialize model values."""
         self.username = username
         self.password = self.hash_password(password)
         self.email = self.normalize_email(email)
-        self.authenticated = authenticated
-        self.date_joined = date_joined
 
     @staticmethod
     def check_email(email):
@@ -77,11 +79,11 @@ class BlacklistToken(BaseModel, DB.Model):
     """
     id = DB.Column(DB.Integer, primary_key=True)
     token = DB.Column(DB.String(500), unique=True, nullable=False)
-    blacklisted_on = DB.Column(DB.DateTime, nullable=False)
+    blacklisted_on = DB.Column(DB.DateTime(timezone=TIME_ZONE), nullable=False)
 
     def __init__(self, token):
         self.token = token
-        self.blacklisted_on = dt.datetime.utcnow()
+        self.blacklisted_on = datetime.now(tz=pytz.timezone(TIME_ZONE)).now()
 
     def __repr__(self):
         return '<id: token: {}'.format(self.token)
@@ -96,10 +98,12 @@ class ShoppingList(BaseModel, DB.Model):
     shopping_items = DB.relationship('ShoppingItem', backref='shopping_list',
                                      lazy='dynamic', cascade='all, delete-orphan')
     is_active = DB.Column(DB.Boolean, default=True)
-    timestamp = DB.Column(DB.DateTime, default=DB.func.current_timestamp())
-    updated = DB.Column(
-        DB.DateTime, default=DB.func.current_timestamp(),
-        onupdate=DB.func.current_timestamp())
+    timestamp = DB.Column(DB.DateTime(timezone=True),
+                          default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now())
+    updated = DB.Column(DB.DateTime(timezone=True),
+                        default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now(),
+                        onupdate=datetime.now(tz=pytz.timezone(TIME_ZONE)).now())
+    description = DB.Column(DB.Text(), nullable=True, default="")
 
     @staticmethod
     def get(shoppinglistId, ownerId):
@@ -111,7 +115,8 @@ class ShoppingList(BaseModel, DB.Model):
         :param ownerId: user id.
         :return: instance.
         """
-        instance = DB.session.query(ShoppingList).filter_by(id=shoppinglistId, owner_id=ownerId).first()
+        instance = DB.session.query(ShoppingList).filter_by(id=shoppinglistId,
+                                                            owner_id=ownerId).first()
         return instance
 
     def __repr__(self):
@@ -123,13 +128,15 @@ class ShoppingItem(BaseModel, DB.Model):
 
     id = DB.Column(DB.Integer, primary_key=True)
     name = DB.Column(DB.String(100), nullable=False)
+    quantity = DB.Column(DB.Float(precision=2), nullable=False)
     price = DB.Column(DB.Float, nullable=False)
     bought = DB.Column(DB.Boolean, default=False)
     shoppinglist_id = DB.Column(DB.Integer, DB.ForeignKey('shopping_list.id'))
-    timestamp = DB.Column(DB.DateTime, default=DB.func.current_timestamp())
-    updated = DB.Column(
-        DB.DateTime, default=DB.func.current_timestamp(),
-        onupdate=DB.func.current_timestamp())
+    timestamp = DB.Column(DB.DateTime(timezone=True),
+                          default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now())
+    updated = DB.Column(DB.DateTime(timezone=True),
+                        default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now(),
+                        onupdate=datetime.now(tz=pytz.timezone(TIME_ZONE)).now())
 
     @staticmethod
     def exists(shl_id, name):
@@ -154,6 +161,14 @@ class ShoppingItem(BaseModel, DB.Model):
             return False
 
         return True
+
+    def total_amount(self):
+        """
+        Calculates total amount(item price * quantity).
+        :return: calculated price.
+        """
+
+        return self.price * self.quantity
 
     def __repr__(self):
         return '<%(name)s obj>' % dict(name=self.name.capitalize())
