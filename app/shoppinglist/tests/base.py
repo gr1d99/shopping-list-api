@@ -204,9 +204,9 @@ class TestShoppingItemsBase(TestShoppingListBase):
     """
     def __init__(self, *args, **kwargs):
         super(TestShoppingItemsBase, self).__init__(*args, **kwargs)
-        _testdata = collections.namedtuple('ShoppingItem', ['name', 'price', 'bought'])
-        self.testdata_1 = _testdata('bread', 90.0, False)
-        self.testdata_2 = _testdata('blueband', 100.5, False)
+        _testdata = collections.namedtuple('ShoppingItem', ['name', 'price', 'quantity', 'bought'])
+        self.testdata_1 = _testdata('bread', 90.0, 10, False)
+        self.testdata_2 = _testdata('blueband', 100.5, 18, False)
 
     def create_shoppingitem(self, token, shoppinglistId, data):
         """
