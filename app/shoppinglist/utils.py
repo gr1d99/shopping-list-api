@@ -16,7 +16,8 @@ __all__ = [
 
 shoppinglist_args = collections.OrderedDict(
     [
-        ('name', fields.Str(required=True, validate=validate.Length(min=3)))
+        ('name', fields.Str(required=True, validate=validate.Length(min=3))),
+        ('description', fields.Str(required=False))
     ]
 )
 
@@ -31,6 +32,7 @@ shoppingitem_create_args = collections.OrderedDict(
     [
         ('name', fields.Str(required=True, validate=validate.Length(min=3))),
         ('price', fields.Decimal(required=True)),
+        ('quantity', fields.Decimal(required=True)),
         ('bought', fields.Bool(required=False))
     ]
 )
@@ -39,6 +41,7 @@ shoppingitem_update_args = collections.OrderedDict(
     [
         ('name', fields.Str(required=False)),
         ('price', fields.Decimal(required=False)),
+        ('quantity', fields.Decimal(required=False)),
         ('bought', fields.Bool(required=False))
     ]
 )
