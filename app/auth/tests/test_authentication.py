@@ -232,7 +232,7 @@ class TestUserAuth(TestBase):
         user = User.query.filter_by(username=info[0]).first()
 
         # format date_joined to string.
-        date_joined = user.date_joined.strftime("%a, %d %b %Y")
+        date_joined = user.date_joined.strftime("%Y-%m-%d %H:%M:%S")
 
         # assert response and data
         self.assert200(view_resp)
@@ -308,15 +308,8 @@ class TestUserAuth(TestBase):
         registration2_response = self.register_user(
             username=target_username, password='password12', email=target_email)
 
-        # confirm first client registration response.
-        self.assertStatus(registration1_response, 201)
-
         self.assertIn(
             account_created, registration2_response.get_data(as_text=True))
-
-        # confirm second client registration response.
-        self.assertTrue(
-            registration1_response.status_code == 201)
 
         self.assertIn(
             account_created, registration2_response.get_data(as_text=True))
@@ -328,22 +321,18 @@ class TestUserAuth(TestBase):
         token = json.loads(
             login1_resp.get_data(as_text=True))['auth_token']
 
-        # assert first client login response.
-        self.assert200(login1_resp)
-
         self.assertIn(
             'Logged in', login1_resp.get_data(as_text=True))
 
         # details that the first client intends to update.
         new_details2 = {
             'username': target_username,  # used username.
-            'email': 'new_user1@email.com'
-        }
+            'email': 'new_user1@email.com'}
 
         new_details3 = {
             'new_username': "new_detailuser",
             'email': target_email  # used email
-        }
+            }
 
         # make a PUT request
         update_det2 = self.update_user_info(
@@ -353,8 +342,8 @@ class TestUserAuth(TestBase):
             token=token, data=new_details3)
 
         # assertions.
-        self.assertStatus(update_det2, 400)
-        self.assertStatus(update_det3, 400)
+        self.assertStatus(update_det2, 409)
+        self.assertStatus(update_det3, 409)
 
         self.assertIn("User with %(uname)s exists" % dict(uname=target_username),
                       update_det2.get_data(as_text=True))
