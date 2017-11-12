@@ -10,7 +10,7 @@ class Config(object):
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
     JWT_BLACKLIST_ENABLED = True
     JWT_BLACKLIST_TOKEN_CHECKS = ['access', 'refresh']
-    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(seconds=120)
+    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(seconds=240)
     HOST = '0.0.0.0'
 
 
@@ -27,3 +27,4 @@ class TestingConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DB_URL')
     TESTING = True
+    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(seconds=5)
