@@ -1,4 +1,5 @@
 import collections
+
 from flask import json
 from flask_restful import url_for
 from flask_testing import TestCase
