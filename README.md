@@ -39,7 +39,9 @@ Take me to [pookie](#pookie)
 * **Success Response:**
 
   * **Code:** 201
-  * **Content:** `{ status :"success", message : "Account created, login with your email and password to get your access tokens" }`
+  * **Content:** 
+  
+        {status :"success", message : "Account created, login with your email and password to get your access tokens" }
  
 * **Error Response:**
 
