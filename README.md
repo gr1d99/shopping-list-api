@@ -15,56 +15,34 @@ Take me to [pookie](#pookie)
 
 
 
-## User Authentication
-**Show User**
-----
-  Returns json data about a single user.
+## 1. User Authentication
 
 * **URL**
 
-  /users/register
+  `/users/register`
 
 * **Method:**
 
   `POST`
 
 * **Data Format**
-  
+
   `application/json`
   
 * **Required**
-  
+
+    * `username`
+    * `email`
+    * `password`
   
 
 * **Success Response:**
 
-  * **Code:** 200 <br />
-    **Content:** `{ id : 12, name : "Michael Bloom" }`
+  * **Code:** 201
+  * **Content:** `{ status :"success", message : "Account created, login with your email and password to get your access tokens" }`
  
 * **Error Response:**
 
-  * **Code:** 404 NOT FOUND <br />
-    **Content:** `{ error : "User doesn't exist" }`
-
-  OR
-
-  * **Code:** 401 UNAUTHORIZED <br />
-    **Content:** `{ error : "You are unauthorized to make this request." }`
-
-* **Sample Call:**
-
-  ```javascript
-    $.ajax({
-      url: "/users/1",
-      dataType: "json",
-      type : "GET",
-      success : function(r) {
-        console.log(r);
-      }
-    });
-  ```
-
-<a name="pookie">Pookie</a>
 
 ```json
 
