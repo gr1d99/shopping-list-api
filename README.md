@@ -11,67 +11,62 @@ See deployment for notes on how to deploy the project on a live system.
 [Shoppinglist-api](https://shoppinglistapiapp.herokuapp.com)
 
 
-Take me to [pookie](#pookie)
-
-
 
 ## Authentication Endpoints
 
 1. **User Registration**
 
- * **URL**
+  * **URL**
 
-   `/users/register`
+    `/users/register`
 
- * **Method:**
+  * **Method:**
 
-   `POST`
+    `POST`
 
- * **Data Format**
+  * **Data Format**
 
-   `application/json`
+    `application/json`
   
- * **Required**
+  * **Required**
 
-     * `username`
-     * `email`
-     * `password`
+      * `username`
+      * `email`
+      * `password`
   
 
- * **Success Response:**
+  * **Success Response:**
 
-   * **Code:** 201 CREATED
-   * **Content:** 
+    * **Code:** 201 CREATED
+    * **Content:** 
   
-         {status :"success", message : "Account created, login with your email and password to get your access tokens" }
+          {status :"success", message : "Account created, login with your email and password to get your access tokens" }
  
- * **Error Response:**
+  * **Error Response:**
   
-   * **Code:** 422 UNPROCESSABLE ENTITY
-   * **Content:** 
+    * **Code:** 422 UNPROCESSABLE ENTITY
+    * **Content:** 
        
-         {
-             "messages": {
-                 "email": [
-                   "Missing data for required field."
-                 ],
-                 "username": [
-                   "Missing data for required field."
-                 ],
-                 "password": [
-                   "Missing data for required field."
-                 ]
-             }
-         }
-        
-        
-   OR
-    
-   * **Code:** 409 CONFLICT
-   * **Content:** 
+          {
+              "messages": {
+                  "email": [
+                    "Missing data for required field."
+                  ],
+                  "username": [
+                    "Missing data for required field."
+                  ],
+                  "password": [
+                    "Missing data for required field."
+                  ]
+              }
+          }   
+    OR
+    * **Code:** 409 CONFLICT
+   
+    * **Content:** 
                  
-         { error: "username exists" }
-         { error: "email exists" 
+          { error: "username exists" }
+          { error: "email exists" 
  
  2. **Login User**
     
