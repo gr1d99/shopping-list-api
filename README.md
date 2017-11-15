@@ -297,7 +297,6 @@ See deployment for notes on how to deploy the project on a live system.
       * **Content:** 
        
             { "message": "invalid authorization header" }
-            { "message": "only refresh tokens can access this endpoint" }
             
  6. **User Detail.**
  
