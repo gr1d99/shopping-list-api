@@ -34,46 +34,39 @@ class UserRegisterApi(Resource):
         email = data.get('email')
         password = str(data.get('password'))
 
+        # create user instance
+        user = User(username=username, password=password, email=email)
+
         try:
-            # create user instance
-            user = User(username=username, password=password, email=email)
+            # check if username exists.
+            User.check_username(username)
 
-            try:
-                # check if username exists.
-                User.check_username(username)
-
-            except user.UsernameExists:
-                return make_response(
-                    jsonify(dict(
-                        message=username_exists,
-                        status='fail'
-                    )), 409)
-
-            try:
-                # check if email exists.
-                User.check_email(email)
-
-            except user.EmailExists:
-                return make_response(
-                    jsonify(dict(
-                        message=email_exists,
-                        status='fail'
-                    )), 409)
-
-            # if username and email are okay call the save method.
-            user.save()
-
+        except user.UsernameExists:
             return make_response(
                 jsonify(dict(
-                    message=account_created,
-                    status='success'
-                )), 201)
+                    message=username_exists,
+                    status='fail'
+                )), 409)
 
-        except Exception as e:
-            AppLogger(self.__class__.__name__).logger.error(e)
+        try:
+            # check if email exists.
+            User.check_email(email)
+
+        except user.EmailExists:
             return make_response(
-                jsonify(dict(status='fail', message=e)), 500
-            )
+                jsonify(dict(
+                    message=email_exists,
+                    status='fail'
+                )), 409)
+
+        # if username and email are okay call the save method.
+        user.save()
+
+        return make_response(
+            jsonify(dict(
+                message=account_created,
+                status='success'
+            )), 201)
 
 
 class UserLoginApi(Resource):
@@ -144,6 +137,7 @@ class UserProfileApi(Resource):
             return make_response(
                 jsonify(dict(status='success',
                              data=dict(username=user.username,
+                                       id=user.id,
                                        email=user.email,
                                        date_joined=user.date_joined.strftime("%Y-%m-%d %H:%M:%S"),
                                        updated=user.updated.strftime("%Y-%m-%d %H:%M:%S"))
@@ -374,5 +368,5 @@ class RefreshTokenApi(Resource):
         current_user = get_jwt_identity()
         return make_response(
             jsonify(dict(
-                access_token=create_access_token(identity=current_user)
+                auth_token=create_access_token(identity=current_user)
             )), 200)
