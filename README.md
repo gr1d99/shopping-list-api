@@ -138,7 +138,7 @@ See deployment for notes on how to deploy the project on a live system.
             "message": "Incorrect username or password"
           }
   
- 3. Logout User.
+ 3. **Logout User.**
  
     * **URL**
    
@@ -183,7 +183,7 @@ See deployment for notes on how to deploy the project on a live system.
        
             { "message": "invalid authorization header" }
             
- 4. Reset User Password.
+ 4. **Reset User Password.**
  
    * **URL**
    
@@ -253,7 +253,7 @@ See deployment for notes on how to deploy the project on a live system.
                 ]
            }
       
- 5. Refresh Auth Token.
+ 5. **Refresh Auth Token.**
  
    * **URL**
    
@@ -299,7 +299,7 @@ See deployment for notes on how to deploy the project on a live system.
             { "message": "invalid authorization header" }
             { "message": "only refresh tokens can access this endpoint" }
             
- 6. User Detail.
+ 6. **User Detail.**
  
    * **URL**
    
@@ -353,7 +353,7 @@ See deployment for notes on how to deploy the project on a live system.
    
            { "message": "invalid authorization header" }
         
- 7. Update User.
+ 7. **Update User.**
  
    * **URL**
      
@@ -423,7 +423,7 @@ See deployment for notes on how to deploy the project on a live system.
    
            { "message": "invalid authorization header" }
  
- 8. Delete User.
+ 8. **Delete User**.
  
     
    * **URL**
