@@ -464,3 +464,31 @@ See deployment for notes on how to deploy the project on a live system.
            
            
 ## Shoppinglist Endpoints.
+
+1. **Retrieve All User Shoppinglists**
+
+ * **URL**
+ 
+   * `/shopping-lists`
+
+ * **Method:**
+
+   * `GET`
+
+ * **Data Format**
+
+    * `application/json`
+  
+ * **Required**
+
+    * `auth_token`
+      
+ * **Success Response:**
+ 
+    * **Code:** 200 OK
+    
+    * **Content** 
+    
+          {}
+    
+    
