@@ -465,19 +465,19 @@ See deployment for notes on how to deploy the project on a live system.
            
 ## Shoppinglist Endpoints.
 
-1. **Retrieve All User Shoppinglists**
+1. **Retrieve All Shoppinglists**
 
  * **URL**
  
-   * `/shopping-lists`
+   `/shopping-lists`
 
  * **Method:**
 
-   * `GET`
+   `GET`
 
  * **Data Format**
 
-    * `application/json`
+    `application/json`
   
  * **Required**
 
@@ -489,6 +489,119 @@ See deployment for notes on how to deploy the project on a live system.
     
     * **Content** 
     
-          {}
+      ```json
+      {
+        "status": "success",
+        "total_pages": 1,
+        "message": {
+          "shopping_lists": [
+            {
+                "description": "my shoppinglist",
+                "id": 2,
+                "is_active": true,
+                "name": "breakfast"
+            }
+          ]
+        }
+      }
+
+ * **Error Response**
+ 
+    * **Code:** 401 UNAUTHORIZED
+     
+    * **Content:** 
+     
+          { "message": "authorization header required" }
+   
+     OR
+     
+    * **Code:** 422 UNPROCESSABLE ENTITY
+     
+    * **Content:** 
+   
+           { "message": "invalid authorization header" }
+           
+2. * **Create Shoppinglist**
+
+ **URL**
+ 
+   `/shopping-lists`
+
+ * **Method:**
+
+   `POST`
+
+ * **Data Format**
+
+    `application/json`
     
-    
+ * **Data Params**
+ 
+   * **Required**
+ 
+     * `name`
+  
+   * **Optional**
+
+     * `name`
+     
+ * **Success Response**
+ 
+   * **Code:** 200 OK
+   
+   * **Content** 
+   
+      ```json
+     {
+       "status": "success",
+       "message": {
+         "bought shoppingitems": 0,
+         "created_on": "2017-11-15 18:23:19",
+         "description": "string",
+         "id": 2,
+         "name": "string",
+         "not bought shoppingitems": 0,
+         "total shoppingitems": 0,
+         "updated_on": "2017-11-15 18:23:19"
+         }
+       }
+         
+ * **Error Response**
+ 
+   * **Code:** 401 UNAUTHORIZED
+     
+   * **Content:** 
+     
+         { "message": "authorization header required" }
+         
+   * **Code:** 404 NOT FOUND
+     
+   * **Content:** 
+     
+         { "message": "Shopping list not found" }
+         
+   OR
+     
+   * **Code:** 422 UNPROCESSABLE ENTITY
+     
+   * **Content:** 
+   
+         { "message": "invalid authorization header" }
+
+3. **Retrieve Shoppinglist.**
+
+ * **URL**
+ 
+   `/shopping-lists/{ shoppinglistId }`
+   
+ * **Method**
+ 
+   `GET`
+   
+ * **Url Params**
+ 
+   * **Required**
+ 
+     * `shoppinglistId=[integer]`
+   
+ 
