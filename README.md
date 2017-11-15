@@ -12,7 +12,7 @@ See deployment for notes on how to deploy the project on a live system.
 
 
 
-## Authentication Endpoints
+## Authentication Endpoints.
 
 1. **User Registration**
 
@@ -461,3 +461,6 @@ See deployment for notes on how to deploy the project on a live system.
      * **Content:** 
    
            { "message": "invalid authorization header" }
+           
+           
+## Shoppinglist Endpoints.
