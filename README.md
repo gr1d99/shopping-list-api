@@ -28,8 +28,10 @@ See deployment for notes on how to deploy the project on a live system.
 
     `application/json`
   
-  * **Required**
-
+  * **Data Params**
+  
+    * **Required**
+    
       * `username`
       * `email`
       * `password`
@@ -83,19 +85,14 @@ See deployment for notes on how to deploy the project on a live system.
    * **Data Format**
 
      `application/json`
-  
-   * **Required**
-
-      * `username`
-      * `email`
-      * `password`
-      
+     
    * **Data Params**
-   
-      * `username`
-      * `email`
-      * `password`
   
+     * **Required**
+
+       * `username`
+       * `email`
+       * `password`
 
   * **Success Response:**
 
@@ -151,10 +148,6 @@ See deployment for notes on how to deploy the project on a live system.
     * **Data Format**
 
       `application/json`
-  
-   * **Required**
-
-      * `auth_token`
 
    * **Success Response:**
 
@@ -196,20 +189,19 @@ See deployment for notes on how to deploy the project on a live system.
    * **Data Format**
 
      `application/json`
-  
-   * **Required**
-      
-     * `old_password`
-     * `new_password`
-     * `confirm`
-      
+     
    * **Data Params**
+  
+     * **Required**
+      
+       * `old_password`
+       * `new_password`
+       * `confirm`
+      
+     * **Optional**
    
-     * `username`
-     * `email`
-     * `old_password`
-     * `new_password`
-     * `confirm`
+       * `username`
+       * `email`
      
    * **Success Response:**
 
@@ -266,10 +258,6 @@ See deployment for notes on how to deploy the project on a live system.
    * **Data Format**
 
       `application/json`
-  
-   * **Required**
-
-      * `refresh_token`
       
    * **Success Response:**
 
@@ -312,10 +300,6 @@ See deployment for notes on how to deploy the project on a live system.
 
      `application/json`
   
-   * **Required**
-
-     * `auth_token`
-      
    * **Success Response:**
 
      * **Code:** 200 OK
@@ -365,15 +349,13 @@ See deployment for notes on how to deploy the project on a live system.
    * **Data Format**
    
      `application/json`
-     
-   * **Required**
-   
-     * `auth_token`
-     
+
    * **Data Params**
      
-     * `username`
-     * `email`
+     * **Required**
+     
+       * `username`
+       * `email`
      
    * **Success Response:**
    
@@ -436,10 +418,6 @@ See deployment for notes on how to deploy the project on a live system.
    * **Data Format**
    
      `application/json`
-     
-   * **Required**
-   
-     * `auth_token`
      
    * **Success Response**
    
@@ -516,7 +494,7 @@ See deployment for notes on how to deploy the project on a live system.
      
           { "message": "authorization header required" }
    
-     OR
+    OR
      
     * **Code:** 422 UNPROCESSABLE ENTITY
      
@@ -717,5 +695,49 @@ See deployment for notes on how to deploy the project on a live system.
    * **Content:** 
    
          { "message": "invalid authorization header" }
-         
+
+4. **Delete Shoppinglist.**
+
+ * **URL**
  
+   `/shopping-lists/{ shoppinglistId }`
+ 
+ * **Method**
+ 
+   `DELETE`
+   
+ * **Success Response**
+ 
+   * **Code:** 204 NO CONTENT
+   
+ * **Error Response**
+ 
+   * **Code:** 401 UNAUTHORIZED
+     
+   * **Content:** 
+     
+         { "message": "authorization header required" }
+         
+   OR         
+         
+   * **Code:** 404 NOT FOUND
+     
+   * **Content:** 
+     
+         { "message": "Shopping list not found" }
+         
+   OR
+   
+   * **Code:** 409 CONFLICT
+     
+   * **Content:** 
+     
+         { "message": "There exists a shoppinglist with the provided name exists, try again with a different name" }
+         
+   OR
+     
+   * **Code:** 422 UNPROCESSABLE ENTITY
+     
+   * **Content:** 
+   
+         { "message": "invalid authorization header" }
