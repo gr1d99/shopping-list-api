@@ -478,10 +478,13 @@ See deployment for notes on how to deploy the project on a live system.
  * **Data Format**
 
     `application/json`
-  
- * **Required**
-
-    * `auth_token`
+ 
+ * **Query Params**
+ 
+    * **Optional**
+    
+      * `limit=[integer]`
+      * `page=[integer]`
       
  * **Success Response:**
  
@@ -521,9 +524,10 @@ See deployment for notes on how to deploy the project on a live system.
    
            { "message": "invalid authorization header" }
            
-2. * **Create Shoppinglist**
+           
+2. **Create Shoppinglist**
 
- **URL**
+ * **URL**
  
    `/shopping-lists`
 
@@ -543,7 +547,7 @@ See deployment for notes on how to deploy the project on a live system.
   
    * **Optional**
 
-     * `name`
+     * `description`
      
  * **Success Response**
  
@@ -551,20 +555,16 @@ See deployment for notes on how to deploy the project on a live system.
    
    * **Content** 
    
-      ```json
-     {
-       "status": "success",
-       "message": {
-         "bought shoppingitems": 0,
-         "created_on": "2017-11-15 18:23:19",
-         "description": "string",
-         "id": 2,
-         "name": "string",
-         "not bought shoppingitems": 0,
-         "total shoppingitems": 0,
-         "updated_on": "2017-11-15 18:23:19"
+     ```json
+         {
+          "message": "Shopping list created",
+          "status": "success",
+          "data": {
+            "id": 2,
+            "name": "string",
+            "created_on": "2017-11-15 18:23:19"
+          }
          }
-       }
          
  * **Error Response**
  
@@ -573,12 +573,6 @@ See deployment for notes on how to deploy the project on a live system.
    * **Content:** 
      
          { "message": "authorization header required" }
-         
-   * **Code:** 404 NOT FOUND
-     
-   * **Content:** 
-     
-         { "message": "Shopping list not found" }
          
    OR
      
@@ -604,4 +598,75 @@ See deployment for notes on how to deploy the project on a live system.
  
      * `shoppinglistId=[integer]`
    
+ * **Success Response**
  
+   * **Code:** 200 OK
+   
+   * **Content:** 
+   
+     ```json
+     {
+       "status": "success",
+       "message": {
+         "id": 2,
+         "name": "string",
+         "description": "string",
+         "total_items": 0,
+         "bought_items": 0,
+         "items_not_bought": 0,
+         "created_on": "2017-11-15 18:23:19",
+         "updated_on": "2017-11-15 18:23:19"
+         }
+       }
+   
+ * **Error Response**
+ 
+   * **Code:** 401 UNAUTHORIZED
+     
+   * **Content:** 
+     
+         { "message": "authorization header required" }
+         
+   OR         
+         
+   * **Code:** 404 NOT FOUND
+     
+   * **Content:** 
+     
+         { "message": "Shopping list not found" }
+         
+   OR
+   
+   * **Code:** 409 CONFLICT
+     
+   * **Content:** 
+     
+         { "message": "There exists a shoppinglist with the provided name exists, try again with a different name" }
+         
+   OR
+     
+   * **Code:** 422 UNPROCESSABLE ENTITY
+     
+   * **Content:** 
+   
+         { "message": "invalid authorization header" }
+   
+4. **Update Shoppinglist.**
+
+ * **URL**
+ 
+   `/shopping-lists/{ shoppinglistId }`
+   
+ * **Method**
+ 
+   `PUT`
+   
+ * **Url Params**
+ 
+   * **Required**
+ 
+     * `shoppinglistId=[integer]`
+   
+ * **Success Response**
+ 
+   * **Code:** 200 OK
