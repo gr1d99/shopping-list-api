@@ -670,3 +670,52 @@ See deployment for notes on how to deploy the project on a live system.
  * **Success Response**
  
    * **Code:** 200 OK
+   
+   * **Content:** 
+   
+     ```json
+            {
+               "status": "success",
+               "message": "Shopping list updated",
+               "data": {
+               "created_on": "2017-11-15 18:23:19",
+               "is_active": true,
+               "name": "new string",
+               "updated_on": "2017-11-16 03:29:11"
+               }
+            }
+       
+  
+ * **Error Response**
+ 
+   * **Code:** 401 UNAUTHORIZED
+     
+   * **Content:** 
+     
+         { "message": "authorization header required" }
+         
+   OR         
+         
+   * **Code:** 404 NOT FOUND
+     
+   * **Content:** 
+     
+         { "message": "Shopping list not found" }
+         
+   OR
+   
+   * **Code:** 409 CONFLICT
+     
+   * **Content:** 
+     
+         { "message": "There exists a shoppinglist with the provided name exists, try again with a different name" }
+         
+   OR
+     
+   * **Code:** 422 UNPROCESSABLE ENTITY
+     
+   * **Content:** 
+   
+         { "message": "invalid authorization header" }
+         
+ 
