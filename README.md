@@ -741,3 +741,148 @@ See deployment for notes on how to deploy the project on a live system.
    * **Content:** 
    
          { "message": "invalid authorization header" }
+ 
+## Shopping Items.
+
+1. **Create Shopping Item.**
+
+  * **Url**
+ 
+    `/shopping-lists/{ shoppinglistId }/shopping-items`
+  
+  * **Method**
+          
+    `POST`
+    
+  * **Url Params**
+   
+    * **Required**
+    
+      * `shoppinglistId=[integer]`
+    
+  * **Data Params**
+  
+    * **Required**
+    
+      * `name=[string]`
+      * `price=[decimal]`
+      * `quantity=[decimal]`
+    
+    * **Optional**
+    
+      * `bought=[bool]`
+  
+  * **Success Response**
+  
+    * **Code:** 201 CREATED
+    
+    * **Content:** 
+      
+      ```json
+      { 
+          "status": "success",
+          "message": "Shopping item created",
+          "data": {
+            "bought": true,
+            "id": 1,
+            "name": "Bread",
+            "price": 50,
+            "quantity": 1,
+            "total_amount": 50
+          }
+        }
+  
+  * **Error Response**
+  
+    * **Code:** 404 NOT FOUND
+     
+    * **Content:** 
+     
+         { "message": "Shopping list not found" }
+         
+    OR
+   
+    * **Code:** 409 CONFLICT
+     
+    * **Content:** 
+     
+          { "message": "There exists a shopping item with similar name, try again" }
+         
+    OR
+     
+    * **Code:** 422 UNPROCESSABLE ENTITY
+     
+    * **Content:** 
+   
+          { "message": "invalid authorization header" }
+          
+2. **Retrieve Shopping Item**
+
+   * **Url**
+  
+     `/shopping-lists/{ shoppinglistId }/shopping-items/{ shoppingitemId }`
+    
+   * **Method**
+  
+     `GET`
+    
+   * **Url Params**
+  
+     * **Required**
+  
+       * `shoppinglistId=[integer]`
+       * `shoppingitemId=[integer]`
+      
+   * **Success Response**
+  
+     * **Code:** 200 OK
+     
+     * **Content** 
+    
+       ```json
+       { 
+         "status": "success",
+         "message": {
+           "created_on": "2017-11-16 16:48:21",
+           "id": 1,
+           "name": "Bread",
+           "updated_on": "2017-11-16 16:48:21"
+         }
+       }
+  
+   * **Error Response**
+  
+     * **Code:** 404 NOT FOUND
+     
+     * **Content:** 
+     
+           { "message": "Shopping list not found" }
+         
+           { "message": "Shopping item not found" }
+       
+     OR
+     
+     * **Code:** 422 UNPROCESSABLE ENTITY
+     
+     * **Content:** 
+   
+           { "message": "invalid authorization header" }
+          
+3. **Update Shopping Item.**
+
+   * **Url**
+   
+     `/shopping-lists/{ shoppinglistId }/shopping-items/{ shoppingitemId }`
+     
+   * **Method**
+   
+     `POST`
+     
+   * **Url Params**
+  
+     * **Required**
+  
+       * `shoppinglistId=[integer]`
+       * `shoppingitemId=[integer]`
+       
+   
