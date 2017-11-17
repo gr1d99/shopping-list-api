@@ -16,13 +16,13 @@ See deployment for notes on how to deploy the project on a live system.
 
 1. **User Registration**
 
-  * **URL**
+   * **URL**
 
-    `/users/register`
+     `/users/register`
 
-  * **Method:**
+   * **Method:**
 
-    `POST`
+     `POST`
 
   * **Data Format**
 
@@ -63,8 +63,10 @@ See deployment for notes on how to deploy the project on a live system.
                     "Missing data for required field."
                   ]
               }
-          }   
+          }  
+           
     OR
+    
     * **Code:** 409 CONFLICT
    
     * **Content:** 
@@ -74,27 +76,27 @@ See deployment for notes on how to deploy the project on a live system.
  
  2. **Login User**
  
-   * **URL**
+    * **URL**
    
-     `/users/login`
+      `/users/login`
 
-   * **Method:**
+    * **Method:**
 
-     `POST`
+      `POST`
 
-   * **Data Format**
+    * **Data Format**
 
      `application/json`
      
-   * **Data Params**
+    * **Data Params**
   
-     * **Required**
+      * **Required**
 
-       * `username`
-       * `email`
-       * `password`
+        * `username`
+        * `email`
+        * `password`
 
-  * **Success Response:**
+    * **Success Response:**
 
       * **Code:** 200 OK
       
@@ -107,7 +109,7 @@ See deployment for notes on how to deploy the project on a live system.
                 "refresh_token": "XXXXXXXX.XXXXXX"
             }
  
-  * **Error Response:**
+    * **Error Response:**
   
     * **Code:** 422 UNPROCESSABLE ENTITY
     
@@ -149,7 +151,7 @@ See deployment for notes on how to deploy the project on a live system.
 
       `application/json`
 
-   * **Success Response:**
+    * **Success Response:**
 
       * **Code:** 200 OK
       
@@ -160,7 +162,7 @@ See deployment for notes on how to deploy the project on a live system.
                 message: "Successfully logged out"
             }
  
-   * **Error Response:**
+    * **Error Response:**
   
       * **Code:** 401 UNAUTHORIZED
       
@@ -178,21 +180,21 @@ See deployment for notes on how to deploy the project on a live system.
             
  4. **Reset User Password.**
  
-   * **URL**
+    * **URL**
    
-     `/users/reset-password`
+      `/users/reset-password`
 
-   * **Method:**
+    * **Method:**
 
-     `POST`
+      `POST`
 
-   * **Data Format**
+    * **Data Format**
 
-     `application/json`
+      `application/json`
      
-   * **Data Params**
+    * **Data Params**
   
-     * **Required**
+      * **Required**
       
        * `old_password`
        * `new_password`
