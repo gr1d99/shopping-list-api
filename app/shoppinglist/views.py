@@ -456,7 +456,7 @@ class ShoppingItemDetailApi(Resource):
         data.setdefault('name', shoppingitem.name)
         data.setdefault('price', shoppingitem.price)
         data.setdefault('quantity', shoppingitem.quantity)
-        data.setdefault('total_cost', shoppingitem.total_amount)
+        data.setdefault('total_cost', shoppingitem.total_amount())
         data.setdefault('created_on', shoppingitem.timestamp.strftime("%Y-%m-%d %H:%M:%S"))
         data.setdefault('updated_on', shoppingitem.updated.strftime("%Y-%m-%d %H:%M:%S"))
         return make_response(
