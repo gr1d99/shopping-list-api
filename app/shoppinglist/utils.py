@@ -110,7 +110,7 @@ def prep_keyword(keyword):
 
     operator = '%'
     _term = '%(op)s%(kw)s%(op)s'
-    term = _term % dict(op=operator, kw=keyword)
+    term = _term % dict(op=operator, kw=keyword.lower())
     return term
 
 urlmaker = MakePaginationUrls
