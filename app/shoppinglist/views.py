@@ -599,7 +599,7 @@ class ShoppingItemDetailApi(Resource):
                         jsonify(dict(
                             status='fail',
                             message=shoppingitem_exists
-                        )), 400
+                        )), 409
                     )
 
                 # if it doesn't then assign new name to shoppingitem.
@@ -705,7 +705,7 @@ class SearchShoppingListApi(Resource):
         if _term == '':
             return make_response(
                 jsonify(dict(
-                    message="please provide a value"
+                    message="please provide query value"
                 )), 400
             )
 
