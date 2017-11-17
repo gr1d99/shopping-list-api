@@ -7,6 +7,153 @@ A RESTful ai Flask powered web application that allows users to record and share
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. 
 See deployment for notes on how to deploy the project on a live system.
 
+## Prerequisites.
+
+Things you need to get shoppinglist API app up and running.
+
+Follow the links below and and install the softwares depending on the operating system you are using.
+
+1. Git [Installation instructions](https://git-scm.com/)
+2. Python3 [Installation instructions](https://www.python.org/download/releases/3.0/)
+3. Virtual environment [Installation instructions](http://virtualenv.readthedocs.io/en/stable/)
+3. Postgres [Installation instructions](http://postgresguide.com/setup/install.html)
+
+## Installation.
+
+**NB: Before you start following the steps below, ensure that you have install the necessary dependencies in the 
+**PREREQUISITES** section**
+
+1. Clone project to your local machine/computer.
+   ```bash
+      git clone https://github.com/gr1d99/shopping-list-api.git
+
+   ```
+2. Create virtual environment(This will assume you installed virtualenv package in the prerequisites section).
+
+   ```bash
+      virtualenv --python=python3 venv
+   ```
+   
+   Start the virtual environment.
+   
+   ```bash
+      source venv/bin/activate
+   ```
+
+3. Install application dependencies. 
+   
+   After the project has been downloaded to your local machine, open your `terminal/cmd` depending on the operating 
+   system your computer is running on and navigate to the root of the project. eg `cd projects/shopping-list-api` then 
+   then install the dependencies by running the command below.
+   
+   ```bash
+      pip3 install -r requirements.txt
+   ```
+   
+4. Create `development` and `testing` databases using postgres.
+   
+5. The for the app to run correctly you will need to set certain `enviroment variables` that are required by the 
+   application. These variables include: `SECRET_KEY`, `JWT_SECRET_KEY`, `DATABASE_URL` and `TEST_DB_URL`.
+      
+   follow the procedure below to create and set these environment variables.
+            
+     - Create a script called `env.sh` and copy the contents below into the script and save it on the root of the project.
+     
+       ```bash
+          export SECRET_KEY='2345678t656r6d5f5rd56rd535drrd5rd5dr6rr67fr6rf'
+          export JWT_SECRET_KEY='cytefytftecfytftef5rc6ecr6cr6wc766c66w7tc7'
+          export DATABASE_URL='postgres://<role>:<password>@localhost/<database_name>'
+          export TEST_DB_URL='postgres://<role>:<password>@localhost/<database_name>'
+       ```
+       
+       Replace `<role>, <password> and <database_name>` with real values so that the app can create needed tables.
+       
+       **Example**
+       ```bash
+          export SECRET_KEY='2345678t656r6d5f5rd56rd535drrd5rd5dr6rr67fr6rf'
+          export JWT_SECRET_KEY='cytefytftecfytftef5rc6ecr6cr6wc766c66w7tc7'
+          export DATABASE_URL='postgres://postgres:mypass123@localhost/shl_dev'
+          export TEST_DB_URL='postgres://postgres:mypass123@localhost/shl_test'
+       ```
+       
+6. Save the above file`(env.sh)` and run the command `$ chmod +x env.sh`, then `$ ./env.sh`.
+
+7. If everything was successful then your app should be set and ready to run.
+
+   - Run migrations to create tables.
+     
+     ```bash
+        $ python manage.py db migrate
+   
+        $ python manage.py db upgrade
+     ```
+     
+   - Start development server.
+   
+     ```bash
+        python manage.py runserver
+     ```
+     
+   - In your browser type the following url `http://localhost:5000` to access browsable swagger documentation of the 
+     application, or use tools such as **[Postman](https://www.getpostman.com/) for Chrome** or 
+     **[RESTClient](https://addons.mozilla.org/en-US/firefox/addon/restclient/) for Firefox** to test the application 
+     locally.
+     
+### Example(use curl).
+
+**Register User**
+```bash
+   $ curl -H "Content-Type: application/json" -X POST -d '{"username":"testuser","password":"testuserpassword","email":"testuser@gmail.com"}' http://localhost:5000/api/v1.0/auth/register
+```
+
+you should see the response below.
+
+```
+{
+"message": "Account created, login with your email and password to get your access tokens", 
+"status": "success"
+}   
+```
+
+**Login User**
+```bash
+   $ curl -H "Content-Type: application/json" -X POST -d '{"username":"testuser","password":"testuserpassword"}' http://localhost:5000/api/v1.0/auth/login
+```
+
+you should see the response.
+```
+{
+  "status": "success",
+  "message": "Logged in", 
+  "auth_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlkZW50aXR5IjoidGVzdHVzZXIiLCJpYXQiOjE1MTA5NDc1MDUsImp0aSI6Ijg4YWM0NGE1LTA3NWMtNDU0Zi05NTdmLTU2ZWRlODI3MWUzMyIsInR5cGUiOiJhY2Nlc3MiLCJuYmYiOjE1MTA5NDc1MDUsImV4cCI6MTUxMDk1MTEwNX0.qIKKIDStHtjPx9V51mmZgtrYTbCxuD2s0E1gzJPkDDk",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eSI6InRlc3R1c2VyIiwiaWF0IjoxNTEwOTQ3NTA1LCJqdGkiOiI2NmFiMDc0My0yYjViLTQwODQtYTU3Mi04ZmY2ZWVkZDFhYTciLCJ0eXBlIjoicmVmcmVzaCIsIm5iZiI6MTUxMDk0NzUwNSwiZXhwIjoxNTEzNTM5NTA1fQ.1-6Tfskjj5xwRdeJIwiqBrh5fGSY9Viij0sjRLG44Ys"
+}
+
+```
+
+## Running Tests.
+This app uses `nose` as the main package for testing.
+
+Copy the commands below in your terminal to run automated tests and view test coverage.
+
+```bash
+   $ nosetests --with-coverage tests app/auth/tests app/shoppinglist/tests
+```
+
+Then show coverage.
+
+```bash
+   $ coverage report
+```
+
+View report in browser.
+
+```bash
+   $ coverage html
+```
+
+There should be a new folder named `htmlcov` in the root of the project app, open it and click in an html file
+named `idex.html`.
 
 ## Demo
 [Shoppinglist-api](https://shoppinglistapiapp.herokuapp.com)
