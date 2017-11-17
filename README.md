@@ -86,7 +86,7 @@ See deployment for notes on how to deploy the project on a live system.
 
     * **Data Format**
 
-     `application/json`
+      `application/json`
      
     * **Data Params**
   
@@ -378,6 +378,8 @@ See deployment for notes on how to deploy the project on a live system.
           "status": "success"
          }
          ```
+         
+      OR
         
       * **Code:** 304 NOT MODIFIED
      
@@ -446,26 +448,26 @@ See deployment for notes on how to deploy the project on a live system.
 
 1. **Retrieve All Shoppinglists**
 
-  * **URL**
+   * **URL**
  
-    `/shopping-lists`
+     `/shopping-lists`
 
-  * **Method:**
+   * **Method:**
 
-    `GET`
+     `GET`
 
-  * **Data Format**
+   * **Data Format**
 
      `application/json`
  
-  * **Query Params**
+   * **Query Params**
  
-    * **Optional**
+     * **Optional**
     
-      * `limit=[integer]`
-      * `page=[integer]`
+       * `limit=[integer]`
+       * `page=[integer]`
       
- * **Success Response:**
+   * **Success Response:**
  
    * **Code:** 200 OK
     
@@ -487,38 +489,38 @@ See deployment for notes on how to deploy the project on a live system.
         }
       }
 
- * **Error Response**
+   * **Error Response**
  
-    * **Code:** 401 UNAUTHORIZED
+     * **Code:** 401 UNAUTHORIZED
      
-    * **Content:** 
+     * **Content:** 
      
-          { "message": "authorization header required" }
+           { "message": "authorization header required" }
    
-    OR
+   OR
      
-    * **Code:** 422 UNPROCESSABLE ENTITY
+   * **Code:** 422 UNPROCESSABLE ENTITY
      
-    * **Content:** 
+   * **Content:** 
    
            { "message": "invalid authorization header" }
            
            
 2. **Create Shoppinglist**
 
- * **URL**
+   * **URL**
  
-   `/shopping-lists`
+     `/shopping-lists`
 
- * **Method:**
+   * **Method:**
 
-   `POST`
+     `POST`
 
- * **Data Format**
+   * **Data Format**
 
-    `application/json`
+     `application/json`
     
- * **Data Params**
+   * **Data Params**
  
    * **Required**
  
@@ -528,7 +530,7 @@ See deployment for notes on how to deploy the project on a live system.
 
      * `description`
      
- * **Success Response**
+   * **Success Response**
  
    * **Code:** 200 OK
    
@@ -545,7 +547,7 @@ See deployment for notes on how to deploy the project on a live system.
           }
          }
          
- * **Error Response**
+   * **Error Response**
  
    * **Code:** 401 UNAUTHORIZED
      
@@ -563,21 +565,21 @@ See deployment for notes on how to deploy the project on a live system.
 
 3. **Retrieve Shoppinglist.**
 
- * **URL**
+   * **URL**
  
-   `/shopping-lists/{ shoppinglistId }`
+     `/shopping-lists/{ shoppinglistId }`
    
- * **Method**
+   * **Method**
  
-   `GET`
+     `GET`
    
- * **Url Params**
+   * **Url Params**
  
    * **Required**
  
      * `shoppinglistId=[integer]`
    
- * **Success Response**
+   * **Success Response**
  
    * **Code:** 200 OK
    
@@ -598,7 +600,7 @@ See deployment for notes on how to deploy the project on a live system.
          }
        }
    
- * **Error Response**
+   * **Error Response**
  
    * **Code:** 401 UNAUTHORIZED
      
@@ -632,21 +634,21 @@ See deployment for notes on how to deploy the project on a live system.
    
 4. **Update Shoppinglist.**
 
- * **URL**
+   * **URL**
  
-   `/shopping-lists/{ shoppinglistId }`
+     `/shopping-lists/{ shoppinglistId }`
    
- * **Method**
+   * **Method**
  
-   `PUT`
+     `PUT`
    
- * **Url Params**
+   * **Url Params**
  
    * **Required**
  
      * `shoppinglistId=[integer]`
    
- * **Success Response**
+   * **Success Response**
  
    * **Code:** 200 OK
    
@@ -665,7 +667,7 @@ See deployment for notes on how to deploy the project on a live system.
             }
        
   
- * **Error Response**
+   * **Error Response**
  
    * **Code:** 401 UNAUTHORIZED
      
@@ -699,21 +701,20 @@ See deployment for notes on how to deploy the project on a live system.
 
 4. **Delete Shoppinglist.**
 
- * **URL**
+   * **URL**
  
-   `/shopping-lists/{ shoppinglistId }`
+     `/shopping-lists/{ shoppinglistId }`
  
- * **Method**
+   * **Method**
  
-   `DELETE`
+     `DELETE`
    
- * **Success Response**
+   * **Success Response**
  
    * **Code:** 204 NO CONTENT
    
- * **Error Response**
-       
-         
+   * **Error Response**
+             
    * **Code:** 404 NOT FOUND
      
    * **Content:** 
@@ -733,40 +734,40 @@ See deployment for notes on how to deploy the project on a live system.
 
 1. **Create Shopping Item.**
 
-  * **Url**
+   * **Url**
  
-    `/shopping-lists/{ shoppinglistId }/shopping-items`
+     `/shopping-lists/{ shoppinglistId }/shopping-items`
   
-  * **Method**
+   * **Method**
           
-    `POST`
+     `POST`
     
-  * **Url Params**
+   * **Url Params**
    
-    * **Required**
+   * **Required**
     
-      * `shoppinglistId=[integer]`
+     * `shoppinglistId=[integer]`
     
-  * **Data Params**
+   * **Data Params**
   
-    * **Required**
+     * **Required**
     
-      * `name=[string]`
-      * `price=[decimal]`
-      * `quantity=[decimal]`
+       * `name=[string]`
+       * `price=[decimal]`
+       * `quantity=[decimal]`
     
-    * **Optional**
+     * **Optional**
     
-      * `bought=[bool]`
+       * `bought=[bool]`
   
-  * **Success Response**
+   * **Success Response**
   
-    * **Code:** 201 CREATED
+     * **Code:** 201 CREATED
     
-    * **Content:** 
+     * **Content:** 
       
-      ```json
-      { 
+       ```json
+       { 
           "status": "success",
           "message": "Shopping item created",
           "data": {
@@ -779,21 +780,21 @@ See deployment for notes on how to deploy the project on a live system.
           }
         }
   
-  * **Error Response**
+   * **Error Response**
   
-    * **Code:** 404 NOT FOUND
+     * **Code:** 404 NOT FOUND
      
-    * **Content:** 
+     * **Content:** 
      
-         { "message": "Shopping list not found" }
+           { "message": "Shopping list not found" }
          
-    OR
+     OR
    
-    * **Code:** 409 CONFLICT
+     * **Code:** 409 CONFLICT
      
-    * **Content:** 
+     * **Content:** 
      
-          { "message": "There exists a shopping item with similar name, try again" }
+           { "message": "There exists a shopping item with similar name, try again" }
          
           
 2. **Retrieve Shopping Item**
