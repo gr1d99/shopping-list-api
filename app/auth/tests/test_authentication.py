@@ -432,11 +432,11 @@ class TestUserAuth(TestBase):
 
         refresh_resp = self.refresh_user_token(refresh_token)
         _refresh_resp = json.loads(refresh_resp.get_data(as_text=True))
-        new_auth_token = _refresh_resp['access_token']
+        new_auth_token = _refresh_resp['auth_token']
 
         self.assert200(refresh_resp)
 
-        self.assertIn('access_token', _refresh_resp)
+        self.assertIn('auth_token', _refresh_resp)
         self.assertNotEqual(old_auth_token, new_auth_token)
 
         get_user_details_resp = self.get_user_details(new_auth_token)
