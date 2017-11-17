@@ -7,9 +7,9 @@ A RESTful ai Flask powered web application that allows users to record and share
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. 
 See deployment for notes on how to deploy the project on a live system.
 
+
 ## Demo
 [Shoppinglist-api](https://shoppinglistapiapp.herokuapp.com)
-
 
 
 ## Authentication Endpoints.
@@ -24,55 +24,55 @@ See deployment for notes on how to deploy the project on a live system.
 
      `POST`
 
-  * **Data Format**
+   * **Data Format**
 
-    `application/json`
+     `application/json`
   
-  * **Data Params**
+   * **Data Params**
   
-    * **Required**
+     * **Required**
     
-      * `username`
-      * `email`
-      * `password`
+       * `username`
+       * `email`
+       * `password`
   
 
-  * **Success Response:**
+   * **Success Response:**
 
-    * **Code:** 201 CREATED
+     * **Code:** 201 CREATED
     
-    * **Content:** 
+     * **Content:** 
   
-          {status :"success", message : "Account created, login with your email and password to get your access tokens" }
+           {status :"success", message : "Account created, login with your email and password to get your access tokens" }
  
-  * **Error Response:**
+   * **Error Response:**
   
-    * **Code:** 422 UNPROCESSABLE ENTITY
+     * **Code:** 422 UNPROCESSABLE ENTITY
     
-    * **Content:** 
+     * **Content:** 
        
-          {
-              "messages": {
-                  "email": [
-                    "Missing data for required field."
-                  ],
-                  "username": [
-                    "Missing data for required field."
-                  ],
-                  "password": [
-                    "Missing data for required field."
-                  ]
-              }
-          }  
+           {
+               "messages": {
+                   "email": [
+                     "Missing data for required field."
+                   ],
+                   "username": [
+                     "Missing data for required field."
+                   ],
+                   "password": [
+                     "Missing data for required field."
+                   ]
+               }
+           }  
            
-    OR
+     OR
     
-    * **Code:** 409 CONFLICT
+     * **Code:** 409 CONFLICT
    
-    * **Content:** 
+     * **Content:** 
                  
-          { error: "username exists" }
-          { error: "email exists" 
+           { error: "username exists" }
+           { error: "email exists" 
  
  2. **Login User**
  
@@ -249,30 +249,30 @@ See deployment for notes on how to deploy the project on a live system.
       
  5. **Refresh Auth Token.**
  
-   * **URL**
+    * **URL**
    
-     `/users/logout`
+      `/users/logout`
 
-   * **Method:**
+    * **Method:**
 
-     `POST`
+      `POST`
 
-   * **Data Format**
+    * **Data Format**
 
-      `application/json`
+       `application/json`
       
-   * **Success Response:**
+    * **Success Response:**
 
-      * **Code:** 200 OK
+       * **Code:** 200 OK
       
-      * **Content:** 
+       * **Content:** 
   
-            {
-                status:"success", 
-                auth_token: "XXXXXXXXXX.XXXXXXXXXXXX"
-            }
+             {
+                 status:"success", 
+                 auth_token: "XXXXXXXXXX.XXXXXXXXXXXX"
+             }
       
-   * **Error Response:**
+    * **Error Response:**
   
       * **Code:** 401 UNAUTHORIZED
       
@@ -290,176 +290,175 @@ See deployment for notes on how to deploy the project on a live system.
             
  6. **User Detail.**
  
-   * **URL**
+    * **URL**
    
-     `/users`
+      `/users`
 
-   * **Method:**
+    * **Method:**
 
-     `GET`
+      `GET`
 
-   * **Data Format**
+    * **Data Format**
 
-     `application/json`
+      `application/json`
   
-   * **Success Response:**
+    * **Success Response:**
 
-     * **Code:** 200 OK
+      * **Code:** 200 OK
       
-     * **Content:** 
+      * **Content:** 
      
-       ```json
-        {
-          "data": {
-            "username": "example",
-            "id": 1,
-            "date_joined": "2017-11-14 03:34:06",
-            "email": "example@email.com",
-            "updated": "2017-11-14 03:34:06"
-          },
-          "status": "success"
-        }
+        ```json
+         {
+           "data": {
+             "username": "example",
+             "id": 1,
+             "date_joined": "2017-11-14 03:34:06",
+             "email": "example@email.com",
+             "updated": "2017-11-14 03:34:06"
+           },
+           "status": "success"
+         }
 
-       ```
+        ```
        
-   * **Error Response**
+    * **Error Response**
    
-     * **Code:** 401 UNAUTHORIZED
+      * **Code:** 401 UNAUTHORIZED
      
-     * **Content:** 
+      * **Content:** 
      
-           { "message": "authorization header required" }
+            { "message": "authorization header required" }
            
-     OR
+      OR
      
-     * **Code:** 422 UNPROCESSABLE ENTITY
+      * **Code:** 422 UNPROCESSABLE ENTITY
      
-     * **Content:** 
+      * **Content:** 
    
-           { "message": "invalid authorization header" }
+            { "message": "invalid authorization header" }
         
  7. **Update User.**
  
-   * **URL**
+    * **URL**
      
-     `/users`
+      `/users`
      
-   * **Method:**
+    * **Method:**
      
-     `PUT`
+      `PUT`
      
-   * **Data Format**
+    * **Data Format**
    
-     `application/json`
+      `application/json`
 
-   * **Data Params**
+    * **Data Params**
      
-     * **Required**
+      * **Required**
      
-       * `username`
-       * `email`
+        * `username`
+        * `email`
      
-   * **Success Response:**
+    * **Success Response:**
    
-     * **Code:** 200 OK
+      * **Code:** 200 OK
      
-     * **Content:** 
+      * **Content:** 
      
-        ```json
-        {
-           "data": {
-             "id": 2,
-             "username": "string1",
-             "email": "string1@gmail.com",
-             "date_joined": "2017-11-14 03:34:06",
-             "updated": "2017-11-15 03:15:26"
-             },
-         "message": "Account updated",
-         "status": "success"
-        }
-        ```
+         ```json
+         {
+            "data": {
+              "id": 2,
+              "username": "string1",
+              "email": "string1@gmail.com",
+              "date_joined": "2017-11-14 03:34:06",
+              "updated": "2017-11-15 03:15:26"
+              },
+          "message": "Account updated",
+          "status": "success"
+         }
+         ```
         
-     * **Code:** 304 NOT MODIFIED
+      * **Code:** 304 NOT MODIFIED
      
-   * **Error Response**
+    * **Error Response**
    
-     * **Code:** 401 UNAUTHORIZED
+      * **Code:** 401 UNAUTHORIZED
      
-     * **Content:** 
+      * **Content:** 
      
-           { "message": "authorization header required" }
+            { "message": "authorization header required" }
            
-     OR
+      OR
                       
-     * **Code:** 409 CONFLICT
+      * **Code:** 409 CONFLICT
      
-     * **Content:**
+      * **Content:**
      
-           { "message": "username exists" }
-           { "message": "email exists" }
+            { "message": "username exists" }
+            { "message": "email exists" }
            
-     OR
+      OR
      
-     * **Code:** 422 UNPROCESSABLE ENTITY
+      * **Code:** 422 UNPROCESSABLE ENTITY
      
-     * **Content:** 
+      * **Content:** 
    
-           { "message": "invalid authorization header" }
+            { "message": "invalid authorization header" }
  
  8. **Delete User**.
  
-    
-   * **URL**
+    * **URL**
      
-     `/users`
+      `/users`
      
-   * **Method:**
+    * **Method:**
      
-     `DELETE`
+      `DELETE`
      
-   * **Data Format**
+    * **Data Format**
    
-     `application/json`
+      `application/json`
      
-   * **Success Response**
+    * **Success Response**
    
-     * **Code:** 204 NO CONTENT
-     
-     
-   * **Error Response**
+      * **Code:** 204 NO CONTENT
+         
+    * **Error Response**
    
-     * **Code:** 401 UNAUTHORIZED
+      * **Code:** 401 UNAUTHORIZED
      
-     * **Content:** 
+      * **Content:** 
      
-           { "message": "authorization header required" }
+            { "message": "authorization header required" }
    
-     OR
+      OR
      
-     * **Code:** 422 UNPROCESSABLE ENTITY
+      * **Code:** 422 UNPROCESSABLE ENTITY
      
-     * **Content:** 
+      * **Content:** 
    
-           { "message": "invalid authorization header" }
+            { "message": "invalid authorization header" }
            
+
            
 ## Shoppinglist Endpoints.
 
 1. **Retrieve All Shoppinglists**
 
- * **URL**
+  * **URL**
  
-   `/shopping-lists`
+    `/shopping-lists`
 
- * **Method:**
+  * **Method:**
 
-   `GET`
+    `GET`
 
- * **Data Format**
+  * **Data Format**
 
-    `application/json`
+     `application/json`
  
- * **Query Params**
+  * **Query Params**
  
     * **Optional**
     
@@ -468,9 +467,9 @@ See deployment for notes on how to deploy the project on a live system.
       
  * **Success Response:**
  
-    * **Code:** 200 OK
+   * **Code:** 200 OK
     
-    * **Content** 
+   * **Content** 
     
       ```json
       {
