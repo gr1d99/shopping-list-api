@@ -454,6 +454,9 @@ class ShoppingItemDetailApi(Resource):
 
         data.setdefault('id', shoppingitem.id)
         data.setdefault('name', shoppingitem.name)
+        data.setdefault('price', shoppingitem.price)
+        data.setdefault('quantity', shoppingitem.quantity)
+        data.setdefault('total_cost', shoppingitem.total_amount())
         data.setdefault('created_on', shoppingitem.timestamp.strftime("%Y-%m-%d %H:%M:%S"))
         data.setdefault('updated_on', shoppingitem.updated.strftime("%Y-%m-%d %H:%M:%S"))
         return make_response(
@@ -493,7 +496,7 @@ class ShoppingItemDetailApi(Resource):
                 jsonify(dict(
                     status='fail',
                     message=shoppingitem_exists
-                )), 400
+                )), 409
             )
 
         # get shoppinglist instance.
@@ -596,7 +599,7 @@ class ShoppingItemDetailApi(Resource):
                         jsonify(dict(
                             status='fail',
                             message=shoppingitem_exists
-                        )), 400
+                        )), 409
                     )
 
                 # if it doesn't then assign new name to shoppingitem.
@@ -702,7 +705,7 @@ class SearchShoppingListApi(Resource):
         if _term == '':
             return make_response(
                 jsonify(dict(
-                    message="please provide a value"
+                    message="please provide query value"
                 )), 400
             )
 

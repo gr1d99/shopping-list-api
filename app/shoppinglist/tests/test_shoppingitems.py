@@ -102,7 +102,7 @@ class TestShoppingItems(TestShoppingItemsBase):
             shoppingitem_response.get_data(as_text=True))
 
         # assertions.
-        self.assert400(shoppingitem_response)
+        self.assertStatus(shoppingitem_response, 409)
         self.assertTrue(
             shoppingitem_response_data['status'] == 'fail')
 
@@ -566,7 +566,7 @@ class TestShoppingItems(TestShoppingItemsBase):
             update_response.get_data(as_text=True))
 
         # assertions.
-        self.assert400(update_response)
+        self.assertStatus(update_response, 409)
         self.assertTrue(update_response_data['status'] == 'fail')
         self.assertTrue(update_response_data['message'] == shoppingitem_exists)
 

@@ -28,8 +28,10 @@ See deployment for notes on how to deploy the project on a live system.
 
     `application/json`
   
-  * **Required**
-
+  * **Data Params**
+  
+    * **Required**
+    
       * `username`
       * `email`
       * `password`
@@ -83,19 +85,14 @@ See deployment for notes on how to deploy the project on a live system.
    * **Data Format**
 
      `application/json`
-  
-   * **Required**
-
-      * `username`
-      * `email`
-      * `password`
-      
+     
    * **Data Params**
-   
-      * `username`
-      * `email`
-      * `password`
   
+     * **Required**
+
+       * `username`
+       * `email`
+       * `password`
 
   * **Success Response:**
 
@@ -151,10 +148,6 @@ See deployment for notes on how to deploy the project on a live system.
     * **Data Format**
 
       `application/json`
-  
-   * **Required**
-
-      * `auth_token`
 
    * **Success Response:**
 
@@ -196,20 +189,19 @@ See deployment for notes on how to deploy the project on a live system.
    * **Data Format**
 
      `application/json`
-  
-   * **Required**
-      
-     * `old_password`
-     * `new_password`
-     * `confirm`
-      
+     
    * **Data Params**
+  
+     * **Required**
+      
+       * `old_password`
+       * `new_password`
+       * `confirm`
+      
+     * **Optional**
    
-     * `username`
-     * `email`
-     * `old_password`
-     * `new_password`
-     * `confirm`
+       * `username`
+       * `email`
      
    * **Success Response:**
 
@@ -266,10 +258,6 @@ See deployment for notes on how to deploy the project on a live system.
    * **Data Format**
 
       `application/json`
-  
-   * **Required**
-
-      * `refresh_token`
       
    * **Success Response:**
 
@@ -312,10 +300,6 @@ See deployment for notes on how to deploy the project on a live system.
 
      `application/json`
   
-   * **Required**
-
-     * `auth_token`
-      
    * **Success Response:**
 
      * **Code:** 200 OK
@@ -365,15 +349,13 @@ See deployment for notes on how to deploy the project on a live system.
    * **Data Format**
    
      `application/json`
-     
-   * **Required**
-   
-     * `auth_token`
-     
+
    * **Data Params**
      
-     * `username`
-     * `email`
+     * **Required**
+     
+       * `username`
+       * `email`
      
    * **Success Response:**
    
@@ -437,10 +419,6 @@ See deployment for notes on how to deploy the project on a live system.
    
      `application/json`
      
-   * **Required**
-   
-     * `auth_token`
-     
    * **Success Response**
    
      * **Code:** 204 NO CONTENT
@@ -465,23 +443,26 @@ See deployment for notes on how to deploy the project on a live system.
            
 ## Shoppinglist Endpoints.
 
-1. **Retrieve All User Shoppinglists**
+1. **Retrieve All Shoppinglists**
 
  * **URL**
  
-   * `/shopping-lists`
+   `/shopping-lists`
 
  * **Method:**
 
-   * `GET`
+   `GET`
 
  * **Data Format**
 
-    * `application/json`
-  
- * **Required**
-
-    * `auth_token`
+    `application/json`
+ 
+ * **Query Params**
+ 
+    * **Optional**
+    
+      * `limit=[integer]`
+      * `page=[integer]`
       
  * **Success Response:**
  
@@ -489,6 +470,577 @@ See deployment for notes on how to deploy the project on a live system.
     
     * **Content** 
     
-          {}
+      ```json
+      {
+        "status": "success",
+        "total_pages": 1,
+        "message": {
+          "shopping_lists": [
+            {
+                "description": "my shoppinglist",
+                "id": 2,
+                "is_active": true,
+                "name": "breakfast"
+            }
+          ]
+        }
+      }
+
+ * **Error Response**
+ 
+    * **Code:** 401 UNAUTHORIZED
      
+    * **Content:** 
+     
+          { "message": "authorization header required" }
+   
+    OR
+     
+    * **Code:** 422 UNPROCESSABLE ENTITY
+     
+    * **Content:** 
+   
+           { "message": "invalid authorization header" }
+           
+           
+2. **Create Shoppinglist**
+
+ * **URL**
+ 
+   `/shopping-lists`
+
+ * **Method:**
+
+   `POST`
+
+ * **Data Format**
+
+    `application/json`
     
+ * **Data Params**
+ 
+   * **Required**
+ 
+     * `name`
+  
+   * **Optional**
+
+     * `description`
+     
+ * **Success Response**
+ 
+   * **Code:** 200 OK
+   
+   * **Content** 
+   
+     ```json
+         {
+          "message": "Shopping list created",
+          "status": "success",
+          "data": {
+            "id": 2,
+            "name": "string",
+            "created_on": "2017-11-15 18:23:19"
+          }
+         }
+         
+ * **Error Response**
+ 
+   * **Code:** 401 UNAUTHORIZED
+     
+   * **Content:** 
+     
+         { "message": "authorization header required" }
+         
+   OR
+     
+   * **Code:** 422 UNPROCESSABLE ENTITY
+     
+   * **Content:** 
+   
+         { "message": "invalid authorization header" }
+
+3. **Retrieve Shoppinglist.**
+
+ * **URL**
+ 
+   `/shopping-lists/{ shoppinglistId }`
+   
+ * **Method**
+ 
+   `GET`
+   
+ * **Url Params**
+ 
+   * **Required**
+ 
+     * `shoppinglistId=[integer]`
+   
+ * **Success Response**
+ 
+   * **Code:** 200 OK
+   
+   * **Content:** 
+   
+     ```json
+     {
+       "status": "success",
+       "message": {
+         "id": 2,
+         "name": "string",
+         "description": "string",
+         "total_items": 0,
+         "bought_items": 0,
+         "items_not_bought": 0,
+         "created_on": "2017-11-15 18:23:19",
+         "updated_on": "2017-11-15 18:23:19"
+         }
+       }
+   
+ * **Error Response**
+ 
+   * **Code:** 401 UNAUTHORIZED
+     
+   * **Content:** 
+     
+         { "message": "authorization header required" }
+         
+   OR         
+         
+   * **Code:** 404 NOT FOUND
+     
+   * **Content:** 
+     
+         { "message": "Shopping list not found" }
+         
+   OR
+   
+   * **Code:** 409 CONFLICT
+     
+   * **Content:** 
+     
+         { "message": "There exists a shoppinglist with the provided name exists, try again with a different name" }
+         
+   OR
+     
+   * **Code:** 422 UNPROCESSABLE ENTITY
+     
+   * **Content:** 
+   
+         { "message": "invalid authorization header" }
+   
+4. **Update Shoppinglist.**
+
+ * **URL**
+ 
+   `/shopping-lists/{ shoppinglistId }`
+   
+ * **Method**
+ 
+   `PUT`
+   
+ * **Url Params**
+ 
+   * **Required**
+ 
+     * `shoppinglistId=[integer]`
+   
+ * **Success Response**
+ 
+   * **Code:** 200 OK
+   
+   * **Content:** 
+   
+     ```json
+            {
+               "status": "success",
+               "message": "Shopping list updated",
+               "data": {
+               "created_on": "2017-11-15 18:23:19",
+               "is_active": true,
+               "name": "new string",
+               "updated_on": "2017-11-16 03:29:11"
+               }
+            }
+       
+  
+ * **Error Response**
+ 
+   * **Code:** 401 UNAUTHORIZED
+     
+   * **Content:** 
+     
+         { "message": "authorization header required" }
+         
+   OR         
+         
+   * **Code:** 404 NOT FOUND
+     
+   * **Content:** 
+     
+         { "message": "Shopping list not found" }
+         
+   OR
+   
+   * **Code:** 409 CONFLICT
+     
+   * **Content:** 
+     
+         { "message": "There exists a shoppinglist with the provided name exists, try again with a different name" }
+         
+   OR
+     
+   * **Code:** 422 UNPROCESSABLE ENTITY
+     
+   * **Content:** 
+   
+         { "message": "invalid authorization header" }
+
+4. **Delete Shoppinglist.**
+
+ * **URL**
+ 
+   `/shopping-lists/{ shoppinglistId }`
+ 
+ * **Method**
+ 
+   `DELETE`
+   
+ * **Success Response**
+ 
+   * **Code:** 204 NO CONTENT
+   
+ * **Error Response**
+       
+         
+   * **Code:** 404 NOT FOUND
+     
+   * **Content:** 
+     
+         { "message": "Shopping list not found" }
+         
+   OR
+   
+   * **Code:** 409 CONFLICT
+     
+   * **Content:** 
+     
+         { "message": "There exists a shoppinglist with the provided name exists, try again with a different name" }
+         
+ 
+## Shopping Items.
+
+1. **Create Shopping Item.**
+
+  * **Url**
+ 
+    `/shopping-lists/{ shoppinglistId }/shopping-items`
+  
+  * **Method**
+          
+    `POST`
+    
+  * **Url Params**
+   
+    * **Required**
+    
+      * `shoppinglistId=[integer]`
+    
+  * **Data Params**
+  
+    * **Required**
+    
+      * `name=[string]`
+      * `price=[decimal]`
+      * `quantity=[decimal]`
+    
+    * **Optional**
+    
+      * `bought=[bool]`
+  
+  * **Success Response**
+  
+    * **Code:** 201 CREATED
+    
+    * **Content:** 
+      
+      ```json
+      { 
+          "status": "success",
+          "message": "Shopping item created",
+          "data": {
+            "bought": true,
+            "id": 1,
+            "name": "Bread",
+            "price": 50,
+            "quantity": 1,
+            "total_amount": 50
+          }
+        }
+  
+  * **Error Response**
+  
+    * **Code:** 404 NOT FOUND
+     
+    * **Content:** 
+     
+         { "message": "Shopping list not found" }
+         
+    OR
+   
+    * **Code:** 409 CONFLICT
+     
+    * **Content:** 
+     
+          { "message": "There exists a shopping item with similar name, try again" }
+         
+          
+2. **Retrieve Shopping Item**
+
+   * **Url**
+  
+     `/shopping-lists/{ shoppinglistId }/shopping-items/{ shoppingitemId }`
+    
+   * **Method**
+  
+     `GET`
+    
+   * **Url Params**
+  
+     * **Required**
+  
+       * `shoppinglistId=[integer]`
+       * `shoppingitemId=[integer]`
+      
+   * **Success Response**
+  
+     * **Code:** 200 OK
+     
+     * **Content** 
+    
+       ```json
+       { 
+         "status": "success",
+         "message": {
+           "created_on": "2017-11-16 16:48:21",
+           "id": 1,
+           "name": "Bread",
+           "updated_on": "2017-11-16 16:48:21"
+         }
+       }
+  
+   * **Error Response**
+  
+     * **Code:** 404 NOT FOUND
+     
+     * **Content:** 
+     
+           { "message": "Shopping list not found" }
+         
+           { "message": "Shopping item not found" }
+           
+
+4. **Retrieve All Shopping Items**
+
+   * **Url**
+  
+     `/shopping-lists/{ shoppinglistId }/shopping-items/{ shoppingitemId }`
+    
+   * **Method**
+  
+     `GET`
+    
+   * **Url Params**
+  
+     * **Required**
+  
+       * `shoppinglistId=[integer]`
+      
+     * **Optional**
+     
+       * `limit=[integer]`
+       * `page=[integer]`
+      
+   * **Success Response**
+  
+     * **Code:** 200 OK
+     
+     * **Content:** 
+       
+       ```json
+       {
+         "status": "success",
+         "total_items": 2,
+         "total_pages": 1,
+         "message": {
+           "shopping_items": [
+              {
+                "name": "Bread"
+              },
+              {
+                "name": "Greens"
+              }
+           ]
+         }
+       }
+   
+     * **Error Response**
+  
+       * **Code:** 404 NOT FOUND
+     
+       * **Content:** 
+     
+             { "message": "Shopping list not found" }
+         
+5. **Update Shopping Item.**
+
+   * **Url**
+   
+     `/shopping-lists/{ shoppinglistId }/shopping-items/{ shoppingitemId }`
+     
+   * **Method**
+   
+     `PUT`
+     
+   * **Url Params**
+  
+     * **Required**
+  
+       * `shoppinglistId=[integer]`
+       * `shoppingitemId=[integer]`
+       
+   * **Data Params**
+   
+     * **Optional**
+     
+       * `name`
+       * `price`
+       * `quantity`
+       * `bought`
+       
+   * **Success Response**
+   
+     * **Code:** 200 OK
+     
+     * **Content:** 
+       ```json
+       {
+         "status": "success",
+         "message": "Shopping item updated",
+         "data": {
+           "bought": true,
+            "name": "Bread",
+            "price": 100,
+            "quantity": 10,
+            "total_amount": 1000,
+            "updated_on": "2017-11-17 02:55:36"
+         }
+       }
+
+   * **Error Response**
+   
+     * **Code:** 404 NOT FOUND
+     
+     * **Content:** 
+     
+           { "message": "Shopping list not found" }
+         
+           { "message": "Shopping item not found" }
+       
+     OR
+        
+     * **Code:** 409 CONFLICT
+     
+     * **Content:** 
+     
+           { "message": "There exists a shopping item with similar name, try again" }
+
+
+6. **Delete Shopping Item.**
+
+   * **Url**
+   
+     `/shopping-lists/{ shoppinglistId }/shopping-items/{ shoppingitemId }`
+     
+   * **Method**
+   
+     `DELETE`
+     
+   * **Url Params**
+  
+     * **Required**
+  
+       * `shoppinglistId=[integer]`
+       * `shoppingitemId=[integer]`
+            
+   * **Success Response**
+   
+     * **Code:** 204 NO CONTENT
+   
+   * **Error Response**
+   
+     * **Code:** 404 NOT FOUND
+     
+     * **Content:** 
+     
+           { "message": "Shopping list not found" }
+         
+           { "message": "Shopping item not found" }
+
+
+## Search Shopping Lists.
+
+* **Url**
+
+  `/shopping-lists/search`
+  
+* **Method**
+
+  `GET`
+  
+* **Query Params**
+
+  * **Required**
+  
+    * `query=[string]`
+
+  * **Optional**
+  
+    * `limit=[integer]`
+    * `page=[limit]`
+    
+* **Success Response**
+
+  * **Code:** 200 OK
+  
+  * **Content:** 
+  
+    ```json
+    {
+      "total_pages": 1,
+      "items_in_page": 2,
+      "shoppinglists": [
+        {
+          "new string": {
+            "shoppingitems": [
+              "Bread",
+              "Greens"
+            ]
+          }
+        },
+        {
+          "another string": {
+            "shoppingitems": []
+          }
+        }
+      ]
+    }
+  
+  * **Error Response**
+  
+    * **Code:** 400
+    
+    * **Content:** 
+    
+          { "message": "please provide query value" }
+        

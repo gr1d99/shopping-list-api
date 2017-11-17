@@ -32,7 +32,7 @@ shoppinglist_updated = 'Shopping list updated'
 shoppinglist_name_exists = "There exists a shoppinglist with the provided name exists, try again with a different name"
 shoppinglist_deleted = 'Shopping list deleted'
 
-shoppingitem_exists = 'There exists a shopping item with similar name, try again with'
+shoppingitem_exists = 'There exists a shopping item with similar name, try again'
 shoppingitem_created = 'Shopping item created'
 shoppingitem_not_found = 'Shopping item not found'
 shoppingitem_updated = 'Shopping item updated'
