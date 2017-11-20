@@ -5,7 +5,4 @@ env
 .coverage
 shl_api/
 migrations/
-*.db
-*.sqlite3
-*.sqlite
 htmlcov/

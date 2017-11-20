@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/gr1d99/shopping-list-api.svg?branch=challenge-3)](https://travis-ci.org/gr1d99/shopping-list-api)  [![Coverage Status](https://coveralls.io/repos/github/gr1d99/shopping-list-api/badge.svg?branch=challenge-3)](https://coveralls.io/github/gr1d99/shopping-list-api?branch=challenge-3)  [![Code Climate](https://codeclimate.com/github/gr1d99/shopping-list-api/badges/gpa.svg)](https://codeclimate.com/github/gr1d99/shopping-list-api) [![Issue Count](https://codeclimate.com/github/gr1d99/shopping-list-api/badges/issue_count.svg)](https://codeclimate.com/shopping-list-api) 
+[![Build Status](https://travis-ci.org/gr1d99/shopping-list-api.svg?branch=develop)](https://travis-ci.org/gr1d99/shopping-list-api)  [![Coverage Status](https://coveralls.io/repos/github/gr1d99/shopping-list-api/badge.svg?branch=challenge-3)](https://coveralls.io/github/gr1d99/shopping-list-api?branch=challenge-3)  [![Code Climate](https://codeclimate.com/github/gr1d99/shopping-list-api/badges/gpa.svg)](https://codeclimate.com/github/gr1d99/shopping-list-api) [![Issue Count](https://codeclimate.com/github/gr1d99/shopping-list-api/badges/issue_count.svg)](https://codeclimate.com/shopping-list-api) 
 
 # shopping-list-api
 A RESTful ai Flask powered web application that allows users to record and share things they want to spend money on and keeping track of their shopping lists 
@@ -7,76 +7,167 @@ A RESTful ai Flask powered web application that allows users to record and share
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. 
 See deployment for notes on how to deploy the project on a live system.
 
+## Prerequisites.
+
+Things you need to get shoppinglist API app up and running.
+
+Follow the links below and and install the softwares depending on the operating system you are using.
+
+1. Git [Installation instructions](https://git-scm.com/)
+2. Python3 [Installation instructions](https://www.python.org/download/releases/3.0/)
+3. Virtual environment [Installation instructions](http://virtualenv.readthedocs.io/en/stable/)
+3. Postgres [Installation instructions](http://postgresguide.com/setup/install.html)
+
+## Installation.
+
+**NB: Before you start following the steps below, ensure that you have install the necessary dependencies in the 
+**PREREQUISITES** section**
+
+1. Clone project to your local machine/computer.
+   ```bash
+      git clone https://github.com/gr1d99/shopping-list-api.git
+
+   ```
+2. Create virtual environment(This will assume you installed virtualenv package in the prerequisites section).
+
+   ```bash
+      virtualenv --python=python3 venv
+   ```
+   
+   Start the virtual environment.
+   
+   ```bash
+      source venv/bin/activate
+   ```
+
+3. Install application dependencies. 
+   
+   After the project has been downloaded to your local machine, open your `terminal/cmd` depending on the operating 
+   system your computer is running on and navigate to the root of the project. eg `cd projects/shopping-list-api` then 
+   then install the dependencies by running the command below.
+   
+   ```bash
+      pip3 install -r requirements.txt
+   ```
+   
+4. Create `development` and `testing` databases using postgres.
+   
+5. The for the app to run correctly you will need to set certain `enviroment variables` that are required by the 
+   application. These variables include: `SECRET_KEY`, `JWT_SECRET_KEY`, `DATABASE_URL` and `TEST_DB_URL`.
+      
+   follow the procedure below to create and set these environment variables.
+            
+     - Create a script called `env.sh` and copy the contents below into the script and save it on the root of the project.
+     
+       ```bash
+          export SECRET_KEY='2345678t656r6d5f5rd56rd535drrd5rd5dr6rr67fr6rf'
+          export JWT_SECRET_KEY='cytefytftecfytftef5rc6ecr6cr6wc766c66w7tc7'
+          export DATABASE_URL='postgres://<role>:<password>@localhost/<database_name>'
+          export TEST_DB_URL='postgres://<role>:<password>@localhost/<database_name>'
+       ```
+       
+       Replace `<role>, <password> and <database_name>` with real values so that the app can create needed tables.
+       
+       **Example**
+       ```bash
+          export SECRET_KEY='2345678t656r6d5f5rd56rd535drrd5rd5dr6rr67fr6rf'
+          export JWT_SECRET_KEY='cytefytftecfytftef5rc6ecr6cr6wc766c66w7tc7'
+          export DATABASE_URL='postgres://postgres:mypass123@localhost/shl_dev'
+          export TEST_DB_URL='postgres://postgres:mypass123@localhost/shl_test'
+       ```
+       
+6. Save the above file`(env.sh)` and run the command `chmod +x env.sh`, then `./env.sh`.
+
+7. If everything was successful then your app should be set and ready to run.
+
+   - Run migrations to create tables.
+     
+     ```bash
+        $ python manage.py init
+        
+        $ python manage.py db migrate
+   
+        $ python manage.py db upgrade
+     ```
+     
+   - Start development server.
+   
+     ```bash
+        python manage.py runserver
+     ```
+     
+   - In your browser type the following url `http://localhost:5000` to access browsable swagger documentation of the 
+     application, or use tools such as **[Postman](https://www.getpostman.com/) for Chrome** or 
+     **[RESTClient](https://addons.mozilla.org/en-US/firefox/addon/restclient/) for Firefox** to test the application 
+     locally.
+     
+### Example(use curl).
+
+**Register User**
+```bash
+   $ curl -H "Content-Type: application/json" -X POST -d '{"username":"testuser","password":"testuserpassword","email":"testuser@gmail.com"}' http://localhost:5000/api/v1.0/auth/register
+```
+
+you should see the response below.
+
+```
+{
+"message": "Account created, login with your email and password to get your access tokens", 
+"status": "success"
+}   
+```
+
+**Login User**
+```bash
+   $ curl -H "Content-Type: application/json" -X POST -d '{"username":"testuser","password":"testuserpassword"}' http://localhost:5000/api/v1.0/auth/login
+```
+
+you should see the response.
+```
+{
+  "status": "success",
+  "message": "Logged in", 
+  "auth_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlkZW50aXR5IjoidGVzdHVzZXIiLCJpYXQiOjE1MTA5NDc1MDUsImp0aSI6Ijg4YWM0NGE1LTA3NWMtNDU0Zi05NTdmLTU2ZWRlODI3MWUzMyIsInR5cGUiOiJhY2Nlc3MiLCJuYmYiOjE1MTA5NDc1MDUsImV4cCI6MTUxMDk1MTEwNX0.qIKKIDStHtjPx9V51mmZgtrYTbCxuD2s0E1gzJPkDDk",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eSI6InRlc3R1c2VyIiwiaWF0IjoxNTEwOTQ3NTA1LCJqdGkiOiI2NmFiMDc0My0yYjViLTQwODQtYTU3Mi04ZmY2ZWVkZDFhYTciLCJ0eXBlIjoicmVmcmVzaCIsIm5iZiI6MTUxMDk0NzUwNSwiZXhwIjoxNTEzNTM5NTA1fQ.1-6Tfskjj5xwRdeJIwiqBrh5fGSY9Viij0sjRLG44Ys"
+}
+
+```
+
+## Running Tests.
+This app uses `nose` as the main package for testing.
+
+Copy the commands below in your terminal to run automated tests and view test coverage.
+
+```bash
+   $ nosetests --with-coverage tests app/auth/tests app/shoppinglist/tests
+```
+
+Then show coverage.
+
+```bash
+   $ coverage report
+```
+
+View report in browser.
+
+```bash
+   $ coverage html
+```
+
+There should be a new folder named `htmlcov` in the root of the project app, open it and click in an html file
+named `idex.html`.
+
 ## Demo
 [Shoppinglist-api](https://shoppinglistapiapp.herokuapp.com)
-
 
 
 ## Authentication Endpoints.
 
 1. **User Registration**
 
-  * **URL**
-
-    `/users/register`
-
-  * **Method:**
-
-    `POST`
-
-  * **Data Format**
-
-    `application/json`
-  
-  * **Data Params**
-  
-    * **Required**
-    
-      * `username`
-      * `email`
-      * `password`
-  
-
-  * **Success Response:**
-
-    * **Code:** 201 CREATED
-    
-    * **Content:** 
-  
-          {status :"success", message : "Account created, login with your email and password to get your access tokens" }
- 
-  * **Error Response:**
-  
-    * **Code:** 422 UNPROCESSABLE ENTITY
-    
-    * **Content:** 
-       
-          {
-              "messages": {
-                  "email": [
-                    "Missing data for required field."
-                  ],
-                  "username": [
-                    "Missing data for required field."
-                  ],
-                  "password": [
-                    "Missing data for required field."
-                  ]
-              }
-          }   
-    OR
-    * **Code:** 409 CONFLICT
-   
-    * **Content:** 
-                 
-          { error: "username exists" }
-          { error: "email exists" 
- 
- 2. **Login User**
- 
    * **URL**
-   
-     `/users/login`
+
+     `/users/register`
 
    * **Method:**
 
@@ -85,16 +176,76 @@ See deployment for notes on how to deploy the project on a live system.
    * **Data Format**
 
      `application/json`
-     
+  
    * **Data Params**
   
      * **Required**
-
+    
        * `username`
        * `email`
        * `password`
+  
 
-  * **Success Response:**
+   * **Success Response:**
+
+     * **Code:** 201 CREATED
+    
+     * **Content:** 
+  
+           {status :"success", message : "Account created, login with your email and password to get your access tokens" }
+ 
+   * **Error Response:**
+  
+     * **Code:** 422 UNPROCESSABLE ENTITY
+    
+     * **Content:** 
+       
+           {
+               "messages": {
+                   "email": [
+                     "Missing data for required field."
+                   ],
+                   "username": [
+                     "Missing data for required field."
+                   ],
+                   "password": [
+                     "Missing data for required field."
+                   ]
+               }
+           }  
+           
+     OR
+    
+     * **Code:** 409 CONFLICT
+   
+     * **Content:** 
+                 
+           { error: "username exists" }
+           { error: "email exists" 
+ 
+ 2. **Login User**
+ 
+    * **URL**
+   
+      `/users/login`
+
+    * **Method:**
+
+      `POST`
+
+    * **Data Format**
+
+      `application/json`
+     
+    * **Data Params**
+  
+      * **Required**
+
+        * `username`
+        * `email`
+        * `password`
+
+    * **Success Response:**
 
       * **Code:** 200 OK
       
@@ -107,7 +258,7 @@ See deployment for notes on how to deploy the project on a live system.
                 "refresh_token": "XXXXXXXX.XXXXXX"
             }
  
-  * **Error Response:**
+    * **Error Response:**
   
     * **Code:** 422 UNPROCESSABLE ENTITY
     
@@ -149,7 +300,7 @@ See deployment for notes on how to deploy the project on a live system.
 
       `application/json`
 
-   * **Success Response:**
+    * **Success Response:**
 
       * **Code:** 200 OK
       
@@ -160,7 +311,7 @@ See deployment for notes on how to deploy the project on a live system.
                 message: "Successfully logged out"
             }
  
-   * **Error Response:**
+    * **Error Response:**
   
       * **Code:** 401 UNAUTHORIZED
       
@@ -178,21 +329,21 @@ See deployment for notes on how to deploy the project on a live system.
             
  4. **Reset User Password.**
  
-   * **URL**
+    * **URL**
    
-     `/users/reset-password`
+      `/users/reset-password`
 
-   * **Method:**
+    * **Method:**
 
-     `POST`
+      `POST`
 
-   * **Data Format**
+    * **Data Format**
 
-     `application/json`
+      `application/json`
      
-   * **Data Params**
+    * **Data Params**
   
-     * **Required**
+      * **Required**
       
        * `old_password`
        * `new_password`
@@ -247,30 +398,30 @@ See deployment for notes on how to deploy the project on a live system.
       
  5. **Refresh Auth Token.**
  
-   * **URL**
+    * **URL**
    
-     `/users/logout`
+      `/users/logout`
 
-   * **Method:**
+    * **Method:**
 
-     `POST`
+      `POST`
 
-   * **Data Format**
+    * **Data Format**
 
-      `application/json`
+       `application/json`
       
-   * **Success Response:**
+    * **Success Response:**
 
-      * **Code:** 200 OK
+       * **Code:** 200 OK
       
-      * **Content:** 
+       * **Content:** 
   
-            {
-                status:"success", 
-                auth_token: "XXXXXXXXXX.XXXXXXXXXXXX"
-            }
+             {
+                 status:"success", 
+                 auth_token: "XXXXXXXXXX.XXXXXXXXXXXX"
+             }
       
-   * **Error Response:**
+    * **Error Response:**
   
       * **Code:** 401 UNAUTHORIZED
       
@@ -288,9 +439,167 @@ See deployment for notes on how to deploy the project on a live system.
             
  6. **User Detail.**
  
-   * **URL**
+    * **URL**
    
-     `/users`
+      `/users`
+
+    * **Method:**
+
+      `GET`
+
+    * **Data Format**
+
+      `application/json`
+  
+    * **Success Response:**
+
+      * **Code:** 200 OK
+      
+      * **Content:** 
+     
+        ```json
+         {
+           "data": {
+             "username": "example",
+             "id": 1,
+             "date_joined": "2017-11-14 03:34:06",
+             "email": "example@email.com",
+             "updated": "2017-11-14 03:34:06"
+           },
+           "status": "success"
+         }
+
+        ```
+       
+    * **Error Response**
+   
+      * **Code:** 401 UNAUTHORIZED
+     
+      * **Content:** 
+     
+            { "message": "authorization header required" }
+           
+      OR
+     
+      * **Code:** 422 UNPROCESSABLE ENTITY
+     
+      * **Content:** 
+   
+            { "message": "invalid authorization header" }
+        
+ 7. **Update User.**
+ 
+    * **URL**
+     
+      `/users`
+     
+    * **Method:**
+     
+      `PUT`
+     
+    * **Data Format**
+   
+      `application/json`
+
+    * **Data Params**
+     
+      * **Required**
+     
+        * `username`
+        * `email`
+     
+    * **Success Response:**
+   
+      * **Code:** 200 OK
+     
+      * **Content:** 
+     
+         ```json
+         {
+            "data": {
+              "id": 2,
+              "username": "string1",
+              "email": "string1@gmail.com",
+              "date_joined": "2017-11-14 03:34:06",
+              "updated": "2017-11-15 03:15:26"
+              },
+          "message": "Account updated",
+          "status": "success"
+         }
+         ```
+         
+      OR
+        
+      * **Code:** 304 NOT MODIFIED
+     
+    * **Error Response**
+   
+      * **Code:** 401 UNAUTHORIZED
+     
+      * **Content:** 
+     
+            { "message": "authorization header required" }
+           
+      OR
+                      
+      * **Code:** 409 CONFLICT
+     
+      * **Content:**
+     
+            { "message": "username exists" }
+            { "message": "email exists" }
+           
+      OR
+     
+      * **Code:** 422 UNPROCESSABLE ENTITY
+     
+      * **Content:** 
+   
+            { "message": "invalid authorization header" }
+ 
+ 8. **Delete User**.
+ 
+    * **URL**
+     
+      `/users`
+     
+    * **Method:**
+     
+      `DELETE`
+     
+    * **Data Format**
+   
+      `application/json`
+     
+    * **Success Response**
+   
+      * **Code:** 204 NO CONTENT
+         
+    * **Error Response**
+   
+      * **Code:** 401 UNAUTHORIZED
+     
+      * **Content:** 
+     
+            { "message": "authorization header required" }
+   
+      OR
+     
+      * **Code:** 422 UNPROCESSABLE ENTITY
+     
+      * **Content:** 
+   
+            { "message": "invalid authorization header" }
+           
+
+           
+## Shoppinglist Endpoints.
+
+1. **Retrieve All Shoppinglists**
+
+   * **URL**
+ 
+     `/shopping-lists`
 
    * **Method:**
 
@@ -299,176 +608,19 @@ See deployment for notes on how to deploy the project on a live system.
    * **Data Format**
 
      `application/json`
-  
-   * **Success Response:**
-
-     * **Code:** 200 OK
+ 
+   * **Query Params**
+ 
+     * **Optional**
+    
+       * `limit=[integer]`
+       * `page=[integer]`
       
-     * **Content:** 
-     
-       ```json
-        {
-          "data": {
-            "username": "example",
-            "id": 1,
-            "date_joined": "2017-11-14 03:34:06",
-            "email": "example@email.com",
-            "updated": "2017-11-14 03:34:06"
-          },
-          "status": "success"
-        }
-
-       ```
-       
-   * **Error Response**
-   
-     * **Code:** 401 UNAUTHORIZED
-     
-     * **Content:** 
-     
-           { "message": "authorization header required" }
-           
-     OR
-     
-     * **Code:** 422 UNPROCESSABLE ENTITY
-     
-     * **Content:** 
-   
-           { "message": "invalid authorization header" }
-        
- 7. **Update User.**
- 
-   * **URL**
-     
-     `/users`
-     
-   * **Method:**
-     
-     `PUT`
-     
-   * **Data Format**
-   
-     `application/json`
-
-   * **Data Params**
-     
-     * **Required**
-     
-       * `username`
-       * `email`
-     
    * **Success Response:**
-   
-     * **Code:** 200 OK
-     
-     * **Content:** 
-     
-        ```json
-        {
-           "data": {
-             "id": 2,
-             "username": "string1",
-             "email": "string1@gmail.com",
-             "date_joined": "2017-11-14 03:34:06",
-             "updated": "2017-11-15 03:15:26"
-             },
-         "message": "Account updated",
-         "status": "success"
-        }
-        ```
-        
-     * **Code:** 304 NOT MODIFIED
-     
-   * **Error Response**
-   
-     * **Code:** 401 UNAUTHORIZED
-     
-     * **Content:** 
-     
-           { "message": "authorization header required" }
-           
-     OR
-                      
-     * **Code:** 409 CONFLICT
-     
-     * **Content:**
-     
-           { "message": "username exists" }
-           { "message": "email exists" }
-           
-     OR
-     
-     * **Code:** 422 UNPROCESSABLE ENTITY
-     
-     * **Content:** 
-   
-           { "message": "invalid authorization header" }
  
- 8. **Delete User**.
- 
+   * **Code:** 200 OK
     
-   * **URL**
-     
-     `/users`
-     
-   * **Method:**
-     
-     `DELETE`
-     
-   * **Data Format**
-   
-     `application/json`
-     
-   * **Success Response**
-   
-     * **Code:** 204 NO CONTENT
-     
-     
-   * **Error Response**
-   
-     * **Code:** 401 UNAUTHORIZED
-     
-     * **Content:** 
-     
-           { "message": "authorization header required" }
-   
-     OR
-     
-     * **Code:** 422 UNPROCESSABLE ENTITY
-     
-     * **Content:** 
-   
-           { "message": "invalid authorization header" }
-           
-           
-## Shoppinglist Endpoints.
-
-1. **Retrieve All Shoppinglists**
-
- * **URL**
- 
-   `/shopping-lists`
-
- * **Method:**
-
-   `GET`
-
- * **Data Format**
-
-    `application/json`
- 
- * **Query Params**
- 
-    * **Optional**
-    
-      * `limit=[integer]`
-      * `page=[integer]`
-      
- * **Success Response:**
- 
-    * **Code:** 200 OK
-    
-    * **Content** 
+   * **Content** 
     
       ```json
       {
@@ -486,38 +638,38 @@ See deployment for notes on how to deploy the project on a live system.
         }
       }
 
- * **Error Response**
+   * **Error Response**
  
-    * **Code:** 401 UNAUTHORIZED
+     * **Code:** 401 UNAUTHORIZED
      
-    * **Content:** 
+     * **Content:** 
      
-          { "message": "authorization header required" }
+           { "message": "authorization header required" }
    
-    OR
+   OR
      
-    * **Code:** 422 UNPROCESSABLE ENTITY
+   * **Code:** 422 UNPROCESSABLE ENTITY
      
-    * **Content:** 
+   * **Content:** 
    
            { "message": "invalid authorization header" }
            
            
 2. **Create Shoppinglist**
 
- * **URL**
+   * **URL**
  
-   `/shopping-lists`
+     `/shopping-lists`
 
- * **Method:**
+   * **Method:**
 
-   `POST`
+     `POST`
 
- * **Data Format**
+   * **Data Format**
 
-    `application/json`
+     `application/json`
     
- * **Data Params**
+   * **Data Params**
  
    * **Required**
  
@@ -527,7 +679,7 @@ See deployment for notes on how to deploy the project on a live system.
 
      * `description`
      
- * **Success Response**
+   * **Success Response**
  
    * **Code:** 200 OK
    
@@ -544,7 +696,7 @@ See deployment for notes on how to deploy the project on a live system.
           }
          }
          
- * **Error Response**
+   * **Error Response**
  
    * **Code:** 401 UNAUTHORIZED
      
@@ -562,21 +714,21 @@ See deployment for notes on how to deploy the project on a live system.
 
 3. **Retrieve Shoppinglist.**
 
- * **URL**
+   * **URL**
  
-   `/shopping-lists/{ shoppinglistId }`
+     `/shopping-lists/{ shoppinglistId }`
    
- * **Method**
+   * **Method**
  
-   `GET`
+     `GET`
    
- * **Url Params**
+   * **Url Params**
  
    * **Required**
  
      * `shoppinglistId=[integer]`
    
- * **Success Response**
+   * **Success Response**
  
    * **Code:** 200 OK
    
@@ -597,7 +749,7 @@ See deployment for notes on how to deploy the project on a live system.
          }
        }
    
- * **Error Response**
+   * **Error Response**
  
    * **Code:** 401 UNAUTHORIZED
      
@@ -631,21 +783,21 @@ See deployment for notes on how to deploy the project on a live system.
    
 4. **Update Shoppinglist.**
 
- * **URL**
+   * **URL**
  
-   `/shopping-lists/{ shoppinglistId }`
+     `/shopping-lists/{ shoppinglistId }`
    
- * **Method**
+   * **Method**
  
-   `PUT`
+     `PUT`
    
- * **Url Params**
+   * **Url Params**
  
    * **Required**
  
      * `shoppinglistId=[integer]`
    
- * **Success Response**
+   * **Success Response**
  
    * **Code:** 200 OK
    
@@ -664,7 +816,7 @@ See deployment for notes on how to deploy the project on a live system.
             }
        
   
- * **Error Response**
+   * **Error Response**
  
    * **Code:** 401 UNAUTHORIZED
      
@@ -698,21 +850,20 @@ See deployment for notes on how to deploy the project on a live system.
 
 4. **Delete Shoppinglist.**
 
- * **URL**
+   * **URL**
  
-   `/shopping-lists/{ shoppinglistId }`
+     `/shopping-lists/{ shoppinglistId }`
  
- * **Method**
+   * **Method**
  
-   `DELETE`
+     `DELETE`
    
- * **Success Response**
+   * **Success Response**
  
    * **Code:** 204 NO CONTENT
    
- * **Error Response**
-       
-         
+   * **Error Response**
+             
    * **Code:** 404 NOT FOUND
      
    * **Content:** 
@@ -732,40 +883,40 @@ See deployment for notes on how to deploy the project on a live system.
 
 1. **Create Shopping Item.**
 
-  * **Url**
+   * **Url**
  
-    `/shopping-lists/{ shoppinglistId }/shopping-items`
+     `/shopping-lists/{ shoppinglistId }/shopping-items`
   
-  * **Method**
+   * **Method**
           
-    `POST`
+     `POST`
     
-  * **Url Params**
+   * **Url Params**
    
-    * **Required**
+   * **Required**
     
-      * `shoppinglistId=[integer]`
+     * `shoppinglistId=[integer]`
     
-  * **Data Params**
+   * **Data Params**
   
-    * **Required**
+     * **Required**
     
-      * `name=[string]`
-      * `price=[decimal]`
-      * `quantity=[decimal]`
+       * `name=[string]`
+       * `price=[decimal]`
+       * `quantity=[decimal]`
     
-    * **Optional**
+     * **Optional**
     
-      * `bought=[bool]`
+       * `bought=[bool]`
   
-  * **Success Response**
+   * **Success Response**
   
-    * **Code:** 201 CREATED
+     * **Code:** 201 CREATED
     
-    * **Content:** 
+     * **Content:** 
       
-      ```json
-      { 
+       ```json
+       { 
           "status": "success",
           "message": "Shopping item created",
           "data": {
@@ -778,21 +929,21 @@ See deployment for notes on how to deploy the project on a live system.
           }
         }
   
-  * **Error Response**
+   * **Error Response**
   
-    * **Code:** 404 NOT FOUND
+     * **Code:** 404 NOT FOUND
      
-    * **Content:** 
+     * **Content:** 
      
-         { "message": "Shopping list not found" }
+           { "message": "Shopping list not found" }
          
-    OR
+     OR
    
-    * **Code:** 409 CONFLICT
+     * **Code:** 409 CONFLICT
      
-    * **Content:** 
+     * **Content:** 
      
-          { "message": "There exists a shopping item with similar name, try again" }
+           { "message": "There exists a shopping item with similar name, try again" }
          
           
 2. **Retrieve Shopping Item**

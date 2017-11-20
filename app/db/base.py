@@ -9,8 +9,11 @@ BaseUserManager contains methods that are specific to only
 User model.
 
 """
+import pytz
+from datetime import datetime
 
 from app import BCRYPT, DB
+from app.conf.settings import TIME_ZONE
 from app.core.exceptions import EmailExists, UsernameExists
 
 
@@ -23,14 +26,32 @@ class BaseModel(DB.Model):
 
     # ----Attach custom exceptions to class----- #
     #       we will never have to import
-    #        these exceptions to where
-    #      User class has been imported
+    #       these exceptions to where
+    #       User class has been imported
+    #
+    #     Example:
+    #     try:
+    #         ...
+    #     Except User.UsernameExists:
+    #         ...
+    #         do something
+    #         ...
+
     UsernameExists = UsernameExists
     EmailExists = EmailExists
     # ------------------------------------------- #
 
+    timestamp = DB.Column(DB.DateTime(timezone=True),
+                          default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now())
+    updated = DB.Column(DB.DateTime(timezone=True),
+                        default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now(),
+                        onupdate=datetime.now(tz=pytz.timezone(TIME_ZONE)).now())
+
     def delete(self):
-        """Remove instance from the database."""
+        """
+        Remove instance from the database.
+        """
+
         DB.session.delete(self)
         DB.session.commit()
         return None
@@ -38,7 +59,9 @@ class BaseModel(DB.Model):
     def save(self):
         """
         Calls protected method to populate the database with data.
+
         """
+
         return self._save()
 
     def _save(self):
@@ -47,25 +70,9 @@ class BaseModel(DB.Model):
 
 
 class BaseUserManager(object):
-    """Manager class for User model."""
-
-    def authenticate(self):
-        """Method to authenticate user."""
-        self.authenticated = True
-        self.save()
-        return True
-
-    def deauthenticate(self):
-        """Set is_authenticated column to false."""
-        self.authenticated = False
-        self.save()
-        return True
-
-    @property
-    def is_authenticated(self):
-        """A property to indicate whether the user is authenticated or not."""
-
-        return self.authenticated
+    """
+    Manager class for User model.
+    """
 
     @classmethod
     def hash_password(cls, raw_password):
@@ -104,35 +111,7 @@ class BaseUserManager(object):
 
         return BCRYPT.check_password_hash(self.password, raw_password)
 
-    def validate_required(self):
-        """
-        A method to inspect required columns.
-
-        Passing an empty string passes non-nullable flag,
-        this method helps handle that flaw.
-        Field names are included in the error message to
-        assist in debugging.
-        """
-        error_message = '%(col)s is required'
-        errors = {}
-        for col in self.REQUIRED_COLUMNS:
-            if getattr(self, col) == '':
-                errors.update({col: error_message % dict(col=col)})
-
-        if errors == {}:
-            return None
-
-        else:
-            return errors
-
     def verify_password(self, password):
         """Outer method that verifies stored hashed password and returns either True or False."""
 
         return self._verify_password(password)
-
-    # bcrypt saves us the work of checking password column.
-    # we only need to add critical columns to REQUIRED_COLUMNS.
-
-    # NB. This allows addition of other colums which appear in the Model.
-    # passing a column which does not exist will raise AttributeError.
-    REQUIRED_COLUMNS = ['username', 'email']
