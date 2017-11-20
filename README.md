@@ -76,13 +76,15 @@ Follow the links below and and install the softwares depending on the operating 
           export TEST_DB_URL='postgres://postgres:mypass123@localhost/shl_test'
        ```
        
-6. Save the above file`(env.sh)` and run the command `$ chmod +x env.sh`, then `$ ./env.sh`.
+6. Save the above file`(env.sh)` and run the command `chmod +x env.sh`, then `./env.sh`.
 
 7. If everything was successful then your app should be set and ready to run.
 
    - Run migrations to create tables.
      
      ```bash
+        $ python manage.py init
+        
         $ python manage.py db migrate
    
         $ python manage.py db upgrade
