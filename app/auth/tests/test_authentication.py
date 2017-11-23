@@ -218,35 +218,33 @@ class TestUserAuth(TestBase):
     def test_cannot_login_with_invalid_cridentials(self):
         # login
         response = self.login_user(username="someuser",
-                               password="somepassword")
+                                   password="somepassword")
 
         self.assertFalse(response.status_code == 200)
         self.assert401(response)
         self.assertTrue(user_does_not_exist, response.get_data(as_text=True))
 
-    @file_data("test_data/valid_userinfo.json")
-    def test_user_can_login(self, info):
-        """
-        Test client can login with correct cridentials.
-        """
+    def test_user_can_login_with_correct_cridentials(self):
+        # register user.
+        self.register_user(
+            username=self.test_user.username,
+            email=self.test_user.email,
+            password=self.test_user.password,
+            confirm=self.test_user.password)
 
-        # register user first
-        reg_resp = self.register_user(username=info[0], password=info[1], email=info[2])
+        # login user.
+        response = self.login_user(
+            username=self.test_user.username,
+            password=self.test_user.password)
 
-        # confirm registration response
-        self.assertTrue(reg_resp.status_code == 201)
-        self.assertIn(account_created, reg_resp.get_data(as_text=True))
-
-        # login user
-        resp = self.login_user(username=info[0], password=info[1])
+        data = json.dumps(response.get_data(as_text=True))
 
         # assertions.
-        self.assert200(resp)
+        self.assert200(response)
 
         # a response should be sent containing access token and refresh_token
-        self.assertIn('Logged in', resp.get_data(as_text=True))
-        self.assertIn('auth_token', resp.get_data(as_text=True))
-        self.assertIn('refresh_token', resp.get_data(as_text=True))
+        self.assertTrue(successful_login, data['message'])
+        self.assertIn('auth_token', data)
 
     # @file_data("test_data/valid_userinfo.json")
     # def test_view_account_details(self, info):

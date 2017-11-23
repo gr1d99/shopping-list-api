@@ -3,11 +3,12 @@
 App module with function for checking it token has been blacklisted.
 """
 
-from app import jwt
-from ..models import BlacklistToken
+import secrets
+from app import JWT
+from ..models import BlacklistToken, ResetToken
 
 
-@jwt.token_in_blacklist_loader
+@JWT.token_in_blacklist_loader
 def check_if_token_in_blacklist(decrypted_token):
     """
     Checks if token is stored in blacklist model.
@@ -23,3 +24,10 @@ def check_if_token_in_blacklist(decrypted_token):
 
     else:
         return False
+
+
+def generate_token(user_id):
+    token = secrets.token_urlsafe(20)
+    rt = ResetToken(user_id, token)
+    rt.save()
+    return token
