@@ -12,7 +12,7 @@ User model.
 import pytz
 from datetime import datetime
 
-from app import BCRYPT, DB
+from app import bcrypt, DB
 from app.conf.settings import TIME_ZONE
 from app.core.exceptions import EmailExists, UsernameExists
 
@@ -40,12 +40,6 @@ class BaseModel(DB.Model):
     UsernameExists = UsernameExists
     EmailExists = EmailExists
     # ------------------------------------------- #
-
-    timestamp = DB.Column(DB.DateTime(timezone=True),
-                          default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now())
-    updated = DB.Column(DB.DateTime(timezone=True),
-                        default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now(),
-                        onupdate=datetime.now(tz=pytz.timezone(TIME_ZONE)).now())
 
     def delete(self):
         """
@@ -82,7 +76,7 @@ class BaseUserManager(object):
         This method hashes the raw password and returns hashed password.
         """
 
-        return BCRYPT.generate_password_hash(raw_password)
+        return bcrypt.generate_password_hash(raw_password)
 
     @classmethod
     def normalize_email(cls, email):
@@ -109,7 +103,7 @@ class BaseUserManager(object):
         since password stored are hashed.
         """
 
-        return BCRYPT.check_password_hash(self.password, raw_password)
+        return bcrypt.check_password_hash(self.password, raw_password)
 
     def verify_password(self, password):
         """Outer method that verifies stored hashed password and returns either True or False."""
