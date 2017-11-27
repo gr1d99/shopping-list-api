@@ -1,6 +1,5 @@
 import collections
-
-from flask import json
+from base64 import b64encode
 from flask_restful import url_for
 from flask_testing import TestCase
 
@@ -49,96 +48,92 @@ class TestBase(TestCase):
         user = User.get_user(username)
         return user
 
-    def login_user(self, **cridentials):
+    def login_user(self, with_header=True, **cridentials):
         """
         Login and authenticate user.
         """
+        auth = b64encode(
+            bytes(
+                cridentials.get('username', '') + ":" + cridentials.get('password', ''), 'ascii')
+        ).decode('ascii')
 
+        header = dict(Authorization='Basic %(auth)s' % dict(auth=auth))
         url = url_for('user_login')
-        return self.client.post(url, data=cridentials)
+
+        if with_header:
+            return self.client.post(url, headers=header)
+
+        else:
+            return self.client.post(url)
 
     def register_user(self, **details):
-        """
-        Register user.
-        """
-
         data = details
         url = url_for('user_register')
         return self.client.post(url, data=data)
 
-    # def logout_user(self, token):
-    #     """
-    #     Helper method to logout user.
-    #     """
-    #
-    #     headers = dict(
-    #         Authorization='Bearer %(token)s' % dict(token=token)
-    #     )
-    #
-    #     url = url_for('user_logout')
-    #
-    #     return self.client.delete(url, content_type=self.content_type, headers=headers)
-    #
-    # def get_user_details(self, token):
-    #     """
-    #     Helper method to make a POST request to fetch user details.
-    #     """
-    #
-    #     headers = dict(
-    #         Authorization='Bearer %(token)s' % dict(token=token))
-    #
-    #     url = url_for('user_detail')
-    #
-    #     return self.client.get(url, content_type=self.content_type, headers=headers)
-    #
-    # def update_user_info(self, token, data):
-    #     """
-    #      Helper method to make a PUT request to update user details.
-    #      """
-    #
-    #     data = json.dumps(data)
-    #
-    #     headers = dict(
-    #         Authorization='Bearer %(token)s' % dict(token=token))
-    #
-    #     url = url_for('user_detail')
-    #
-    #     return self.client.put(url, data=data, content_type=self.content_type, headers=headers)
-    #
-    # def refresh_user_token(self, token):
-    #     """
-    #      Helper method to make a PUT request to update user details.
-    #      """
-    #
-    #     headers = dict(
-    #         Authorization='Bearer %(token)s' % dict(token=token)
-    #     )
-    #
-    #     url = url_for('token_refresh')
-    #
-    #     return self.client.post(url, content_type=self.content_type, headers=headers)
-    #
-    # def reset_password(self, **data):
-    #     """
-    #     A method to make a post request with user details in order to reset user password.
-    #     """
-    #
-    #     data = json.dumps(data)
-    #
-    #     url = url_for('password_reset')
-    #
-    #     return self.client.post(url, data=data, content_type=self.content_type)
-    #
-    # def delete_user(self, token):
-    #     """
-    #     Makes DELETE request as client to delete user account.
-    #     :param token: client auth token.
-    #     :return: resonse.
-    #     """
-    #
-    #     url = url_for('user_detail')
-    #
-    #     headers = dict(
-    #         Authorization='Bearer %(token)s' % dict(token=token))
-    #
-    #     return self.client.delete(url, headers=headers, content_type=self.content_type)
+    def get_user_details(self, token):
+        """
+        Helper method to make a POST request to fetch user details.
+        """
+
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=token))
+
+        url = url_for('user_detail')
+
+        return self.client.get(url, headers=headers)
+
+    def update_user_info(self, token, data=None):
+        """
+         Helper method to make a PUT request to update user details.
+         """
+
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=token))
+
+        url = url_for('user_detail')
+
+        return self.client.put(url, data=data, headers=headers)
+
+    def logout_user(self, token):
+        """
+        Helper method to make requests to logout logged in users.
+        """
+
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=token)
+        )
+
+        url = url_for('user_logout')
+
+        return self.client.delete(url, headers=headers)
+
+    def get_password_reset_token(self, auth_token):
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=auth_token))
+        url = url_for('password_reset')
+        return self.client.get(url, headers=headers)
+
+    def reset_password(self, **data):
+        """
+        A method to make a post request with user details in order to reset user password.
+        """
+
+        url = url_for('password_reset')
+
+        return self.client.post(url, data=data)
+
+    def delete_user(self, token, confirm=False):
+        """
+        Makes DELETE request as client to delete user account.
+        :param token: client auth token.
+        :param confirm: True|False flag to authorize account delete.
+        :return: resonse.
+        """
+
+        url = url_for('user_detail', confirm=confirm)
+
+        headers = dict(
+            Authorization='Bearer %(token)s' % dict(token=token))
+
+        return self.client.delete(url, headers=headers)
