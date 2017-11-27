@@ -6,6 +6,8 @@
             2. `ShoppingList`
             3. `ShoppingItem`
 """
+
+import datetime as dt
 import pytz
 from datetime import datetime
 
@@ -27,6 +29,8 @@ class User(BaseUserManager, BaseModel, DB.Model):
     password = DB.Column(DB.Binary(200), nullable=False)
     email = DB.Column(DB.String(30), unique=True, nullable=False)
     shopping_lists = DB.relationship('ShoppingList', backref='user',
+                                     lazy='dynamic', cascade='all, delete-orphan')
+    reset_tokens = DB.relationship('ResetToken', backref='user',
                                      lazy='dynamic', cascade='all, delete-orphan')
     date_joined = DB.Column(DB.DateTime(timezone=True),
                             default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now)
@@ -181,14 +185,15 @@ class ShoppingItem(BaseModel, DB.Model):
 
 class ResetToken(BaseModel, DB.Model):
     id = DB.Column(DB.Integer, primary_key=True)
-    user_id = DB.Column(DB.Integer, DB.ForeignKey('users.id'))
     token = DB.Column(DB.String(50), nullable=False)
+    user_id = DB.Column(DB.Integer, DB.ForeignKey('users.id'))
     expired = DB.Column(DB.Boolean, default=False)
     timestamp = DB.Column(DB.DateTime(timezone=True),
                           default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now)
-    updated = DB.Column(DB.DateTime(timezone=True),
-                        default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now,
-                        onupdate=datetime.now(tz=pytz.timezone(TIME_ZONE)).now)
+
+    def __init__(self, user_id, token):
+        self.user_id = user_id
+        self.token = token
 
     def expire_token(self):
         self.token = True
@@ -197,3 +202,9 @@ class ResetToken(BaseModel, DB.Model):
     @property
     def is_expired(self):
         return self.expired
+
+    @staticmethod
+    def get_instance(token, user_id):
+        instance = DB.session.query(ResetToken).filter_by(
+                token=token, user_id=user_id).first()
+        return instance
