@@ -4,8 +4,10 @@ App module with function for checking it token has been blacklisted.
 """
 
 import secrets
+from functools import wraps
+from flask import Response, make_response, jsonify
 from app import JWT
-from ..models import BlacklistToken, ResetToken
+from ..models import BlacklistToken, ResetToken, User
 
 
 @JWT.token_in_blacklist_loader
@@ -31,3 +33,8 @@ def generate_token(user_id):
     rt = ResetToken(user_id, token)
     rt.save()
     return token
+
+
+def check_user(username):
+    user = User.get_user(username)
+    return user
