@@ -36,5 +36,5 @@ def generate_token(user_id):
 
 
 def check_user(username):
-    user = User.get_user(username)
+    user = User.get_by_username(username)
     return user
