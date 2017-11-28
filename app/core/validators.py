@@ -2,18 +2,14 @@ import string
 
 
 class Validator(object):
-    PUNCTUATIONS = (char for char in string.punctuation)
-    DIGITS = (str(dig) for dig in string.digits)
+    PUNCTUATIONS = list(string.punctuation)
+    DIGITS = list(string.digits)
+    PREFIX = 'validate_'
 
-    def __init__(self, value, allow_spaces=False):
-        self.prefix = 'validate_'
+    def __init__(self, value, special=True, allow_digits=False):
         self.value = str(value)
-        self.allow_spaces = allow_spaces
-
-    def validate(self):
-        for method in dir(self):
-            if method.startswith(self.prefix):
-                getattr(self, method)()
+        self.special = special
+        self.allow_digits = allow_digits
 
 
 class CustomValidator(Validator):
@@ -22,23 +18,33 @@ class CustomValidator(Validator):
         self.whitespace = " "
 
     def validate_does_not_startswith_special_chars(self):
+        if not self.special:
+            try:
+                if self.value[0] in CustomValidator.PUNCTUATIONS:
+                    raise ValueError('cannot start with %(c)s' % dict(c=self.value))
 
-        for c in Validator.PUNCTUATIONS:
-            if self.value.startswith(c):
-                raise ValueError('cannot start with %(c)s' % dict(c=c))
+            except IndexError:
+                pass
 
     def validate_does_not_startswith_space(self):
         if self.value.startswith(self.whitespace):
             raise ValueError('cannot start with whitespace')
 
     def validate_does_not_contain_whitespaces(self):
-        if not self.allow_spaces:
-            if self.value.__contains__(self.whitespace):
-                raise ValueError("cannot contain whitespaces")
+        if self.value.__contains__(self.whitespace):
+            raise ValueError("cannot contain whitespaces")
 
     def validate_does_not_startswith_digits(self):
-        for dig in Validator.DIGITS:
-            if self.value.startswith(dig):
-                raise ValueError('cannot start with digits')
+            if not self.allow_digits:
+                try:
+                    if self.value[0] in CustomValidator.DIGITS:
+                        raise ValueError('cannot start with digits')
+
+                except IndexError:
+                    pass
 
 
+def validate(value, special=False, allow_digits=False):
+    for method in dir(CustomValidator):
+        if method.startswith(CustomValidator.PREFIX):
+            getattr(CustomValidator(value, special, allow_digits), method)()
