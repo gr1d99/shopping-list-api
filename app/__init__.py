@@ -37,4 +37,4 @@ def index():
 
 
 if __name__ == '__main__':
-    APP.run()
+    APP.run(threaded=True)
