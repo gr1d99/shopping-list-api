@@ -7,16 +7,17 @@ App module containing client authentication and account management resources.
 from flask import jsonify, make_response, request
 from flask_jwt_extended import \
     (create_access_token, jwt_required, get_jwt_identity, get_raw_jwt)
+from email_validator import validate_email, EmailNotValidError
 from flask_restful import Resource
 from webargs.flaskparser import use_args
 from usernames import is_safe_username
 
-from app.core.validators import CustomValidator
+from app.core.validators import validate
 from .security import check_user
 from .utils import (delete_account_args, registration_args, reset_password_args,
-                    update_account_args, send_reset_token)
+                    update_account_args, send_reset_token, request_reset_token_args)
 from ..messages import *
-from ..models import User, BlacklistToken, ResetToken
+from ..models import User, BlacklistToken
 
 
 class UserRegisterApi(Resource):
@@ -32,14 +33,14 @@ class UserRegisterApi(Resource):
         :param data: username, email, password
         """
 
-        username = data.get('username').lower()
+        username = data.get('username', '').lower()
         email = data.get('email')
         password = str(data.get('password'))
         confirm = str(data.get('confirm'))
 
         # validate username and password for bad characters and formatting.
         try:
-            CustomValidator(username).validate()
+            validate(username)
 
         except Exception as e:
             return make_response(
@@ -50,7 +51,7 @@ class UserRegisterApi(Resource):
             )
 
         try:
-            CustomValidator(password).validate()
+            validate(password, special=True, allow_digits=True)
 
         except Exception as e:
             return make_response(
@@ -133,7 +134,7 @@ class UserLoginApi(Resource):
         username = cridentials.get('username')
         password = cridentials.get('password')
 
-        user = User.get_user(username)
+        user = User.get_by_username(username)
 
         if user is None:
             return make_response(
@@ -213,8 +214,8 @@ class UserProfileApi(Resource):
                     message=login_again
                 )), 401)
 
-        new_username = args.get('username')
-        email = args.get('email')
+        new_username = args.get('username', None)
+        email = args.get('email', None)
 
         if any([new_username, email]):
 
@@ -223,6 +224,18 @@ class UserProfileApi(Resource):
             # not return any errors, instead we will
             # not make any update.
             if new_username:
+
+                # validate username and password for bad characters and formatting.
+                try:
+                    validate(new_username)
+
+                except Exception as e:
+                    return make_response(
+                        jsonify(dict(
+                            status='fail',
+                            message="username value %(err)s" % dict(err=e.args[0])
+                        )), 422
+                    )
 
                 # check if username is not equal to the current one used
                 # by the user.
@@ -248,6 +261,17 @@ class UserProfileApi(Resource):
                 # check if supplied email is not equal to current email
                 # used by the user.
                 if user.email != email:
+
+                    try:
+                        validate_email(email)
+
+                    except EmailNotValidError as e:
+                        return make_response(
+                            jsonify(dict(
+                                status='fail',
+                                message=e.args
+                            )), 422
+                        )
 
                     try:
                         User.check_email(email)
@@ -316,7 +340,12 @@ class UserProfileApi(Resource):
         BlacklistToken(token=get_raw_jwt()['jti']).save()
 
         # return 204 response with nothing
-        return {}, 204
+        return make_response(
+            jsonify(dict(
+                status='success',
+                message=account_deleted
+            )), 200
+        )
 
 
 class UserLogoutApi(Resource):
@@ -351,20 +380,24 @@ class ResetPasswordApi(Resource):
     Resource class to handle client password reset.
     """
 
-    @jwt_required
-    def get(self):
-        current_user = get_jwt_identity()
-        user = check_user(current_user)
+    @use_args(request_reset_token_args)
+    def get(self, data):
+        email = data.get('email', "")
 
-        if not user:
+        try:
+            validate_email(email)
+
+        except EmailNotValidError as e:
             return make_response(
                 jsonify(dict(
                     status='fail',
-                    message=login_again
-                )), 401)
+                    message=e.args
+                )), 422
+            )
+
+        user = User.get_by_email(email)
 
         if user is not None:
-            user = User.get_user(current_user)
             rt = user.reset_tokens.filter_by(
                 user_id=user.id, expired=False
             ).first()
@@ -378,10 +411,8 @@ class ResetPasswordApi(Resource):
                     status='success',
                     message=reset_token_sent,
                     data=dict(
-                        password_reset_token=token
-                    )
-                )), 200
-            )
+                        password_reset_token=token)
+                )), 200)
 
     @use_args(reset_password_args)
     def post(self, data):
@@ -391,6 +422,7 @@ class ResetPasswordApi(Resource):
 
         errors = {}
         username = data.get('username')
+
         user = check_user(username)
 
         if not user:
@@ -415,7 +447,6 @@ class ResetPasswordApi(Resource):
             user_id=user.id, token=reset_token
         ).first()
 
-        # check if token is expired.
         if rt is None:
             errors.setdefault('token', reset_token_does_not_exist)
             return make_response(
@@ -429,7 +460,7 @@ class ResetPasswordApi(Resource):
             return make_response(
                 jsonify(dict(
                     status='fail',
-                    message=dict(token=reset_token_expired)
+                    message=reset_token_expired
                 )), 422
             )
 
