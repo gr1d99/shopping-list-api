@@ -419,6 +419,68 @@ class TestUserAuth(TestBase):
         self.assertIn("User with %(email)s exists" % dict(email=target_email),
                       update_det2.get_data(as_text=True))
 
+    @data('    ', ' not so valid', '"123')
+    def test_cannot_update_account_with_invalid_username(self, username):
+        # register user.
+        self.register_user(
+            username=self.test_user.username,
+            email=self.test_user.email,
+            password=self.test_user.password,
+            confirm=self.test_user.password)
+
+        # login user.
+        login_response = self.login_user(
+            username=self.test_user.username,
+            password=self.test_user.password)
+
+        token = json.loads(
+            login_response.get_data(as_text=True))['data']['auth_token']
+
+        # details that the first client intends to update.
+        new_details = {
+            'username': username,
+            'email': 'new_user1@email.com'}
+
+        update_response = self.update_user_info(
+            token=token, data=new_details)
+
+        # query from user objects from db.
+        obj = User.get_by_username(username)
+
+        # assertions.
+        self.assertStatus(update_response, 422)
+        self.assertIsNone(obj)
+
+    @data('@gmail.com', 'invalidemail.com', '""@gmail.com', '   @gmail.com')
+    def test_cannot_update_account_with_invalid_email(self, email):
+        self.register_user(
+            username=self.test_user.username,
+            email=self.test_user.email,
+            password=self.test_user.password,
+            confirm=self.test_user.password)
+
+        # login user.
+        login_response = self.login_user(
+            username=self.test_user.username,
+            password=self.test_user.password)
+
+        token = json.loads(
+            login_response.get_data(as_text=True))['data']['auth_token']
+
+        update_det = {
+            'email': email
+        }
+
+        update_response = self.update_user_info(
+            token=token, data=update_det)
+
+        # query from user objects from db.
+        obj = User.get_by_email(email)
+
+        # assertions.
+        self.assertStatus(update_response, 422)
+        self.assertIsNone(obj)
+
     def test_no_change_is_applied_to_user_account_if_no_data_is_provided_in_update_request(self):
         self.register_user(
             username=self.test_user.username,
@@ -480,7 +542,7 @@ class TestUserAuth(TestBase):
             )['msg'], 'Token has been revoked')
 
     def test_user_can_change_password(self):
-        # old password and new password
+        # old password.
         new_password = 'mynewpassword'
 
         # register user.
@@ -490,16 +552,8 @@ class TestUserAuth(TestBase):
             password=self.test_user.password,
             confirm=self.test_user.password)
 
-        # login user.
-        login_response = self.login_user(
-            username=self.test_user.username,
-            password=self.test_user.password)
-
-        auth_token = json.loads(
-            login_response.get_data(as_text=True))['data']['auth_token']
-
         # get password reset token.
-        res = self.get_password_reset_token(auth_token)
+        res = self.get_password_reset_token(email=self.test_user.email)
 
         reset_token = json.loads(
             res.get_data(as_text=True))['data']['password_reset_token']
@@ -527,6 +581,106 @@ class TestUserAuth(TestBase):
         # response status code should be 200.
         self.assert200(new_login_response)
 
+    def test_user_cannot_reset_password_without_reset_token(self):
+        # old password.
+        new_password = 'this is a new password'
+
+        # register user.
+        self.register_user(
+            username=self.test_user.username,
+            email=self.test_user.email,
+            password=self.test_user.password,
+            confirm=self.test_user.password)
+
+        reset_response = self.reset_password(
+            username=self.test_user.username,
+            new_password=new_password,
+            confirm=new_password,
+            reset_token=''
+        )
+
+        err = json.loads(
+            reset_response.get_data(as_text=True))
+
+        # assertions.
+        self.assertStatus(reset_response, 422)
+        self.assertTrue(
+            err['message'], reset_token_required)
+
+    @data('hdbvhbdjbdbdbvd', 'dcece345678cuye7', "    dfghjcbvgsc")
+    def test_cannot_reset_password_with_invalid_token(self, token):
+        # old password.
+        new_password = 'this is a new password'
+
+        # register user.
+        self.register_user(
+            username=self.test_user.username,
+            email=self.test_user.email,
+            password=self.test_user.password,
+            confirm=self.test_user.password)
+
+        reset_response = self.reset_password(
+            username=self.test_user.username,
+            new_password=new_password,
+            confirm=new_password,
+            reset_token=token
+        )
+
+        err = json.loads(
+            reset_response.get_data(as_text=True))
+
+        # assertions.
+        self.assertStatus(reset_response, 422)
+        self.assertTrue(
+            err['message'], reset_token_does_not_exist)
+
+    @data('@gmail.com', 'invalidemail.com', '""@gmail.com', '   @gmail.com')
+    def test_user_cannot_reset_password_with_invalid_email(self, email):
+        # make reset request.
+        response = self.get_password_reset_token(email)
+        self.assertStatus(response, 422)
+        self.assertNotIn('reset_token', response.get_data(as_text=True))
+
+    def test_cannot_reset_password_with_expired_token(self):
+        # old password.
+        new_password = 'mynewpassword'
+
+        # register user.
+        self.register_user(
+            username=self.test_user.username,
+            email=self.test_user.email,
+            password=self.test_user.password,
+            confirm=self.test_user.password)
+
+        # get password reset token.
+        res = self.get_password_reset_token(email=self.test_user.email)
+
+        reset_token = json.loads(
+            res.get_data(as_text=True))['data']['password_reset_token']
+
+        # make actual response to change password.
+        self.reset_password(
+            username=self.test_user.username,
+            new_password=new_password,
+            confirm=new_password,
+            reset_token=reset_token)
+
+        # make another request with the same token provided.
+        response = self.reset_password(
+            username=self.test_user.username,
+            new_password=new_password,
+            confirm=new_password,
+            reset_token=reset_token)
+
+        response_data = json.loads(
+            response.get_data(as_text=True))
+
+        self.assertStatus(response, 422)
+        self.assertFalse(
+            response_data['status'] == 'success')
+        self.assertTrue(
+            response_data['message'] == reset_token_expired)
+
     def test_user_can_delete_account(self):
         # register user.
         self.register_user(
@@ -542,7 +696,7 @@ class TestUserAuth(TestBase):
 
         # logout client.
         token = json.loads(
-            login_response.get_data(as_text=True)['data']['auth_token'])
+            login_response.get_data(as_text=True))['data']['auth_token']
 
         # make delete request.
         delete_response = self.delete_user(token=token, confirm=True)
@@ -550,184 +704,5 @@ class TestUserAuth(TestBase):
         data = json.loads(
             delete_response.get_data(as_text=True))
         self.assertStatus(delete_response, 200)
-        self.assertTrue(delete_response['status'] == 'success')
+        self.assertTrue(data['status'] == 'success')
         self.assertTrue(data['message'] == account_deleted)
-
-        # @file_data("test_data/valid_userinfo.json")
-    # def test_cannot_update_password_without_username_or_email(self, info):
-    #     """
-    #     Test client cannot update password without username or password.
-    #     """
-    #
-    #     # register client.
-    #     self.register_user(
-    #         username=info[0], password=info[1], email=info[2])
-    #
-    #     # login user
-    #     login_response = self.login_user(
-    #         username=info[0], password=info[1]
-    #     )
-    #
-    #     # old password and new password
-    #     old_password = info[1]
-    #     new_password = 'mynewpassword'
-    #
-    #     # make a post request to reset password api.
-    #     reset_response = self.reset_password(
-    #         old_password=old_password,
-    #         new_password=new_password,
-    #         confirm=new_password
-    #     )
-    #
-    #     # get data returned.
-    #     reset_response_data = json.loads(reset_response.get_data(as_text=True))
-    #
-    #     # assert reset password response.
-    #     self.assert401(reset_response)
-    #     self.assertTrue(reset_response_data['status'] == 'fail')
-    #     self.assertTrue(reset_response_data['message'] == username_or_email_required)
-    #
-    # @file_data("test_data/valid_userinfo.json")
-    # def test_can_update_password_with_username_only(self, info):
-    #     """
-    #     Test client can update password with username only.
-    #     """
-    #
-    #     # register client.
-    #     self.register_user(
-    #         username=info[0], password=info[1], email=info[2])
-    #
-    #     # login client.
-    #     login_response = self.login_user(
-    #         username=info[0], password=info[1]
-    #     )
-    #
-    #     # assert status code from login response
-    #     self.assertStatus(login_response, 200)
-    #
-    #     # old password and new password
-    #     old_password = info[1]
-    #     new_password = 'mynewpassword'
-    #
-    #     # make a post request to reset password api
-    #     reset_response = self.reset_password(
-    #         username=info[0],
-    #         old_password=old_password,
-    #         new_password=new_password,
-    #         confirm=new_password
-    #     )
-    #
-    #     # get data returned
-    #     reset_response_data = json.loads(
-    #         reset_response.get_data(as_text=True))
-    #
-    #     # assert reset password response
-    #     self.assert200(reset_response)
-    #     self.assertTrue(reset_response_data['status'] == 'success')
-    #     self.assertTrue(reset_response_data['message'] == password_changed)
-    #
-    # @file_data("test_data/valid_userinfo.json")
-    # def test_can_update_password_with_email_only(self, info):
-    #     """
-    #     Test client can update password with email only.
-    #     """
-    #
-    #     # register client.
-    #     self.register_user(
-    #         username=info[0], password=info[1], email=info[2])
-    #
-    #     # login client.
-    #     self.login_user(
-    #         username=info[0], password=info[1]
-    #     )
-    #
-    #     # old password and new password.
-    #     old_password = info[1]
-    #     new_password = 'mynewpassword'
-    #
-    #     # make a post request to reset password api.
-    #     reset_response = self.reset_password(
-    #         email=info[2],
-    #         old_password=old_password,
-    #         new_password=new_password,
-    #         confirm=new_password
-    #     )
-    #
-    #     # get data returned
-    #     reset_response_data = json.loads(reset_response.get_data(as_text=True))
-    #
-    #     # assert reset password response
-    #     self.assert200(reset_response)
-    #     self.assertTrue(reset_response_data['status'] == 'success')
-    #     self.assertTrue(reset_response_data['message'] == password_changed)
-    #
-    # @file_data("test_data/valid_userinfo.json")
-    # def test_cannot_update_password_with_incorrect_old_password(self, info):
-    #     """
-    #     Test client cannot update password without correct old_password.
-    #     """
-    #
-    #     # register client.
-    #     self.register_user(
-    #         username=info[0], password=info[1], email=info[2])
-    #
-    #     # login client.
-    #     self.login_user(
-    #         username=info[0], password=info[1]
-    #     )
-    #
-    #     # old password and new password.
-    #     old_password = info[1]
-    #     new_password = 'mynewpassword'
-    #
-    #     # make a post request to reset password api.
-    #     reset_response = self.reset_password(
-    #         username=info[0],
-    #         old_password='somerandompassword',
-    #         new_password=new_password,
-    #         confirm=new_password
-    #     )
-    #
-    #     # get data returned.
-    #     reset_response_data = json.loads(reset_response.get_data(as_text=True))
-    #
-    #     # assert reset password response
-    #     self.assert401(reset_response)
-    #     self.assertTrue(reset_response_data['status'] == 'fail')
-    #     self.assertTrue(reset_response_data['message'] == incorrect_old_password)
-    #
-    # @file_data("test_data/valid_userinfo.json")
-    # def test_cannot_update_password_with_unmatched_passwords(self, info):
-    #     """
-    #     Test client cannot update password with new_password and confirm password that dont match.
-    #     """
-    #
-    #     # register client.
-    #     self.register_user(
-    #         username=info[0], password=info[1], email=info[2])
-    #
-    #     # login client.
-    #     self.login_user(
-    #         username=info[0], password=info[1]
-    #     )
-    #
-    #     # old password and new password.
-    #     old_password = info[1]
-    #     new_password = 'mynewpassword'
-    #
-    #     # make a post request to reset password api.
-    #     reset_response = self.reset_password(
-    #         username=info[0],
-    #         old_password=old_password,
-    #         new_password='somerandompassword',
-    #         confirm=new_password
-    #     )
-    #
-    #     # get data returned
-    #     reset_response_data = json.loads(reset_response.get_data(as_text=True))
-    #
-    #     # assert reset password response
-    #     self.assert401(reset_response)
-    #     self.assertTrue(reset_response_data['status'] == 'fail')
-    #     self.assertTrue(reset_response_data['message'] == passwords_donot_match)
-    #
