@@ -2,6 +2,7 @@ celery
 coverage==4.0.3
 coveralls==1.2.0
 ddt
+email_validator
 flask-bcrypt
 Flask==0.12.2
 Flask-Httpauth
