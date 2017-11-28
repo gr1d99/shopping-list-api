@@ -31,6 +31,12 @@ update_account_args = OrderedDict(
     ]
 )
 
+request_reset_token_args = OrderedDict(
+    [
+        ('email', fields.Str(required=True, location='query', validate=validate.Email()))
+    ]
+)
+
 reset_password_args = OrderedDict(
     [
         ('username', fields.Str(location='form', required=True)),
