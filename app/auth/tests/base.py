@@ -45,7 +45,7 @@ class TestBase(TestCase):
 
     @staticmethod
     def query_user_from_db(username):
-        user = User.get_user(username)
+        user = User.get_by_username(username)
         return user
 
     def login_user(self, with_header=True, **cridentials):
@@ -108,11 +108,9 @@ class TestBase(TestCase):
 
         return self.client.delete(url, headers=headers)
 
-    def get_password_reset_token(self, auth_token):
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=auth_token))
-        url = url_for('password_reset')
-        return self.client.get(url, headers=headers)
+    def get_password_reset_token(self, email):
+        url = url_for('password_reset', email=email)
+        return self.client.get(url)
 
     def reset_password(self, **data):
         """
@@ -120,7 +118,6 @@ class TestBase(TestCase):
         """
 
         url = url_for('password_reset')
-
         return self.client.post(url, data=data)
 
     def delete_user(self, token, confirm=False):
