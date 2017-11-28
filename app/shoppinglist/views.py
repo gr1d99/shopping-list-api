@@ -541,7 +541,7 @@ class ShoppingItemDetailApi(Resource):
         current_user = get_jwt_identity()
 
         # get user instance.
-        user = User.get_user(current_user)
+        user = User.get_by_username(current_user)
 
         # get shoppinglist instance.
         shoppinglist = user.shopping_lists.filter_by(id=shoppinglistId).first()
@@ -646,7 +646,7 @@ class ShoppingItemDetailApi(Resource):
 
         current_user = get_jwt_identity()
 
-        user = User.get_user(current_user)
+        user = User.get_by_username(current_user)
 
         # get shoppinglist
         shoppinglist = user.shopping_lists.filter_by(id=shoppinglistId).first()
@@ -698,7 +698,7 @@ class SearchShoppingListApi(Resource):
 
         current_user = get_jwt_identity()
 
-        user = User.get_user(current_user)
+        user = User.get_by_username(current_user)
 
         _term = args.get('q')
 
