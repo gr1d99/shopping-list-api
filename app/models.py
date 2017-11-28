@@ -65,7 +65,7 @@ class User(BaseUserManager, BaseModel, DB.Model):
             raise UsernameExists
 
     @staticmethod
-    def get_user(username):
+    def get_by_username(username):
         """
         Gets user instance using provided username.
 
@@ -74,6 +74,17 @@ class User(BaseUserManager, BaseModel, DB.Model):
         """
 
         return DB.session.query(User).filter_by(username=username).first()
+
+    @staticmethod
+    def get_by_email(email):
+        """
+        Gets user instance using provided email.
+
+        :param email: user email.
+        :return: instance.
+        """
+
+        return DB.session.query(User).filter_by(email=email).first()
 
     def __repr__(self):
         return '<%(username)s obj>' % dict(username=self.username.capitalize())
@@ -196,7 +207,7 @@ class ResetToken(BaseModel, DB.Model):
         self.token = token
 
     def expire_token(self):
-        self.token = True
+        self.expired = True
         self.save()
 
     @property
