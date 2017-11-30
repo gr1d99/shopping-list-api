@@ -20,7 +20,7 @@ from flask import json
 
 from app.messages import *
 from app.models import User
-from .base import TestBase
+from .auth_base import TestBase
 
 
 @ddt
@@ -54,18 +54,33 @@ class TestUserAuth(TestBase):
         self.assertStatus(response, 422)
         self.assertTrue(data['status'] == 'fail')
 
-    # @data('1user', '333', '4562cfe')
-    # def test_cannot_register_with_username_that_startswith_digits(self, digits):
-    #     response = self.register_user(username=digits,
-    #                                   email=self.test_user.email,
-    #                                   password=self.test_user.password,
-    #                                   confirm=self.test_user.password)
-    #
-    #     data = json.loads(response.get_data(as_text=True))
-    #
-    #     # assertions.
-    #     self.assertStatus(response, 422)
-    #     self.assertTrue(data['status'] == 'fail')
+    @data("@gideon", "     ", "%^&*()(  my   name")
+    def test_cannot_register_with_username_that_startswith_special_characters(self, name):
+        response = self.register_user(
+            username=name,
+            email=self.test_user.email,
+            password=self.test_user.password,
+            confirm=self.test_user.password)
+
+        data = json.loads(response.get_data(as_text=True))
+
+        # assertions.
+        self.assertStatus(response, 422)
+        self.assertTrue(data['status'] == 'fail')
+
+    @data('1user', '333', '4562cfe')
+    def test_cannot_register_with_username_that_startswith_digits(self, digits):
+        response = self.register_user(
+            username=digits,
+            email=self.test_user.email,
+            password=self.test_user.password,
+            confirm=self.test_user.password)
+
+        data = json.loads(response.get_data(as_text=True))
+
+        # assertions.
+        self.assertStatus(response, 422)
+        self.assertTrue(data['status'] == 'fail')
 
     @data("hello ", "hello world", "this is so invalid", "my   name")
     def test_cannot_register_with_username_that_contain_spaces(self, invalid):
