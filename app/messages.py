@@ -1,5 +1,6 @@
 __all__ = [
-    'account_created', 'account_deleted', 'account_not_updated', 'account_updated', 'cridentials_required', 'data_required', 'email_not_provided', 'email_exists',
+    'account_created', 'account_deleted', 'account_not_updated', 'account_updated', 'cridentials_required', 'data_required',
+    'email_does_not_exist', 'email_not_provided', 'email_exists',
     'incomplete_delete', 'incorrect_old_password', 'incorrect_password', 'invalid_email', 'invalid_limit', 'invalid_page',
     'login_again', 'negative_limit', 'negative_page', 'new_email_exists', 'new_username_exists', 'password_changed', 'passwords_donot_match',
     'password_not_provided', 'reset_token_sent', 'reset_token_expired', 'reset_token_does_not_exist',
@@ -12,7 +13,7 @@ __all__ = [
     'valid_integer_required'
 ]
 
-login_again = 'Please login again.'
+login_again = 'Please login again with your username and password.'
 user_does_not_exist = 'The username you provided does not exist, ' \
                       'please check your username or register to get an account'
 cridentials_required = "You musty provide username and password."
@@ -37,10 +38,12 @@ username_with_whitespaces = 'username values %(err)s, please try again without w
 successful_login = 'Successfully logged in.'
 new_username_exists = "User with %(username)s exists. Choose a different username."
 new_email_exists = "User with %(email)s exists. Choose a different email."
-account_not_updated = "Your account has not been modified."
+account_not_updated = "You made an update request with no new details, " \
+                      "your account has not been modified."
 logout_successful = "You have successfully been logged out."
 incomplete_delete = "You account has not been deleted, " \
                     "please confirm that you would wish to delete your account."
+email_does_not_exist = "There is no such email, check the email you provided and try again."
 
 
 # shopping list and shopping items endpoints messages
@@ -49,7 +52,8 @@ valid_integer_required = "Provide a valid id"
 shoppinglist_not_found = 'Shopping list not found'
 shoppinglist_updated = 'Shopping list updated'
 shoppinglist_not_updated = "Your shoppinglist has not been modified."
-shoppinglist_name_exists = "There exists a shoppinglist with the provided name exists, try again with a different name"
+shoppinglist_name_exists = "You are trying to create a shoppinglist with a name that already exist, " \
+                           "please choose a different name and try again."
 shoppinglist_deleted = 'Shopping list deleted'
 
 shoppingitem_exists = 'There exists a shopping item with similar name, try again'
