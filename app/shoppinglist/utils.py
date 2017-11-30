@@ -16,15 +16,18 @@ __all__ = [
 
 shoppinglist_args = collections.OrderedDict(
     [
-        ('name', fields.Str(required=True, validate=validate.Length(min=3))),
-        ('description', fields.Str(required=False))
+        ('name', fields.Str(required=True,
+                            validate=validate.Length(min=3),
+                            location='form')),
+        ('description', fields.Str(required=False,
+                                   location='form'))
     ]
 )
 
 shoppinglist_update_args = collections.OrderedDict(
     [
-        ('new_name', fields.Str(required=False)),
-        ('is_active', fields.Bool(required=False))
+        ('name', fields.Str(required=False, location='form')),
+        ('description', fields.Str(required=False, location='form'))
     ]
 )
 
