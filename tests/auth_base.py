@@ -14,9 +14,8 @@ class TestBase(TestCase):
         super(TestBase, self).__init__(*args, **kwargs)
         # initialize to None because it is not defined in the
         # TestCase init
-        model = collections.namedtuple('User', ['username', 'email', 'password'])
-        user = model('gideon', 'gideon@gmail.com', 'gideonpassword')
-        self.test_user = user
+        self.model = collections.namedtuple('User', ['username', 'email', 'password'])
+        self.test_user = self.model('gideon', 'gideon@gmail.com', 'gideonpassword')
 
     def create_app(self):
         return APP
@@ -48,13 +47,13 @@ class TestBase(TestCase):
         user = User.get_by_username(username)
         return user
 
-    def login_user(self, with_header=True, **cridentials):
+    def login_user(self, with_header=True, **credentials):
         """
         Login and authenticate user.
         """
         auth = b64encode(
             bytes(
-                cridentials.get('username', '') + ":" + cridentials.get('password', ''), 'ascii')
+                credentials.get('username', '') + ":" + credentials.get('password', ''), 'ascii')
         ).decode('ascii')
 
         header = dict(Authorization='Basic %(auth)s' % dict(auth=auth))
