@@ -11,6 +11,8 @@ class Config(object):
     JWT_BLACKLIST_ENABLED = True
     JWT_BLACKLIST_TOKEN_CHECKS = ['access', 'refresh']
     JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(seconds=3600)
+    JWT_HEADER_NAME = 'x-access-token'
+    JWT_HEADER_TYPE = None
     HOST = '0.0.0.0'
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     JSON_SORT_KEYS = False
