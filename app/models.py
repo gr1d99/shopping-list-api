@@ -113,11 +113,10 @@ class ShoppingList(BaseModel, DB.Model):
     """Model used to store user shopping lists"""
 
     id = DB.Column(DB.Integer, primary_key=True)
-    name = DB.Column(DB.String(100), nullable=False, unique=True)
+    name = DB.Column(DB.String(100), nullable=False)
     owner_id = DB.Column(DB.Integer, DB.ForeignKey('users.id'))
     shopping_items = DB.relationship('ShoppingItem', backref='shopping_list',
                                      lazy='dynamic', cascade='all, delete-orphan')
-    is_active = DB.Column(DB.Boolean, default=True)
     description = DB.Column(DB.Text(), nullable=True, default="")
     timestamp = DB.Column(DB.DateTime(timezone=True),
                           default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now)
