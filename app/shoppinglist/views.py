@@ -14,6 +14,7 @@ from webargs.flaskparser import use_args
 from .utils import *
 from ..conf.settings import MAX_ITEMS_PER_PAGE
 from ..core.loggers import AppLogger
+from ..core.validators import validate
 from ..messages import *
 from ..models import User, ShoppingList, ShoppingItem
 
@@ -79,8 +80,7 @@ class ShoppingListsApi(Resource):
             output = [{
                 'id': shl.id,
                 'name': shl.name,
-                'description': shl.description,
-                'is_active': shl.is_active} for shl in paginated.items]
+                'description': shl.description} for shl in paginated.items]
 
             response.setdefault('total_pages', paginated.pages)
 
@@ -92,8 +92,7 @@ class ShoppingListsApi(Resource):
             output = [{
                 'id': shl.id,
                 'name': shl.name,
-                'description': shl.description,
-                'is_active': shl.is_active} for shl in shoppinglists]
+                'description': shl.description} for shl in shoppinglists]
 
             response.setdefault('shopping_lists', output)
 
@@ -116,8 +115,21 @@ class ShoppingListsApi(Resource):
         name = data.get('name')
         description = data.get('description')
 
+        user = User.query.filter_by(username=current_user).first()
+
+        try:
+            validate(value=name, allow_spaces=True)
+
+        except Exception as e:
+            return make_response(
+                jsonify(dict(
+                    status='fail',
+                    message="Shoppinglist name value %(err)s" % dict(err=e.args[0])
+                )), 422
+            )
+
         # check if shopping list exists
-        old_shl = ShoppingList.query.filter_by(name=name).first()
+        old_shl = ShoppingList.query.filter_by(name=name, owner_id=user.id).first()
 
         # if shopping list exists return bad request response.
         if old_shl:
@@ -143,10 +155,8 @@ class ShoppingListsApi(Resource):
                 data=dict(
                     id=shl.id,
                     name=shl.name,
-                    created_on=shl.timestamp.strftime("%Y-%m-%d %H:%M:%S")
-                )
-            )), 201
-        )
+                    created_on=shl.timestamp.strftime("%Y-%m-%d %H:%M:%S"))
+            )), 201)
 
 
 class ShoppingListDetailApi(Resource):
@@ -160,6 +170,7 @@ class ShoppingListDetailApi(Resource):
     def get(self, id=None):
         """
         Handles GET request to fetch specific shopping list requested by client.
+
         :param id: id of shopping list.
         :return: json data.
         """
@@ -173,7 +184,8 @@ class ShoppingListDetailApi(Resource):
         # get shopping list using provided id, if not found raise error 404 and
         # return response to client.
         try:
-            shoppinglist = user.shopping_lists.filter_by(id=int(id)).first_or_404()
+            shoppinglist = user.shopping_lists.filter_by(
+                id=int(id)).first_or_404()
 
         except Exception as e:
             AppLogger(self.__class__.__name__).logger.warning(e)
@@ -191,16 +203,16 @@ class ShoppingListDetailApi(Resource):
         data.setdefault('id', shoppinglist.id)
         data.setdefault('name', shoppinglist.name)
         data.setdefault('description', shoppinglist.description)
-        data.setdefault('created_on', shoppinglist.timestamp.strftime("%Y-%m-%d %H:%M:%S"))
-        data.setdefault('updated_on', shoppinglist.updated.strftime("%Y-%m-%d %H:%M:%S"))
         data.setdefault('total shoppingitems', shoppinglist.shopping_items.count())
         data.setdefault('bought shoppingitems', bought)
         data.setdefault('not bought shoppingitems', not_bought)
+        data.setdefault('created_on', shoppinglist.timestamp.strftime("%Y-%m-%d %H:%M:%S"))
+        data.setdefault('updated_on', shoppinglist.updated.strftime("%Y-%m-%d %H:%M:%S"))
 
         return make_response(
             jsonify(dict(
                 status='success',
-                message=data
+                data=data
             )), 200
         )
 
@@ -209,37 +221,12 @@ class ShoppingListDetailApi(Resource):
     def put(self, args, id):
         """
         Handles PUT request to update user shopping list.
+
         :param args: new name to be updated.
         :param id: shopping list id
         :return: response
         """
         current_user = get_jwt_identity()
-
-        # get user instance
-        user = User.query.filter_by(username=current_user).first()
-
-        # new name provided by client
-        new_name = args.get('new_name', None)
-        is_active = args.get('is_active', None)
-
-        # if name is none there is no need to modify client resource.
-        if not new_name and is_active is None:
-            return make_response(
-                jsonify(dict(
-                    status='success',
-                )), 304
-            )
-
-        # check if shopping list exists, if not, return 404 response to client.
-        shopping_list = user.shopping_lists.filter_by(id=int(id)).first()
-
-        if not shopping_list:
-            return make_response(
-                jsonify(dict(
-                    status='fail',
-                    message=shoppinglist_not_found
-                )), 404
-            )
 
         def response():
             return make_response(
@@ -247,45 +234,58 @@ class ShoppingListDetailApi(Resource):
                     status='success',
                     message=shoppinglist_updated,
                     data=dict(
-                        name=shopping_list.name,
-                        is_active=shopping_list.is_active,
-                        created_on=shopping_list.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-                        updated_on=shopping_list.updated.strftime("%Y-%m-%d %H:%M:%S")
-                    )
-                )), 200
-            )
+                        name=shoppinglist.name,
+                        description=shoppinglist.description,
+                        updated_on=shoppinglist.updated.strftime("%Y-%m-%d %H:%M:%S"))
+                )), 200)
 
-        # client may just want to update shoppinglist active status but
-        # not the name therefore we only make changes to what is required and return
-        # the response.
-        if is_active and not new_name:
-            shopping_list.is_active = True
-            shopping_list.save()
-            return response()
+        # get user instance
+        user = User.query.filter_by(username=current_user).first()
 
-        elif not is_active and not new_name:
-            shopping_list.is_active = False
-            shopping_list.save()
-            return response()
+        # new name provided by client
+        name = args.get('name', None)
+        description = args.get('description', None)
 
-        # check if shopping list with the same name exists.
-        shl = ShoppingList.query.filter_by(name=new_name).first()
+        # check if shopping list exists, if not, return 404 response to client.
+        shoppinglist = user.shopping_lists.filter_by(id=int(id)).first()
 
-        # if shopping list exists and it is not owned by the client return bad request.
-        if shl and shl.owner_id is not user.id:
-            msg = shoppinglist_name_exists
+        if not shoppinglist:
             return make_response(
                 jsonify(dict(
                     status='fail',
-                    message=msg
-                )), 409
-            )
+                    message=shoppinglist_not_found
+                )), 404)
 
-        # make changes and save
-        shopping_list.name = new_name
-        shopping_list.save()
+        # if name is none then there is no need to modify client resource.
+        if any([name, description]):
+            if name:
+                # check if shopping list with the same name exists.
+                shl = ShoppingList.query.filter_by(name=name, owner_id=user.id).first()
 
-        return response()
+                print(shl)
+
+                # if shopping list exists and it is not owned by the client return bad request.
+                if shl:
+                    msg = shoppinglist_name_exists
+                    return make_response(
+                        jsonify(dict(
+                            status='fail',
+                            message=msg
+                        )), 409)
+
+                if description:
+                    shoppinglist.description = description
+
+                shoppinglist.name = name
+                shoppinglist.save()
+                return response()
+
+        return make_response(
+            jsonify(dict(
+                status='success',
+                message=shoppinglist_not_updated
+            )), 200)
+
 
     @jwt_required
     def delete(self, id):
@@ -306,8 +306,9 @@ class ShoppingListDetailApi(Resource):
             instance.delete()
             return make_response(
                 jsonify(dict(
-                    status="success"
-                )), 204
+                    status="success",
+                    message=shoppinglist_deleted
+                )), 200
             )
 
         except Exception as e:
