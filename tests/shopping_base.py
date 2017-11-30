@@ -7,19 +7,18 @@ from flask_testing import TestCase
 from app import APP, DB
 from app.conf import app_config
 
+from .auth_base import TestBase
 
-class TestShoppingListBase(TestCase):
+
+class TestShoppingListBase(TestBase):
     def __init__(self, *args, **kwargs):
         super(TestShoppingListBase, self).__init__(*args, **kwargs)
-
         # test data
-        user_model = collections.namedtuple('User', ['username', 'password', 'email'])
-        shoppinglist_model = collections.namedtuple('ShoppingList', ['name', 'description'])
+        self.test_user_two = self.model('usertwo', "user_two_password", "user_two@gmail.com")
 
-        self.user = user_model('gideon', 'gideonpassword', 'gideon@gmail.com')
-        self.user_two = user_model('user_two', "user_two_password", "user_two@gmail.com")
-        self.shopping_list = shoppinglist_model('testshoppinglist', 'my very first shoppinglist')
-        self.shopping_list_two = shoppinglist_model('testshoppinglisttwo', "my second shoppinglist")
+        self.shoppinglist_model = collections.namedtuple('ShoppingList', ['name', 'description'])
+        self.shopping_list = self.shoppinglist_model('testshoppinglist', 'my very first shoppinglist')
+        self.shopping_list_two = self.shoppinglist_model('testshoppinglisttwo', "my second shoppinglist")
 
     def create_app(self):
         # update app configuration to testing.
@@ -44,23 +43,17 @@ class TestShoppingListBase(TestCase):
         DB.session.remove()
         DB.drop_all()
 
-    def login_user(self):
+    def login_user(self, with_header=True, **credentials):
         """
         Helper method to login client.
-
-        Makes post request using client information initialized in
-        the setUp method.
         """
+        credentials.update(
+            {'username': self.test_user.username,
+             'password': self.test_user.password})
 
-        cridentials = dict(
-            username=self.user.username,
-            password=self.user.password)
+        return super(TestShoppingListBase, self).login_user(with_header=True, **credentials)
 
-        data = json.dumps(cridentials)
-        url = url_for('user_login')
-        return self.client.post(url, data=data)
-
-    def login_user_two(self):
+    def login_second_user(self):
         """
         Helper method to login another client..
 
@@ -68,14 +61,13 @@ class TestShoppingListBase(TestCase):
         the setUp method.
         """
 
-        cridentials = dict(
-            username=self.user_two.username,
-            password=self.user_two.password)
+        credentials = dict(
+            username=self.test_user_two.username,
+            password=self.test_user_two.password)
 
-        data = json.dumps(cridentials)
         url = url_for('user_login')
 
-        return self.client.post(url, data=data)
+        return self.client.post(url, data=credentials)
 
     def register_user(self):
         """
@@ -83,15 +75,14 @@ class TestShoppingListBase(TestCase):
         """
 
         user_info = dict(
-            username=self.user.username,
-            email=self.user.email,
-            password=self.user.password,
-            confirm=self.user.password)
+            username=self.test_user.username,
+            email=self.test_user.email,
+            password=self.test_user.password,
+            confirm=self.test_user.password)
 
-        data = json.dumps(user_info)
         url = url_for('user_register')
 
-        return self.client.post(url, data=data)
+        return self.client.post(url, data=user_info)
 
     def register_second_user(self):
         """
@@ -99,39 +90,30 @@ class TestShoppingListBase(TestCase):
         """
 
         user_info = dict(
-            username=self.user_two.username,
-            password=self.user_two.password,
-            email=self.user_two.email)
+            username=self.test_user_two.username,
+            email=self.test_user_two.email,
+            password=self.test_user_two.password,
+            confirm=self.test_user_two.password)
 
-        data = json.dumps(user_info)
         url = url_for('user_register')
 
-        return self.client.post(url, data=data)
+        return self.client.post(url, data=user_info)
 
-    def logout_user(self, token):
+    def create_shoppinglist(self, token, details):
         """
-        Helper method to logout client.
-        """
+        Helper method that creates shoppinglist object.
 
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token))
-
-        url = url_for('user_logout')
-
-        return self.client.delete(url, headers=headers)
-
-    def create_shoppinglist(self, token, **data):
-        """
-        Method to make a post request to create shopping list.
+        :param token: user authentication token.
+        :param details: name and description of shoppinglist object.
+        :return: response object.
         """
 
         headers = dict(
             Authorization='Bearer %(token)s' % dict(token=token))
-        data = json.dumps(data)
         url = url_for('shoppinglist_list')
-        return self.client.post(url, data=data, headers=headers)
+        return self.client.post(url, data=details, headers=headers)
 
-    def get_user_shoppinglists(self, token):
+    def get_shoppinglists(self, token):
         """
         Method to make get request to fetch user shopping lists.
         """
@@ -141,7 +123,7 @@ class TestShoppingListBase(TestCase):
 
         return self.client.get(url, headers=headers)
 
-    def get_user_shoppinglist_detail(self, token, id):
+    def get_shoppinglist_detail(self, token, id):
         """
         Method to make get request and fetch specific shopping list based on provided id.
         """
@@ -153,21 +135,21 @@ class TestShoppingListBase(TestCase):
 
         return self.client.get(url, headers=headers)
 
-    def update_user_shoppinglist(self, token, id, new_info):
+    def update_shoppinglist(self, token, id, new_info):
         """
         Method to make PUT request to update user shoppinglist.
+
         :param token: user auth token
         :param id: shopping list id
         :param new_info: details to update
         :return: response
         """
 
-        data = json.dumps(new_info)
         headers = dict(
             Authorization='Bearer %(token)s' % dict(token=token))
         url = url_for('shoppinglist_detail', id=id)
 
-        return self.client.put(url, data=data, headers=headers)
+        return self.client.put(url, data=new_info, headers=headers)
 
     def delete_shoppinglist(self, token, id):
         """
