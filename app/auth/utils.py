@@ -26,7 +26,6 @@ registration_args = OrderedDict(
 
 update_account_args = OrderedDict(
     [
-        ('username', fields.Str(location='form', required=False)),
         ('email', fields.Str(location='form', required=False, validate=validate.Email())),
     ]
 )

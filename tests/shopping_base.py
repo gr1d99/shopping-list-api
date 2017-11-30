@@ -1,7 +1,3 @@
-"""
-Contains Base classes for all shopping list and shopping item functionalities.
-"""
-
 import collections
 
 from flask import json
@@ -13,38 +9,27 @@ from app.conf import app_config
 
 
 class TestShoppingListBase(TestCase):
-    """
-    Base class for all test cases for ShoppingList functionality.
-    """
-
     def __init__(self, *args, **kwargs):
         super(TestShoppingListBase, self).__init__(*args, **kwargs)
 
-        self.content_type = 'application/json'
-
         # test data
-        _ = collections.namedtuple('User', ['username', 'password', 'email'])
-        __ = collections.namedtuple('ShoppingList', ['name', ])
+        user_model = collections.namedtuple('User', ['username', 'password', 'email'])
+        shoppinglist_model = collections.namedtuple('ShoppingList', ['name', 'description'])
 
-        self.user = _('gideon', 'gideonpassword', 'gideon@gmail.com')
-        self.user_two = _('user_two', "user_two_password", "user_two@gmail.com")
-        self.shopping_list = __('testshoppinglist')
-        self.shopping_list_two = __('testshoppinglisttwo')
+        self.user = user_model('gideon', 'gideonpassword', 'gideon@gmail.com')
+        self.user_two = user_model('user_two', "user_two_password", "user_two@gmail.com")
+        self.shopping_list = shoppinglist_model('testshoppinglist', 'my very first shoppinglist')
+        self.shopping_list_two = shoppinglist_model('testshoppinglisttwo', "my second shoppinglist")
 
     def create_app(self):
-        """
-        Creates an application instance.
-        """
-
+        # update app configuration to testing.
+        APP.config.from_object(app_config.TestingConfig)
         return APP
 
     def setUp(self):
         """
         Prep app for testing.
         """
-
-        # update app configuration to testing.
-        self.app.config.from_object(app_config.TestingConfig)
 
         # create all models.
         DB.session.commit()
@@ -73,7 +58,7 @@ class TestShoppingListBase(TestCase):
 
         data = json.dumps(cridentials)
         url = url_for('user_login')
-        return self.client.post(url, data=data, content_type=self.content_type)
+        return self.client.post(url, data=data)
 
     def login_user_two(self):
         """
@@ -90,7 +75,7 @@ class TestShoppingListBase(TestCase):
         data = json.dumps(cridentials)
         url = url_for('user_login')
 
-        return self.client.post(url, data=data, content_type=self.content_type)
+        return self.client.post(url, data=data)
 
     def register_user(self):
         """
@@ -99,13 +84,14 @@ class TestShoppingListBase(TestCase):
 
         user_info = dict(
             username=self.user.username,
+            email=self.user.email,
             password=self.user.password,
-            email=self.user.email)
+            confirm=self.user.password)
 
         data = json.dumps(user_info)
         url = url_for('user_register')
 
-        return self.client.post(url, data=data, content_type=self.content_type)
+        return self.client.post(url, data=data)
 
     def register_second_user(self):
         """
@@ -120,7 +106,7 @@ class TestShoppingListBase(TestCase):
         data = json.dumps(user_info)
         url = url_for('user_register')
 
-        return self.client.post(url, data=data, content_type=self.content_type)
+        return self.client.post(url, data=data)
 
     def logout_user(self, token):
         """
@@ -132,7 +118,7 @@ class TestShoppingListBase(TestCase):
 
         url = url_for('user_logout')
 
-        return self.client.delete(url, content_type=self.content_type, headers=headers)
+        return self.client.delete(url, headers=headers)
 
     def create_shoppinglist(self, token, **data):
         """
@@ -143,7 +129,7 @@ class TestShoppingListBase(TestCase):
             Authorization='Bearer %(token)s' % dict(token=token))
         data = json.dumps(data)
         url = url_for('shoppinglist_list')
-        return self.client.post(url, data=data, content_type=self.content_type, headers=headers)
+        return self.client.post(url, data=data, headers=headers)
 
     def get_user_shoppinglists(self, token):
         """
@@ -153,7 +139,7 @@ class TestShoppingListBase(TestCase):
         headers = dict(Authorization='Bearer %(token)s' % dict(token=token))
         url = url_for('shoppinglist_list')
 
-        return self.client.get(url, content_type=self.content_type, headers=headers)
+        return self.client.get(url, headers=headers)
 
     def get_user_shoppinglist_detail(self, token, id):
         """
@@ -165,7 +151,7 @@ class TestShoppingListBase(TestCase):
 
         headers = dict(Authorization='Bearer %(token)s' % dict(token=token))
 
-        return self.client.get(url, headers=headers, content_type=self.content_type)
+        return self.client.get(url, headers=headers)
 
     def update_user_shoppinglist(self, token, id, new_info):
         """
@@ -181,7 +167,7 @@ class TestShoppingListBase(TestCase):
             Authorization='Bearer %(token)s' % dict(token=token))
         url = url_for('shoppinglist_detail', id=id)
 
-        return self.client.put(url, data=data, headers=headers, content_type=self.content_type)
+        return self.client.put(url, data=data, headers=headers)
 
     def delete_shoppinglist(self, token, id):
         """
@@ -195,7 +181,7 @@ class TestShoppingListBase(TestCase):
             Authorization='Bearer %(token)s' % dict(token=token))
         url = url_for('shoppinglist_detail', id=id)
 
-        return self.client.delete(url, headers=headers, content_type=self.content_type)
+        return self.client.delete(url, headers=headers)
 
 
 class TestShoppingItemsBase(TestShoppingListBase):
@@ -222,7 +208,7 @@ class TestShoppingItemsBase(TestShoppingListBase):
             Authorization='Bearer %(token)s' % dict(token=token))
         url = url_for('shoppingitem_create', shoppinglistId=shoppinglistId)
 
-        return self.client.post(url, data=data, headers=headers, content_type=self.content_type)
+        return self.client.post(url, data=data, headers=headers)
 
     def get_shoppingitems(self, token, shoppinglistId):
         """
@@ -236,7 +222,7 @@ class TestShoppingItemsBase(TestShoppingListBase):
             Authorization='Bearer %(token)s' % dict(token=token))
         url = url_for('shoppingitem_detail', shoppinglistId=shoppinglistId)
 
-        return self.client.get(url, headers=headers, content_type=self.content_type)
+        return self.client.get(url, headers=headers)
 
     def get_shoppingitem_detail(self, token, shoppinglistId, shoppingitemId):
         """
@@ -252,7 +238,7 @@ class TestShoppingItemsBase(TestShoppingListBase):
         url = url_for('shoppingitem_edit', shoppinglistId=shoppinglistId,
                       shoppingitemId=shoppingitemId)
 
-        return self.client.get(url, headers=headers, content_type=self.content_type)
+        return self.client.get(url, headers=headers)
 
     def update_shoppingitem(self, token, shoppinglistId, shoppingitemId, data):
         """
@@ -269,7 +255,7 @@ class TestShoppingItemsBase(TestShoppingListBase):
         url = url_for('shoppingitem_edit',
                       shoppinglistId=shoppinglistId, shoppingitemId=shoppingitemId)
 
-        return self.client.put(url, data=data, headers=headers, content_type=self.content_type)
+        return self.client.put(url, data=data, headers=headers)
 
     def delete_shoppingitem(self, token, shoppinglistId, shoppingitemId):
         """
@@ -283,7 +269,7 @@ class TestShoppingItemsBase(TestShoppingListBase):
         url = url_for('shoppingitem_edit',
                       shoppinglistId=shoppinglistId, shoppingitemId=shoppingitemId)
 
-        return self.client.delete(url, headers=headers, content_type=self.content_type)
+        return self.client.delete(url, headers=headers)
 
 
 class TestSearchAndPagination(TestShoppingItemsBase):
@@ -332,5 +318,5 @@ class TestSearchAndPagination(TestShoppingItemsBase):
             Authorization='Bearer %(token)s' % dict(token=token))
 
         url = url_for('shoppinglist_search', q=keyword, limit=limit, page=page)
-        return self.client.get(url, content_type=self.content_type, headers=headers)
+        return self.client.get(url, headers=headers)
 

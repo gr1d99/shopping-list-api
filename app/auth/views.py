@@ -17,7 +17,7 @@ from .security import check_user
 from .utils import (delete_account_args, registration_args, reset_password_args,
                     update_account_args, send_reset_token, request_reset_token_args)
 from ..messages import *
-from ..models import User, BlacklistToken
+from ..models import User, BlacklistToken, ResetToken
 
 
 class UserRegisterApi(Resource):
@@ -214,100 +214,53 @@ class UserProfileApi(Resource):
                     message=login_again
                 )), 401)
 
-        new_username = args.get('username', None)
         email = args.get('email', None)
 
-        if any([new_username, email]):
+        if user.email == email or not email:
 
-            # use if else statement to check if client
-            # has provided any data. if not we will
-            # not return any errors, instead we will
-            # not make any update.
-            if new_username:
-
-                # validate username and password for bad characters and formatting.
-                try:
-                    validate(new_username)
-
-                except Exception as e:
-                    return make_response(
-                        jsonify(dict(
-                            status='fail',
-                            message="username value %(err)s" % dict(err=e.args[0])
-                        )), 422
-                    )
-
-                # check if username is not equal to the current one used
-                # by the user.
-                if user.username != new_username:
-
-                    try:
-                        # check if there exists a user with the username
-                        # provided by the user.
-                        User.check_username(new_username)
-                        user.username = new_username
-
-                    except user.UsernameExists:
-                        # return a response informing the user of the conflict.
-                        return make_response(
-                            jsonify(
-                                dict(
-                                    status='fail',
-                                    message=new_username_exists % dict(username=new_username)
-                                )),
-                            409)
-
-            if email:
-                # check if supplied email is not equal to current email
-                # used by the user.
-                if user.email != email:
-
-                    try:
-                        validate_email(email)
-
-                    except EmailNotValidError as e:
-                        return make_response(
-                            jsonify(dict(
-                                status='fail',
-                                message=e.args
-                            )), 422
-                        )
-
-                    try:
-                        User.check_email(email)
-                        user.email = email
-
-                    except user.EmailExists:
-                        return make_response(
-                            jsonify(
-                                dict(
-                                    status='fail',
-                                    message=new_email_exists % dict(email=email)
-                                )),
-                            409)
-
-            # if everything checks out correctly, we save the new details.
-            user.save()
-
-            BlacklistToken(token=get_raw_jwt()['jti']).save()
-
-            return make_response(
-                jsonify(dict(
-                    status='success',
-                    message=account_updated,
-                    data=dict(
-                        username=user.username,
-                        email=user.email,
-                        date_joined=user.date_joined.strftime("%Y-%m-%d %H:%M:%S"),
-                        updated=user.updated.strftime("%Y-%m-%d %H:%M:%S"))
-                )), 200)
-
-        else:
             return make_response(
                 jsonify(dict(
                     status='success',
                     message=account_not_updated
                 )), 200)
+
+        try:
+            validate_email(email)
+
+        except EmailNotValidError as e:
+            return make_response(
+                jsonify(dict(
+                    status='fail',
+                    message=e.args
+                )), 422
+            )
+
+        try:
+            User.check_email(email)
+            user.email = email
+
+        except user.EmailExists:
+            return make_response(
+                jsonify(
+                    dict(
+                        status='fail',
+                        message=new_email_exists % dict(email=email)
+                    )),
+                409)
+
+        # if everything checks out correctly, we save the new details.
+        user.save()
+
+        return make_response(
+            jsonify(dict(
+                status='success',
+                message=account_updated,
+                data=dict(
+                    username=user.username,
+                    email=user.email,
+                    date_joined=user.date_joined.strftime("%Y-%m-%d %H:%M:%S"),
+                    updated=user.updated.strftime("%Y-%m-%d %H:%M:%S"))
+            )), 200)
 
     @use_args(delete_account_args)
     @jwt_required
@@ -382,7 +335,7 @@ class ResetPasswordApi(Resource):
 
     @use_args(request_reset_token_args)
     def get(self, data):
-        email = data.get('email', "")
+        email = data.get('email', '')
 
         try:
             validate_email(email)
@@ -414,6 +367,13 @@ class ResetPasswordApi(Resource):
                         password_reset_token=token)
                 )), 200)
 
+        return make_response(
+            jsonify(dict(
+                status='fail',
+                message=email_does_not_exist
+            ))
+        )
+
     @use_args(reset_password_args)
     def post(self, data):
         """
@@ -443,7 +403,7 @@ class ResetPasswordApi(Resource):
                 message=reset_token_required
             )), 422)
 
-        rt = user.reset_tokens.filter_by(
+        rt = ResetToken.query.filter_by(
             user_id=user.id, token=reset_token
         ).first()
 

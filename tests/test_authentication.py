@@ -345,7 +345,6 @@ class TestUserAuth(TestBase):
             password=self.test_user.password)
 
         new_details = {
-            'username': 'new_admin',
             'email': 'new_admin@email.com'
         }
 
@@ -361,7 +360,6 @@ class TestUserAuth(TestBase):
         # assertions
         self.assert200(update_resp)
         self.assertEqual(account_updated, update_response_data['message'])
-        self.assertEqual(new_details.get('username'), update_response_data['data']['username'])
         self.assertEqual(new_details.get('email'), update_response_data['data']['email'])
 
     def test_cannot_update_account_with_existing_data(self):
@@ -372,13 +370,12 @@ class TestUserAuth(TestBase):
             password=self.test_user.password,
             confirm=self.test_user.password)
 
-        # username and email.
-        target_username = 'existingusername'
+        # email.
         target_email = "existingemail@email.com"
 
         # register second user.
         self.register_user(
-            username=target_username,
+            username='newuser',
             email=target_email,
             password='password12',
             confirm='password12'
@@ -393,63 +390,19 @@ class TestUserAuth(TestBase):
             login1_resp.get_data(as_text=True))['data']['auth_token']
 
         # details that the first client intends to update.
-        new_details1 = {
-            'username': target_username,  # used username.
-            'email': 'new_user1@email.com'}
-
-        new_details2 = {
+        new_details = {
             'username': "anotherusername",
             'email': target_email  # used email
             }
 
-        update_det1 = self.update_user_info(
-            token=token, data=new_details1)
-
-        update_det2 = self.update_user_info(
-            token=token, data=new_details2)
-
-        # assertions.
-        self.assertFalse(update_det1.status_code == 200)
-        self.assertFalse(update_det2.status_code == 200)
-        self.assertStatus(update_det1, 409)
-        self.assertStatus(update_det2, 409)
-        self.assertTrue("User with %(uname)s exists" % dict(uname=target_username),
-                      update_det1.get_data(as_text=True))
-
-        self.assertIn("User with %(email)s exists" % dict(email=target_email),
-                      update_det2.get_data(as_text=True))
-
-    @data('    ', ' not so valid', '"123')
-    def test_cannot_update_account_with_invalid_username(self, username):
-        # register user.
-        self.register_user(
-            username=self.test_user.username,
-            email=self.test_user.email,
-            password=self.test_user.password,
-            confirm=self.test_user.password)
-
-        # login user.
-        login_response = self.login_user(
-            username=self.test_user.username,
-            password=self.test_user.password)
-
-        token = json.loads(
-            login_response.get_data(as_text=True))['data']['auth_token']
-
-        # details that the first client intends to update.
-        new_details = {
-            'username': username,
-            'email': 'new_user1@email.com'}
-
-        update_response = self.update_user_info(
+        update_det = self.update_user_info(
             token=token, data=new_details)
 
-        # query from user objects from db.
-        obj = User.get_by_username(username)
-
         # assertions.
-        self.assertStatus(update_response, 422)
-        self.assertIsNone(obj)
+        self.assertFalse(update_det.status_code == 200)
+        self.assertStatus(update_det, 409)
+        self.assertIn("User with %(email)s exists" % dict(email=target_email),
+                      update_det.get_data(as_text=True))
 
     @data('@gmail.com', 'invalidemail.com', '""@gmail.com', '   @gmail.com')
     def test_cannot_update_account_with_invalid_email(self, email):
