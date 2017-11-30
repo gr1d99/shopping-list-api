@@ -1,7 +1,7 @@
 from flask import json
-from .base import TestShoppingItemsBase
-from ...messages import *
-from ...models import ShoppingItem, ShoppingList
+from .shopping_base import TestShoppingItemsBase
+from app.messages import *
+from app.models import ShoppingItem, ShoppingList
 
 
 class TestShoppingItems(TestShoppingItemsBase):
