@@ -1,6 +1,6 @@
 from flask import json
 from app.messages import search_not_found
-from .base import TestSearchAndPagination
+from .shopping_base import TestSearchAndPagination
 
 
 class TestSearch(TestSearchAndPagination):
