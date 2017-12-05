@@ -34,11 +34,7 @@ class User(BaseUserManager, BaseModel, DB.Model):
                                      lazy='dynamic', cascade='all, delete-orphan')
     date_joined = DB.Column(DB.DateTime(timezone=True),
                             default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now)
-    timestamp = DB.Column(DB.DateTime(timezone=True),
-                          default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now)
-    updated = DB.Column(DB.DateTime(timezone=True),
-                        default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now,
-                        onupdate=datetime.now(tz=pytz.timezone(TIME_ZONE)).now)
+
 
     def __init__(self, username, password, email):
         """Initialize model values."""
@@ -96,11 +92,6 @@ class BlacklistToken(BaseModel, DB.Model):
     """
     id = DB.Column(DB.Integer, primary_key=True)
     token = DB.Column(DB.String(500), unique=True, nullable=False)
-    timestamp = DB.Column(DB.DateTime(timezone=True),
-                          default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now)
-    updated = DB.Column(DB.DateTime(timezone=True),
-                        default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now,
-                        onupdate=datetime.now(tz=pytz.timezone(TIME_ZONE)).now)
 
     def __init__(self, token):
         self.token = token
@@ -118,11 +109,7 @@ class ShoppingList(BaseModel, DB.Model):
     shopping_items = DB.relationship('ShoppingItem', backref='shopping_list',
                                      lazy='dynamic', cascade='all, delete-orphan')
     description = DB.Column(DB.Text(), nullable=True, default="")
-    timestamp = DB.Column(DB.DateTime(timezone=True),
-                          default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now)
-    updated = DB.Column(DB.DateTime(timezone=True),
-                        default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now,
-                        onupdate=datetime.now(tz=pytz.timezone(TIME_ZONE)).now)
+
 
     @staticmethod
     def get(shoppinglistId, ownerId):
@@ -162,11 +149,7 @@ class ShoppingItem(BaseModel, DB.Model):
     price = DB.Column(DB.Float, nullable=False)
     bought = DB.Column(DB.Boolean, default=False)
     shoppinglist_id = DB.Column(DB.Integer, DB.ForeignKey('shopping_list.id'))
-    timestamp = DB.Column(DB.DateTime(timezone=True),
-                          default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now)
-    updated = DB.Column(DB.DateTime(timezone=True),
-                        default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now,
-                        onupdate=datetime.now(tz=pytz.timezone(TIME_ZONE)).now)
+
 
     @staticmethod
     def exists(shl_id, name):
@@ -201,8 +184,6 @@ class ResetToken(BaseModel, DB.Model):
     token = DB.Column(DB.String(50), nullable=False)
     user_id = DB.Column(DB.Integer, DB.ForeignKey('users.id'))
     expired = DB.Column(DB.Boolean, default=False)
-    timestamp = DB.Column(DB.DateTime(timezone=True),
-                          default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now)
 
     def __init__(self, user_id, token):
         self.user_id = user_id
