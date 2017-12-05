@@ -272,7 +272,7 @@ class UserProfileApi(Resource):
 
         current_user = get_jwt_identity()
         user = check_user(current_user)
-        confirm = data.get('confirm')
+        password = data.get('password')
 
         if not user:
             return make_response(
@@ -281,12 +281,12 @@ class UserProfileApi(Resource):
                     message=login_again
                 )), 401)
 
-        if not confirm:
+        if not user.verify_password(password):
             return make_response(
                 jsonify(dict(
                     status='fail',
                     message=incomplete_delete
-                )), 422
+                )), 409
             )
         user.delete()
 
