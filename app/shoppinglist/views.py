@@ -48,13 +48,15 @@ class ShoppingListsApi(Resource):
                 jsonify(dict(
                     status='fail',
                     message=error
-                )), 400
+                )), 422
             )
 
         current_user = get_jwt_identity()
         user = User.query.filter_by(username=current_user).first()
 
         response = {}
+
+        response.setdefault('status', 'success')
 
         page = args.get('page', 1)
         limit = args.get('limit', MAX_ITEMS_PER_PAGE)
@@ -69,22 +71,26 @@ class ShoppingListsApi(Resource):
 
             paginated = user.shopping_lists.paginate(page=page, per_page=limit, error_out=False)
 
+            response.setdefault('current_page', paginated.page)
+            response.setdefault('total_pages', paginated.pages)
+            response.setdefault('total_items', paginated.total)
+
             if paginated.has_prev:
                 prev_page_url = urlmaker(request, paginated.prev_num, limit).make_url()
-                response.setdefault('previous page', prev_page_url)
+                response.setdefault('previous_page', paginated.prev_num)
+                response.setdefault('previous_page_url', prev_page_url)
 
             if paginated.has_next:
                 next_page_url = urlmaker(request, paginated.next_num, limit).make_url()
-                response.setdefault('next page', next_page_url)
+                response.setdefault('next_page', paginated.next_num)
+                response.setdefault('next_page_url', next_page_url)
 
             output = [{
                 'id': shl.id,
                 'name': shl.name,
                 'description': shl.description} for shl in paginated.items]
 
-            response.setdefault('total_pages', paginated.pages)
-
-            response.setdefault('shopping_lists', output)
+            response.setdefault('data', output)
 
         else:
             shoppinglists = user.shopping_lists.all()
@@ -94,13 +100,10 @@ class ShoppingListsApi(Resource):
                 'name': shl.name,
                 'description': shl.description} for shl in shoppinglists]
 
-            response.setdefault('shopping_lists', output)
+            response.setdefault('data', output)
 
         return make_response(
-            jsonify(dict(
-                status='success',
-                message=response
-            )), 200
+            jsonify(response), 200
         )
 
     @use_args(shoppinglist_args)
@@ -208,6 +211,7 @@ class ShoppingListDetailApi(Resource):
         data.setdefault('not bought shoppingitems', not_bought)
         data.setdefault('created_on', shoppinglist.timestamp.strftime("%Y-%m-%d %H:%M:%S"))
         data.setdefault('updated_on', shoppinglist.updated.strftime("%Y-%m-%d %H:%M:%S"))
+        data.setdefault('cost', shoppinglist.cost())
 
         return make_response(
             jsonify(dict(
@@ -464,15 +468,13 @@ class ShoppingItemDetailApi(Resource):
             jsonify(dict(
                 status='success',
                 message=data
-            )), 200
-        )
+            )), 200)
 
     @use_args(shoppingitem_create_args)
     @jwt_required
     def post(self, args, shoppinglistId):
         """
         Handles post request to create shoppingitem object.
-        :return:
         """
 
         current_user = get_jwt_identity()
@@ -486,8 +488,7 @@ class ShoppingItemDetailApi(Resource):
         # get shoppingitems data.
         name = args.get('name')
         price = args.get('price')
-        quantity = args.get('quantity')
-        bought = args.get('bought')
+        quantity = args.get('quantity_description')
 
         # check if item with similar name exists within the shoppinglist itself.
         status = ShoppingItem.exists(shl_id, name)
@@ -504,7 +505,7 @@ class ShoppingItemDetailApi(Resource):
         instance = ShoppingList.get(shoppinglistId=shl_id, ownerId=user.id)
 
         # create shoppingitem instance.
-        item = ShoppingItem(name=name, price=price, quantity=quantity, bought=bought)
+        item = ShoppingItem(name=name, price=price, quantity_description=quantity)
 
         # save item
         item.save()
@@ -521,9 +522,8 @@ class ShoppingItemDetailApi(Resource):
                     id=item.id,
                     name=item.name,
                     price=item.price,
-                    quantity=item.quantity,
-                    bought=item.bought,
-                    total_amount=item.total_amount()
+                    quantity_description=item.quantity_description,
+                    bought=item.bought
                 )
             )), 201
         )
