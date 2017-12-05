@@ -30,9 +30,13 @@ class TestBase(TestCase):
         """
 
         self.app.config.from_object(app_config.TestingConfig)
+
         DB.session.commit()
         DB.drop_all()
         DB.create_all()
+
+        self.header_name = 'x-access-token'
+        self.header = {}
 
     def tearDown(self):
         """
@@ -75,24 +79,18 @@ class TestBase(TestCase):
         Helper method to make a POST request to fetch user details.
         """
 
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token))
-
         url = url_for('user_detail')
 
-        return self.client.get(url, headers=headers)
+        return self.client.get(url, headers={self.header_name: token})
 
     def update_user_info(self, token, data=None):
         """
          Helper method to make a PUT request to update user details.
          """
 
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token))
-
         url = url_for('user_detail')
 
-        return self.client.put(url, data=data, headers=headers)
+        return self.client.put(url, data=data, headers={self.header_name: token})
 
     def logout_user(self, token):
         """
@@ -105,7 +103,7 @@ class TestBase(TestCase):
 
         url = url_for('user_logout')
 
-        return self.client.delete(url, headers=headers)
+        return self.client.delete(url, headers={self.header_name: token})
 
     def get_password_reset_token(self, email):
         url = url_for('password_reset', email=email)
@@ -119,17 +117,13 @@ class TestBase(TestCase):
         url = url_for('password_reset')
         return self.client.post(url, data=data)
 
-    def delete_user(self, token, confirm=False):
+    def delete_user(self, token, password):
         """
         Makes DELETE request as client to delete user account.
         :param token: client auth token.
-        :param confirm: True|False flag to authorize account delete.
+        :param password: user password.
         :return: resonse.
         """
 
-        url = url_for('user_detail', confirm=confirm)
-
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token))
-
-        return self.client.delete(url, headers=headers)
+        url = url_for('user_detail')
+        return self.client.delete(url, headers={self.header_name: token}, data=dict(password=password))
