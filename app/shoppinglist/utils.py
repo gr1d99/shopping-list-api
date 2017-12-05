@@ -35,7 +35,7 @@ shoppingitem_create_args = collections.OrderedDict(
     [
         ('name', fields.Str(required=True, validate=validate.Length(min=3))),
         ('price', fields.Decimal(required=True)),
-        ('quantity', fields.Decimal(required=True)),
+        ('quantity_description', fields.Str(required=True)),
         ('bought', fields.Bool(required=False))
     ]
 )
