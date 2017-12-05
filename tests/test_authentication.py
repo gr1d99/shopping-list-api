@@ -667,10 +667,13 @@ class TestUserAuth(TestBase):
             login_response.get_data(as_text=True))['data']['auth_token']
 
         # make delete request.
-        delete_response = self.delete_user(token=token, confirm=True)
+        delete_response = self.delete_user(
+            token=token,
+            password=self.test_user.password)
 
         data = json.loads(
             delete_response.get_data(as_text=True))
+
         self.assertStatus(delete_response, 200)
         self.assertTrue(data['status'] == 'success')
         self.assertTrue(data['message'] == account_deleted)
