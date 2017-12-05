@@ -41,6 +41,12 @@ class BaseModel(DB.Model):
     EmailExists = EmailExists
     # ------------------------------------------- #
 
+    timestamp = DB.Column(DB.DateTime(timezone=True),
+                          default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now)
+    updated = DB.Column(DB.DateTime(timezone=True),
+                        default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now,
+                        onupdate=datetime.now(tz=pytz.timezone(TIME_ZONE)).now)
+
     def delete(self):
         """
         Remove instance from the database.
