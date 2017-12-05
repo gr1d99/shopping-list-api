@@ -47,7 +47,7 @@ reset_password_args = OrderedDict(
 
 delete_account_args = OrderedDict(
     [
-        ('confirm', fields.Bool(location='query', required=False))
+        ('password', fields.Str(location='form', required=True))
     ]
 )
 
