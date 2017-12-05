@@ -138,6 +138,17 @@ class ShoppingList(BaseModel, DB.Model):
                                                             owner_id=ownerId).first()
         return instance
 
+    def cost(self):
+        """
+        Calculates total amount(item price * quantity).
+        :return: calculated price.
+        """
+
+        return sum([item.price for item in
+                    DB.session.query(self.__class__).
+                   filter_by(id=self.id).first().
+                   shopping_items.all()])
+
     def __repr__(self):
         return '<%(name)s obj>' % dict(name=self.name.capitalize())
 
@@ -147,7 +158,7 @@ class ShoppingItem(BaseModel, DB.Model):
 
     id = DB.Column(DB.Integer, primary_key=True)
     name = DB.Column(DB.String(100), nullable=False)
-    quantity = DB.Column(DB.Float(precision=2), nullable=False)
+    quantity_description = DB.Column(DB.String(200), nullable=False)
     price = DB.Column(DB.Float, nullable=False)
     bought = DB.Column(DB.Boolean, default=False)
     shoppinglist_id = DB.Column(DB.Integer, DB.ForeignKey('shopping_list.id'))
@@ -180,14 +191,6 @@ class ShoppingItem(BaseModel, DB.Model):
             return False
 
         return True
-
-    def total_amount(self):
-        """
-        Calculates total amount(item price * quantity).
-        :return: calculated price.
-        """
-
-        return self.price * self.quantity
 
     def __repr__(self):
         return '<%(name)s obj>' % dict(name=self.name.capitalize())
