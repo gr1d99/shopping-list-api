@@ -21,15 +21,15 @@ API.add_resource(
     ShoppingListDetailApi, 'shopping-lists/<int:id>', endpoint='shoppinglist_detail')
 
 API.add_resource(
-    ShoppingItemListApi, 'shopping-lists/<int:shoppinglistId>/shopping-items',
+    ShoppingItemListApi, 'shopping-lists/<int:shl_id>/shopping-items',
     endpoint='shoppingitem_detail')
 
 API.add_resource(
-    ShoppingItemDetailApi, 'shopping-lists/<int:shoppinglistId>/shopping-items',
+    ShoppingItemDetailApi, 'shopping-lists/<int:shl_id>/shopping-items',
     endpoint='shoppingitem_create')
 
 API.add_resource(
-    ShoppingItemDetailApi, 'shopping-lists/<int:shoppinglistId>/shopping-items/<int:shoppingitemId>',
+    ShoppingItemDetailApi, 'shopping-lists/<int:shl_id>/shopping-items/<int:item_id>',
     endpoint='shoppingitem_edit')
 
 API.add_resource(
