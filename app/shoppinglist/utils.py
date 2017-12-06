@@ -44,7 +44,7 @@ shoppingitem_update_args = collections.OrderedDict(
     [
         ('name', fields.Str(required=False)),
         ('price', fields.Decimal(required=False)),
-        ('quantity', fields.Decimal(required=False)),
+        ('quantity_description', fields.Str(required=False)),
         ('bought', fields.Bool(required=False))
     ]
 )
