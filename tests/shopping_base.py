@@ -174,7 +174,7 @@ class TestShoppingItemsBase(TestShoppingListBase):
         :return: response.
         """
         
-        url = url_for('shoppingitem_create', shoppinglistId=shl_id)
+        url = url_for('shoppingitem_create', shl_id=shl_id)
 
         return self.client.post(url, data=data, headers={self.header_name: token})
 
@@ -189,7 +189,7 @@ class TestShoppingItemsBase(TestShoppingListBase):
         :return: response.
         """
 
-        url = url_for('shoppingitem_detail', shoppinglistId=shl_id, limit=limit, page=page)
+        url = url_for('shoppingitem_detail', shl_id=shl_id, limit=limit, page=page)
 
         return self.client.get(url, headers={self.header_name: token})
 
@@ -202,28 +202,26 @@ class TestShoppingItemsBase(TestShoppingListBase):
         :return: response.
         """
 
-        url = url_for('shoppingitem_edit', shoppinglistId=shl_id,
-                      shoppingitemId=item_id)
+        url = url_for('shoppingitem_edit', shl_id=shl_id,
+                      item_id=item_id)
 
         return self.client.get(url, headers={self.header_name: token})
 
-    def update_shoppingitem(self, token, shoppinglistId, shoppingitemId, data):
+    def update_shoppingitem(self, token, shl_id, item_id, data):
         """
         Method to make PUT request as a client and update shoppingitem.
         :param token: user auth token.
-        :param shoppinglistId: shopping list id.
-        :param shoppingitemId: shopping item id.
+        :param shl_id: shopping list id.
+        :param item_id: shopping item id.
         :param data: new data.
         :return: response.
         """
 
-        data = json.dumps(data)
-        url = url_for('shoppingitem_edit',
-                      shoppinglistId=shoppinglistId, shoppingitemId=shoppingitemId)
+        url = url_for('shoppingitem_edit',shl_id=shl_id, item_id=item_id)
 
         return self.client.put(url, data=data, headers={self.header_name: token})
 
-    def delete_shoppingitem(self, token, shoppinglistId, shoppingitemId):
+    def delete_shoppingitem(self, token, shl_id, item_id):
         """
         Makes DELETE request as a client to delete associated shopping item.
         :param token: user auth token.
@@ -232,7 +230,7 @@ class TestShoppingItemsBase(TestShoppingListBase):
         """
 
         url = url_for('shoppingitem_edit',
-                      shoppinglistId=shoppinglistId, shoppingitemId=shoppingitemId)
+                      shl_id=shl_id, item_id=item_id)
 
         return self.client.delete(url, headers={self.header_name: token})
 
