@@ -11,14 +11,6 @@ from .auth_base import TestBase
 
 
 class TestShoppingListBase(TestBase):
-    def __init__(self, *args, **kwargs):
-        super(TestShoppingListBase, self).__init__(*args, **kwargs)
-        # test data
-        self.test_user_two = self.model('usertwo', "user_two_password", "user_two@gmail.com")
-
-        self.shoppinglist_model = collections.namedtuple('ShoppingList', ['name', 'description'])
-        self.shopping_list = self.shoppinglist_model('testshoppinglist', 'my very first shoppinglist')
-        self.shopping_list_two = self.shoppinglist_model('testshoppinglisttwo', "my second shoppinglist")
 
     def create_app(self):
         # update app configuration to testing.
@@ -29,11 +21,13 @@ class TestShoppingListBase(TestBase):
         """
         Prep app for testing.
         """
+        super(TestShoppingListBase, self).setUp()
 
-        # create all models.
-        DB.session.commit()
-        DB.drop_all()
-        DB.create_all()
+        self.another_test_user = self.model('usertwo', "user_two_password", "user_two@gmail.com")
+        self.shoppinglist_model = collections.namedtuple('ShoppingList', ['name', 'description'])
+        self.shopping_list = self.shoppinglist_model('testshoppinglist', 'my very first shoppinglist')
+        self.shopping_list_two = self.shoppinglist_model('testshoppinglisttwo', "my second shoppinglist")
+        self.shoppinglists = ['Birthday', 'School', 'Breakfast', 'Lunch', 'Camping']
 
     def tearDown(self):
         """
@@ -62,8 +56,8 @@ class TestShoppingListBase(TestBase):
         """
 
         credentials = dict(
-            username=self.test_user_two.username,
-            password=self.test_user_two.password)
+            username=self.another_test_user.username,
+            password=self.another_test_user.password)
 
         url = url_for('user_login')
 
@@ -90,10 +84,10 @@ class TestShoppingListBase(TestBase):
         """
 
         user_info = dict(
-            username=self.test_user_two.username,
-            email=self.test_user_two.email,
-            password=self.test_user_two.password,
-            confirm=self.test_user_two.password)
+            username=self.another_test_user.username,
+            email=self.another_test_user.email,
+            password=self.another_test_user.password,
+            confirm=self.another_test_user.password)
 
         url = url_for('user_register')
 
@@ -108,20 +102,17 @@ class TestShoppingListBase(TestBase):
         :return: response object.
         """
 
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token))
         url = url_for('shoppinglist_list')
-        return self.client.post(url, data=details, headers=headers)
+        return self.client.post(url, data=details, headers={self.header_name: token})
 
-    def get_shoppinglists(self, token):
+    def get_shoppinglists(self, token, limit=None, page=None):
         """
         Method to make get request to fetch user shopping lists.
         """
 
-        headers = dict(Authorization='Bearer %(token)s' % dict(token=token))
-        url = url_for('shoppinglist_list')
+        url = url_for('shoppinglist_list', limit=limit, page=page)
 
-        return self.client.get(url, headers=headers)
+        return self.client.get(url, headers={self.header_name: token})
 
     def get_shoppinglist_detail(self, token, id):
         """
@@ -131,9 +122,7 @@ class TestShoppingListBase(TestBase):
         # append shoppinglist id at the end of url.
         url = url_for('shoppinglist_detail', id=id)
 
-        headers = dict(Authorization='Bearer %(token)s' % dict(token=token))
-
-        return self.client.get(url, headers=headers)
+        return self.client.get(url, headers={self.header_name: token})
 
     def update_shoppinglist(self, token, id, new_info):
         """
@@ -145,11 +134,9 @@ class TestShoppingListBase(TestBase):
         :return: response
         """
 
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token))
         url = url_for('shoppinglist_detail', id=id)
 
-        return self.client.put(url, data=new_info, headers=headers)
+        return self.client.put(url, data=new_info, headers={self.header_name: token})
 
     def delete_shoppinglist(self, token, id):
         """
@@ -159,68 +146,66 @@ class TestShoppingListBase(TestBase):
         :return: response from server.
         """
 
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token))
         url = url_for('shoppinglist_detail', id=id)
 
-        return self.client.delete(url, headers=headers)
+        return self.client.delete(url, headers={self.header_name: token})
 
 
 class TestShoppingItemsBase(TestShoppingListBase):
-    """
-    Base class for shopping items tests.
-    """
-    def __init__(self, *args, **kwargs):
-        super(TestShoppingItemsBase, self).__init__(*args, **kwargs)
-        _testdata = collections.namedtuple('ShoppingItem', ['name', 'price', 'quantity', 'bought'])
-        self.testdata_1 = _testdata('bread', 90.0, 10, False)
-        self.testdata_2 = _testdata('blueband', 100.5, 18, False)
+    def setUp(self):
+        super(TestShoppingItemsBase, self).setUp()
+        _testdata = collections.namedtuple('ShoppingItem',
+                                           ['name', 'price', 'quantity_description'])
+        self.testdata_1 = _testdata('bread', 90.0, '100 Grams')
+        self.testdata_2 = _testdata('blueband', 100.5, '200 Grams')
+        self.testdata_3 = _testdata('eggs', 10.5, 'I crate')
+        self.testdata_4 = _testdata('sausages', 30, 'One Packet')
 
-    def create_shoppingitem(self, token, shoppinglistId, data):
+        self.shoppingitems = [self.testdata_1, self.testdata_2,
+                              self.testdata_3, self.testdata_4]
+
+    def create_shoppingitem(self, token, shl_id, data):
         """
         Makes POST request as client to create shoppingitems.
+
         :param token: user auth token.
-        :param shoppinglistId: shoppinglist id.
+        :param shl_id: shoppinglist id.
         :param data: shoppingitem details
         :return: response.
         """
+        
+        url = url_for('shoppingitem_create', shoppinglistId=shl_id)
 
-        data = json.dumps(data)
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token))
-        url = url_for('shoppingitem_create', shoppinglistId=shoppinglistId)
+        return self.client.post(url, data=data, headers={self.header_name: token})
 
-        return self.client.post(url, data=data, headers=headers)
-
-    def get_shoppingitems(self, token, shoppinglistId):
+    def get_shoppingitems(self, token, shl_id, limit=None, page=None):
         """
         Makes POST request as client to create shoppingitems.
+
         :param token: user auth token.
-        :param shoppinglistId: shoppinglist id.
+        :param shl_id: shoppinglist id.
+        :param limit: number of results expected.
+        :param page: page number.
         :return: response.
         """
 
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token))
-        url = url_for('shoppingitem_detail', shoppinglistId=shoppinglistId)
+        url = url_for('shoppingitem_detail', shoppinglistId=shl_id, limit=limit, page=page)
 
-        return self.client.get(url, headers=headers)
+        return self.client.get(url, headers={self.header_name: token})
 
-    def get_shoppingitem_detail(self, token, shoppinglistId, shoppingitemId):
+    def get_shoppingitem_detail(self, token, shl_id, item_id):
         """
         Makes GET request as client to retrieve specific shoppingitem.
         :param token: user auth token.
-        :param shoppinglistId: ID of shoppinglist..
-        :param shoppingitemId: ID of shoppingitem.
+        :param shl_id: ID of shoppinglist..
+        :param item_id: ID of shoppingitem.
         :return: response.
         """
 
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token))
-        url = url_for('shoppingitem_edit', shoppinglistId=shoppinglistId,
-                      shoppingitemId=shoppingitemId)
+        url = url_for('shoppingitem_edit', shoppinglistId=shl_id,
+                      shoppingitemId=item_id)
 
-        return self.client.get(url, headers=headers)
+        return self.client.get(url, headers={self.header_name: token})
 
     def update_shoppingitem(self, token, shoppinglistId, shoppingitemId, data):
         """
@@ -232,12 +217,11 @@ class TestShoppingItemsBase(TestShoppingListBase):
         :return: response.
         """
 
-        headers = dict(Authorization='Bearer %(token)s' % dict(token=token))
         data = json.dumps(data)
         url = url_for('shoppingitem_edit',
                       shoppinglistId=shoppinglistId, shoppingitemId=shoppingitemId)
 
-        return self.client.put(url, data=data, headers=headers)
+        return self.client.put(url, data=data, headers={self.header_name: token})
 
     def delete_shoppingitem(self, token, shoppinglistId, shoppingitemId):
         """
@@ -247,11 +231,10 @@ class TestShoppingItemsBase(TestShoppingListBase):
         :return: response
         """
 
-        headers = dict(Authorization='Bearer %(token)s' % dict(token=token))
         url = url_for('shoppingitem_edit',
                       shoppinglistId=shoppinglistId, shoppingitemId=shoppingitemId)
 
-        return self.client.delete(url, headers=headers)
+        return self.client.delete(url, headers={self.header_name: token})
 
 
 class TestSearchAndPagination(TestShoppingItemsBase):
@@ -259,34 +242,50 @@ class TestSearchAndPagination(TestShoppingItemsBase):
     Base test case class for testing search functionality and pagination.
     """
 
-    def __init__(self, *args, **kwargs):
-        super(TestSearchAndPagination, self).__init__(*args, **kwargs)
-        self.shoppinglists = ['Birthday', 'School', 'Breakfast', 'Lunch', 'Camping']
-
-    def init(self, use_limit=False, per_page=False,
-             limit=None, page=None):
+    def init_shoppinglists(self):
         # register and authenticate client.
         self.register_user()
         login_resp = self.login_user()
 
         # get auth token.
-        token = json.loads(login_resp.get_data(as_text=True))['auth_token']
+        token = json.loads(
+            login_resp.get_data(as_text=True))['data']['auth_token']
 
         # create shoppinglists.
         for shl in self.shoppinglists:
-            self.create_shoppinglist(token=token, name=shl)
-
-        if any([use_limit, per_page]):
-            if use_limit and per_page:
-                return token, limit, page
-
-            if use_limit and not per_page:
-                return token, limit
-
-            if not use_limit and per_page:
-                return token, page
+            self.create_shoppinglist(token=token, details=dict(name=shl))
 
         return token
+
+    def init_shoppingitems(self):
+        # register and authenticate client.
+        self.register_user()
+        login_resp = self.login_user()
+
+        # get auth token.
+        token = json.loads(
+            login_resp.get_data(as_text=True))['data']['auth_token']
+
+        data = {
+            'name': self.shopping_list.name,
+            'description': self.shopping_list.description
+        }
+
+        # create shoppinglist.
+        r = self.create_shoppinglist(token, data)
+        shl_id = json.loads(
+            r.get_data(as_text=True))['data']['id']
+
+        # create shopping items.
+        for item in self.shoppingitems:
+            item_det = dict(
+                name=item.name,
+                price=item.price,
+                quantity_description=item.quantity_description)
+
+            self.create_shoppingitem(token, shl_id, item_det)
+
+        return token, shl_id
 
     def search_shoppinglist(self, token, keyword, limit=None, page=None):
         """
@@ -296,9 +295,6 @@ class TestSearchAndPagination(TestShoppingItemsBase):
         :return: response.
         """
 
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token))
-
         url = url_for('shoppinglist_search', q=keyword, limit=limit, page=page)
-        return self.client.get(url, headers=headers)
+        return self.client.get(url, headers={self.header_name: token})
 
