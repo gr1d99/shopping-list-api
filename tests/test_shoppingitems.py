@@ -273,8 +273,17 @@ class TestShoppingItemsCase(TestShoppingItemsBase):
         }
 
         update_response = self.update_shoppingitem(auth_token, shl_id, item_id, new_data)
-
         update_res_data = json.loads(update_response.get_data(as_text=True))
+
+        item = ShoppingItem.query.filter_by(id=item_id).first()
+
+        self.assert200(update_response)
+        self.assertIn(shoppingitem_updated, update_response.get_data(as_text=True))
+        self.assertIsNotNone(item)
+        self.assertIs(item.id, update_res_data['data']['id'])
+        self.assertEqual(new_data['name'], update_res_data['data']['name'])
+        self.assertFalse(new_data['name'] == self.testdata_1.name)
+
 
 
     # def test_shoppingitems_with_similar_names_in_diffent_shoppinglists(self):
