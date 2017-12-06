@@ -19,12 +19,6 @@ from ..messages import *
 from ..models import User, ShoppingList, ShoppingItem
 
 
-__all__ = [
-    'ShoppingListsApi', 'ShoppingListDetailApi',
-    'SearchShoppingListApi', 'ShoppingItemDetailApi'
-]
-
-
 class ShoppingListsApi(Resource):
     """
     Resource to handle fetching of specific user shopping lists.
@@ -61,8 +55,8 @@ class ShoppingListsApi(Resource):
         page = args.get('page', 1)
         limit = args.get('limit', MAX_ITEMS_PER_PAGE)
 
-        if any([page, limit]):
-
+        # if the values are default, then no need for pagination.
+        if any([page != 1, limit != MAX_ITEMS_PER_PAGE]):
             if page < 0:
                 return params_error(negative_page)
 
@@ -100,7 +94,7 @@ class ShoppingListsApi(Resource):
                 'name': shl.name,
                 'description': shl.description} for shl in shoppinglists]
 
-            response.setdefault('data', output)
+            response.setdefault('shopping_lists', output)
 
         return make_response(
             jsonify(response), 200
@@ -206,12 +200,12 @@ class ShoppingListDetailApi(Resource):
         data.setdefault('id', shoppinglist.id)
         data.setdefault('name', shoppinglist.name)
         data.setdefault('description', shoppinglist.description)
-        data.setdefault('total shoppingitems', shoppinglist.shopping_items.count())
-        data.setdefault('bought shoppingitems', bought)
-        data.setdefault('not bought shoppingitems', not_bought)
+        data.setdefault('total_items', shoppinglist.shopping_items.count())
+        data.setdefault('bought_items', bought)
+        data.setdefault('items_not_bought', not_bought)
+        data.setdefault('total', shoppinglist.cost())
         data.setdefault('created_on', shoppinglist.timestamp.strftime("%Y-%m-%d %H:%M:%S"))
         data.setdefault('updated_on', shoppinglist.updated.strftime("%Y-%m-%d %H:%M:%S"))
-        data.setdefault('cost', shoppinglist.cost())
 
         return make_response(
             jsonify(dict(
@@ -265,8 +259,6 @@ class ShoppingListDetailApi(Resource):
             if name:
                 # check if shopping list with the same name exists.
                 shl = ShoppingList.query.filter_by(name=name, owner_id=user.id).first()
-
-                print(shl)
 
                 # if shopping list exists and it is not owned by the client return bad request.
                 if shl:
@@ -332,7 +324,7 @@ class ShoppingItemListApi(Resource):
 
     @use_args(limit_args)
     @jwt_required
-    def get(self, query_args, shoppinglistId=None):
+    def get(self, query_args, shl_id=None):
         """
         Method to handle GET request from client and retun client shoppingitems.
         :param query_args: limit and page arguments.
@@ -351,7 +343,7 @@ class ShoppingItemListApi(Resource):
                 jsonify(dict(
                     status='fail',
                     message=error
-                )), 400
+                )), 422
             )
 
         data = {}
@@ -362,20 +354,21 @@ class ShoppingItemListApi(Resource):
         user = User.query.filter_by(username=current_user).first()
 
         # get shoppinglist instance
-        shoppinglist = ShoppingList.get(shoppinglistId, user.id)
+        shoppinglist = ShoppingList.get(shl_id, user.id)
 
         if not shoppinglist:
             return make_response(
                 jsonify(dict(
                     status='fail',
                     message=shoppinglist_not_found
-                )), 404
-            )
+                )), 404)
+
+        data.setdefault('status', 'success')
 
         page = query_args.get('page', 1)
         limit = query_args.get('limit', MAX_ITEMS_PER_PAGE)
 
-        if any([page, limit]):
+        if any([page != 1, limit != MAX_ITEMS_PER_PAGE]):
 
             if page < 0:
                 return params_error(negative_page)
@@ -386,18 +379,26 @@ class ShoppingItemListApi(Resource):
             paginated = shoppinglist. \
                 shopping_items.paginate(page=page, per_page=limit, error_out=False)
 
+            data.setdefault('current_page', paginated.page)
+            data.setdefault('total_pages', paginated.pages)
+            data.setdefault('total_items', paginated.total)
+
             if paginated.has_prev:
                 prev_page_url = urlmaker(request, paginated.prev_num, limit).make_url()
-                data.setdefault('previous page', prev_page_url)
+                data.setdefault('previous_page', paginated.prev_num)
+                data.setdefault('previous_page_url', prev_page_url)
 
             if paginated.has_next:
                 next_page_url = urlmaker(request, paginated.next_num, limit).make_url()
-                data.setdefault('next page', next_page_url)
+                data.setdefault('next_page', paginated.next_num)
+                data.setdefault('next_page_url', next_page_url)
 
-            output = [{'name': item.name} for item in paginated.items]
+            output = [
+                {'name': item.name,
+                 'price': item.price,
+                 'bought': item.bought} for item in paginated.items]
 
             data.setdefault('total_pages', paginated.pages)
-
             data.setdefault('shopping_items', output)
 
         else:
@@ -405,12 +406,7 @@ class ShoppingItemListApi(Resource):
             data.setdefault('shopping_items', items)
 
         data.setdefault('total_items', shoppinglist.shopping_items.count())
-        return make_response(
-            jsonify(dict(
-                status='success',
-                message=data
-            )), 200
-        )
+        return make_response(jsonify(data), 200)
 
 
 class ShoppingItemDetailApi(Resource):
@@ -420,12 +416,10 @@ class ShoppingItemDetailApi(Resource):
 
     @use_args(limit_args)
     @jwt_required
-    def get(self, query_args, shoppinglistId, shoppingitemId=None):
+    def get(self, query_args, shl_id, item_id=None):
         """
         Method to handle GET request from client and retun client shoppingitems.
-        :param query_args: limit and page arguments.
-        :param shoppinglistId: shoppinglist id.
-        :return: response.
+
         """
 
         data = {}
@@ -436,7 +430,7 @@ class ShoppingItemDetailApi(Resource):
         user = User.query.filter_by(username=current_user).first()
 
         # get shoppinglist instance.
-        shoppinglist = ShoppingList.get(shoppinglistId, user.id)
+        shoppinglist = ShoppingList.get(shl_id, user.id)
 
         if not shoppinglist:
             return make_response(
@@ -447,7 +441,7 @@ class ShoppingItemDetailApi(Resource):
             )
 
         shoppingitem = \
-            shoppinglist.shopping_items.filter_by(id=shoppingitemId).first()
+            shoppinglist.shopping_items.filter_by(id=item_id).first()
 
         if not shoppingitem:
             return make_response(
@@ -460,19 +454,18 @@ class ShoppingItemDetailApi(Resource):
         data.setdefault('id', shoppingitem.id)
         data.setdefault('name', shoppingitem.name)
         data.setdefault('price', shoppingitem.price)
-        data.setdefault('quantity', shoppingitem.quantity)
-        data.setdefault('total_cost', shoppingitem.total_amount())
+        data.setdefault('quantity_description', shoppingitem.quantity_description)
         data.setdefault('created_on', shoppingitem.timestamp.strftime("%Y-%m-%d %H:%M:%S"))
         data.setdefault('updated_on', shoppingitem.updated.strftime("%Y-%m-%d %H:%M:%S"))
         return make_response(
             jsonify(dict(
                 status='success',
-                message=data
+                data=data
             )), 200)
 
     @use_args(shoppingitem_create_args)
     @jwt_required
-    def post(self, args, shoppinglistId):
+    def post(self, args, shl_id):
         """
         Handles post request to create shoppingitem object.
         """
@@ -482,23 +475,20 @@ class ShoppingItemDetailApi(Resource):
         # get user instance.
         user = User.query.filter_by(username=current_user).first()
 
-        # get shoppinglist id.
-        shl_id = shoppinglistId
-
         # get shoppingitems data.
         name = args.get('name')
         price = args.get('price')
         quantity = args.get('quantity_description')
 
-        # check if item with similar name exists within the shoppinglist itself.
-        status = ShoppingItem.exists(shl_id, name)
+        try:
+            validate(value=name, allow_spaces=True)
 
-        if status:
+        except Exception as e:
             return make_response(
                 jsonify(dict(
                     status='fail',
-                    message=shoppingitem_exists
-                )), 409
+                    message="Shoppingitem name value %(err)s" % dict(err=e.args[0])
+                )), 422
             )
 
         # get shoppinglist instance.
@@ -530,12 +520,12 @@ class ShoppingItemDetailApi(Resource):
 
     @use_args(shoppingitem_update_args)
     @jwt_required
-    def put(self, args, shoppinglistId, shoppingitemId=None):
+    def put(self, args, shl_id, item_id=None):
         """
         Handles PUT request from client and updates specified shoppingitem.
         :param args: new data.
-        :param shoppinglistId: shopping list id.
-        :param shoppingitemId: shopping item id.
+        :param shl_id: shopping list id.
+        :param item_id: shopping item id.
         :return: response.
         """
 
@@ -545,7 +535,7 @@ class ShoppingItemDetailApi(Resource):
         user = User.get_by_username(current_user)
 
         # get shoppinglist instance.
-        shoppinglist = user.shopping_lists.filter_by(id=shoppinglistId).first()
+        shoppinglist = user.shopping_lists.filter_by(id=shl_id).first()
 
         # check if it exists.
         if not shoppinglist:
@@ -557,7 +547,7 @@ class ShoppingItemDetailApi(Resource):
             )
 
         # get shoppingitem instance.
-        shoppingitem = shoppinglist.shopping_items.filter_by(id=shoppingitemId).first()
+        shoppingitem = shoppinglist.shopping_items.filter_by(id=item_id).first()
 
         # check if it exists.
         if not shoppingitem:
@@ -570,48 +560,29 @@ class ShoppingItemDetailApi(Resource):
 
         name = args.get('name')
         price = args.get('price')
-        quantity = args.get('quantity')
+        quantity = args.get('quantity_description')
         bought = args.get('bought')
 
-        # make sure that if name is provided then it should
-        # not have a minimum of 3 characters.
-        if name:
-            _validate = validate.Length(min=3)
+        try:
+            validate(value=name, allow_spaces=True)
 
-            try:
-                _validate(name)
+        except Exception as e:
+            return make_response(
+                jsonify(dict(
+                    status='fail',
+                    message="Shoppingitem name value %(err)s" % dict(err=e.args[0])
+                )), 422
+            )
 
-            except Exception as e:
-                return make_response(
-                    jsonify(dict(
-                        status='fail',
-                        message=dict(
-                            name=e.args
-                        )
-                    )), 422
-                )
 
-            # check if shoppingitem with suggested name exists.
-            if name != shoppingitem.name:
-                status = ShoppingItem.exists(shoppinglistId, name)
-
-                if status:
-                    return make_response(
-                        jsonify(dict(
-                            status='fail',
-                            message=shoppingitem_exists
-                        )), 409
-                    )
-
-                # if it doesn't then assign new name to shoppingitem.
-                shoppingitem.name = name
+        shoppingitem.name = name
 
         # assign new price.
         if price:
             shoppingitem.price = price
 
         if quantity:
-            shoppingitem.quantity = quantity
+            shoppingitem.quantity_description = quantity
 
         # set new bought flag
         if bought:
@@ -626,17 +597,17 @@ class ShoppingItemDetailApi(Resource):
                 status='success',
                 message=shoppingitem_updated,
                 data=dict(
+                    id=shoppingitem.id,
                     name=shoppingitem.name,
                     price=shoppingitem.price,
-                    quantity=shoppingitem.quantity,
+                    quantity_description=shoppingitem.quantity_description,
                     bought=shoppingitem.bought,
-                    total_amount=shoppingitem.total_amount(),
                     updated_on=shoppingitem.updated.strftime("%Y-%m-%d %H:%M:%S")
                 )
             )), 200)
 
     @jwt_required
-    def delete(self, shoppinglistId, shoppingitemId):
+    def delete(self, shl_id, item_id):
         """
         Handles DELETE request from client to delete a single shoppingitem identified by
         its id.
@@ -650,7 +621,7 @@ class ShoppingItemDetailApi(Resource):
         user = User.get_by_username(current_user)
 
         # get shoppinglist
-        shoppinglist = user.shopping_lists.filter_by(id=shoppinglistId).first()
+        shoppinglist = user.shopping_lists.filter_by(id=shl_id).first()
 
         # check if shoppinglist exists.
         if not shoppinglist:
@@ -662,7 +633,7 @@ class ShoppingItemDetailApi(Resource):
             )
 
         # get shoppingitem.
-        shoppingitem = shoppinglist.shopping_items.filter_by(id=shoppingitemId).first()
+        shoppingitem = shoppinglist.shopping_items.filter_by(id=item_id).first()
 
         # check if shoppingitem exists.
         if not shoppingitem:
