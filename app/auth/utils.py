@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
 """
-Contains authentication resource endpoints argument parsers.
+This module implements argument parsers for authentication endpoint urls
+providing a clean way to validate arguments included in urls.
 """
 
 from collections import OrderedDict
 
-from flask_mail import Message
 from webargs import fields, validate
 
-from app import mail, celery
+from app import celery
 from .security import generate_token
 
 registration_args = OrderedDict(
@@ -27,12 +27,6 @@ registration_args = OrderedDict(
 update_account_args = OrderedDict(
     [
         ('email', fields.Str(location='form', required=False, validate=validate.Email())),
-    ]
-)
-
-request_reset_token_args = OrderedDict(
-    [
-        ('email', fields.Str(required=True, location='query', validate=validate.Email()))
     ]
 )
 
