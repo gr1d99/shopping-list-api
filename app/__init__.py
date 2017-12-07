@@ -6,12 +6,10 @@ Contains application main instances and configurations.
 
 from flask import Flask, redirect
 from flask_bcrypt import Bcrypt
-from flask_httpauth import HTTPBasicAuth
 from flask_jwt_extended import JWTManager
-from flask_mail import Mail
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
-from app.conf import app_config, celery, settings
+from app.conf import app_config, settings
 
 APP = Flask(__name__)
 bcrypt = Bcrypt(APP)
@@ -19,8 +17,6 @@ APP.config.from_object(app_config.DevelopmentConfig)
 DB = SQLAlchemy(APP)
 API = Api(APP, prefix="/api/v1.0/")
 JWT = JWTManager(APP)
-celery = celery.make_celery(APP)
-mail = Mail(APP)
 
 from app.auth import security
 from app.auth.urls import auth_blueprint
