@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 """
-App module containing client authentication and account management resources.
+Application module implementing functionalities for user authentication and account management.
+
 """
 
 from flask import jsonify, make_response, request
-from flask_jwt_extended import \
-    (create_access_token, jwt_required, get_jwt_identity, get_raw_jwt)
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_raw_jwt
 from email_validator import validate_email, EmailNotValidError
 from flask_restful import Resource
 from webargs.flaskparser import use_args
@@ -14,29 +14,25 @@ from usernames import is_safe_username
 
 from app.core.validators import validate
 from .security import check_user
-from .utils import (delete_account_args, registration_args, reset_password_args,
-                    update_account_args, send_reset_token, request_reset_token_args)
+from .utils import delete_args, registration_args, reset_args, update_args
 from ..messages import *
 from ..models import User, BlacklistToken, ResetToken
 
 
 class UserRegisterApi(Resource):
-    """
-    A resource to handle client registration.
-
-    Only accepts POST request.
-    """
     @use_args(registration_args)
-    def post(self, data):
+    def post(self, args):
         """
-        Handle post request.
-        :param data: username, email, password
+        Handle post request with user data and create user object.
+
+        :param args: user data: username, email and password.
+        :return: Response object.
         """
 
-        username = data.get('username', '').lower()
-        email = data.get('email')
-        password = str(data.get('password'))
-        confirm = str(data.get('confirm'))
+        username = args.get('username', '').lower()
+        email = args.get('email')
+        password = str(args.get('password'))
+        confirm = str(args.get('confirm'))
 
         # validate username and password for bad characters and formatting.
         try:
@@ -50,6 +46,13 @@ class UserRegisterApi(Resource):
                 )), 422
             )
 
+        if not is_safe_username(username):
+            return make_response(jsonify(dict(
+                status='fail',
+                message=username_not_allowed
+            )), 422)
+
+        # validate password.
         try:
             validate(password, special=True, allow_digits=True)
 
@@ -58,14 +61,7 @@ class UserRegisterApi(Resource):
                 jsonify(dict(
                     status='fail',
                     message='password value %(err)s' % dict(err=e.args[0])
-                )), 422
-            )
-
-        if not is_safe_username(username):
-            return make_response(jsonify(dict(
-                status='fail',
-                message=username_not_allowed
-            )), 422)
+                )), 422)
 
         # check passwords
         if password != confirm:
@@ -89,8 +85,8 @@ class UserRegisterApi(Resource):
                     message=username_exists,
                 )), 409)
 
+        # check if email exists.
         try:
-            # check if email exists.
             User.check_email(email)
 
         except user.EmailExists:
@@ -111,16 +107,11 @@ class UserRegisterApi(Resource):
 
 
 class UserLoginApi(Resource):
-    """
-    A resource to handle client login.
-
-    Only accepts post requests.
-    """
-
     def post(self):
         """
-        Handle POST request.
-        :param data: username and password.
+        Authenticate users and generate access token for accessing protected endpoints.
+
+        :return: response object.
         """
         if not request.authorization:
             return make_response(
@@ -141,16 +132,14 @@ class UserLoginApi(Resource):
                 jsonify(dict(
                     status='fail',
                     message=user_does_not_exist
-                )), 401
-            )
+                )), 401)
 
         if not user.verify_password(password):
             return make_response(
                 jsonify(dict(
                     status='fail',
                     message=incorrect_password
-                )), 401
-            )
+                )), 401)
 
         # verify client password.
         if user.verify_password(password):
@@ -166,13 +155,15 @@ class UserLoginApi(Resource):
 
 class UserProfileApi(Resource):
     """
-    A resource to handle retrieval and updating of client account.
+    Provide methods to retrieve, update and delete user accounts.
     """
 
     @jwt_required
     def get(self):
         """
-        A method to handle get request.
+        Retrieve and returns user information to client.
+
+        :return: response object.
         """
 
         # get current client identity.
@@ -194,10 +185,10 @@ class UserProfileApi(Resource):
                              id=user.id,
                              email=user.email,
                              date_joined=user.date_joined.strftime("%Y-%m-%d %H:%M:%S"),
-                             updated=user.updated.strftime("%Y-%m-%d %H:%M:%S"))
-                         )), 200)
+                             updated=user.updated.strftime("%Y-%m-%d %H:%M:%S")))),
+            200)
 
-    @use_args(update_account_args)
+    @use_args(update_args)
     @jwt_required
     def put(self, args):
         """
@@ -262,11 +253,12 @@ class UserProfileApi(Resource):
                     updated=user.updated.strftime("%Y-%m-%d %H:%M:%S"))
             )), 200)
 
-    @use_args(delete_account_args)
+    @use_args(delete_args)
     @jwt_required
     def delete(self, data):
         """
         Handles DELETE request to remove/delete client from database.
+
         :return: response
         """
 
@@ -288,11 +280,11 @@ class UserProfileApi(Resource):
                     message=incomplete_delete
                 )), 409
             )
+
         user.delete()
 
         BlacklistToken(token=get_raw_jwt()['jti']).save()
 
-        # return 204 response with nothing
         return make_response(
             jsonify(dict(
                 status='success',
@@ -324,8 +316,8 @@ class UserLogoutApi(Resource):
         return make_response(
             jsonify(
                 dict(status='success',
-                     message=logout_successful
-                     )), 200)
+                     message=logout_successful)),
+            200)
 
 
 class ResetPasswordApi(Resource):
@@ -333,7 +325,7 @@ class ResetPasswordApi(Resource):
     Resource class to handle client password reset.
     """
 
-    @use_args(request_reset_token_args)
+    @use_args(update_args)
     def get(self, data):
         email = data.get('email', '')
 
@@ -374,7 +366,7 @@ class ResetPasswordApi(Resource):
             ))
         )
 
-    @use_args(reset_password_args)
+    @use_args(reset_args)
     def post(self, data):
         """
         Handle POST requests.
@@ -430,8 +422,7 @@ class ResetPasswordApi(Resource):
                     jsonify(dict(
                         status='fail',
                         message=dict(password=passwords_donot_match)
-                    )), 401
-                )
+                    )), 401)
 
             user.password = user.hash_password(new_password)
             rt.expire_token()
