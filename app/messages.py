@@ -1,14 +1,15 @@
 __all__ = [
-    'account_created', 'account_deleted', 'account_not_updated', 'account_updated', 'cridentials_required', 'data_required',
-    'email_does_not_exist', 'email_not_provided', 'email_exists',
-    'incomplete_delete', 'incorrect_old_password', 'incorrect_password', 'invalid_email', 'invalid_limit', 'invalid_page',
-    'login_again', 'negative_limit', 'negative_page', 'new_email_exists', 'new_username_exists', 'password_changed', 'passwords_donot_match',
+    'account_created', 'account_deleted', 'account_not_updated', 'account_updated',
+    'credentials_required', 'data_required', 'email_does_not_exist', 'email_not_provided',
+    'email_exists', 'incomplete_delete', 'incorrect_old_password', 'incorrect_password',
+    'invalid_email', 'invalid_limit', 'invalid_page', 'login_again', 'negative_limit',
+    'negative_page', 'new_email_exists', 'new_username_exists', 'password_changed', 'passwords_donot_match',
     'password_not_provided', 'reset_token_sent', 'reset_token_expired', 'reset_token_does_not_exist',
-    'reset_token_required', 'search_not_found', 'server_error',
-    'shoppingitem_created', 'shoppingitem_exists', 'shoppingitem_not_found', 'shoppingitem_not_updated', 'shoppingitem_updated',
-    'shoppinglist_created', 'shoppinglist_deleted', 'shoppinglist_name_exists', 'shoppinglist_not_found', 'shoppinglist_not_updated',
-    'logout_successful',
-    'shoppinglist_updated', 'successful_login', 'user_does_not_exist', 'username_exists', 'username_not_allowed',
+    'reset_token_required', 'search_not_found', 'server_error', 'shoppingitem_created',
+    'shoppingitem_deleted', 'shoppingitem_exists', 'shoppingitem_not_found', 'shoppingitem_not_updated',
+    'shoppingitem_updated', 'shoppinglist_created', 'shoppinglist_deleted', 'shoppinglist_name_exists',
+    'shoppinglist_not_found', 'shoppinglist_not_updated', 'logout_successful', 'shoppinglist_updated',
+    'successful_login', 'user_does_not_exist', 'username_exists', 'username_not_allowed',
     'user_not_found', 'username_not_provided', 'username_or_email_required', 'username_with_whitespaces',
     'valid_integer_required'
 ]
@@ -16,7 +17,7 @@ __all__ = [
 login_again = 'Please login again with your username and password.'
 user_does_not_exist = 'The username you provided does not exist, ' \
                       'please check your username or register to get an account'
-cridentials_required = "You musty provide username and password."
+credentials_required = "You musty provide username and password."
 username_not_provided = 'Provide a username'
 email_not_provided = 'Provide an email'
 password_not_provided = 'Provide a password'
@@ -41,8 +42,7 @@ new_email_exists = "User with %(email)s exists. Choose a different email."
 account_not_updated = "You made an update request with no new details, " \
                       "your account has not been modified."
 logout_successful = "You have successfully been logged out."
-incomplete_delete = "You account has not been deleted, " \
-                    "please confirm that you would wish to delete your account."
+incomplete_delete = "The password you provided is incorrect. Try again."
 email_does_not_exist = "There is no such email, check the email you provided and try again."
 
 
@@ -58,6 +58,7 @@ shoppinglist_deleted = 'Shopping list deleted'
 
 shoppingitem_exists = 'There exists a shopping item with similar name, try again'
 shoppingitem_created = 'Shopping item created'
+shoppingitem_deleted = 'Shopping item deleted.'
 shoppingitem_not_found = 'Shopping item not found'
 shoppingitem_updated = 'Shopping item updated'
 shoppingitem_not_updated = 'Your shoppingitem has not been modified.'
