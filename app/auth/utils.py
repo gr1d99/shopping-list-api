@@ -24,22 +24,25 @@ registration_args = OrderedDict(
     ]
 )
 
-update_account_args = OrderedDict(
+update_args = OrderedDict(
     [
-        ('email', fields.Str(location='form', required=False, validate=validate.Email())),
+        ('email', fields.Str(location='form', required=False,
+                             validate=validate.Email())),
     ]
 )
 
-reset_password_args = OrderedDict(
+reset_args = OrderedDict(
     [
         ('username', fields.Str(location='form', required=True)),
-        ('new_password', fields.Str(location='form', required=True, validate=validate.Length(min=6))),
-        ('confirm', fields.Str(location='form', required=True, validate=validate.Length(min=6))),
+        ('new_password', fields.Str(location='form', required=True,
+                                    validate=validate.Length(min=6))),
+        ('confirm', fields.Str(location='form', required=True,
+                               validate=validate.Length(min=6))),
         ('reset_token', fields.Str(location='form', required=True))
     ]
 )
 
-delete_account_args = OrderedDict(
+delete_args = OrderedDict(
     [
         ('password', fields.Str(location='form', required=True))
     ]
