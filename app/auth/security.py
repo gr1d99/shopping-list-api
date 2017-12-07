@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-App module with function for checking it token has been blacklisted.
+Application module with helper functions that handle authentication and authorization.
 """
 
 import secrets
-from functools import wraps
-from flask import Response, make_response, jsonify
 from app import JWT
 from ..models import BlacklistToken, ResetToken, User
 
@@ -14,6 +12,7 @@ from ..models import BlacklistToken, ResetToken, User
 def check_if_token_in_blacklist(decrypted_token):
     """
     Checks if token is stored in blacklist model.
+
     :param decrypted_token: auth token.
     :return: True|False
     """
@@ -29,12 +28,24 @@ def check_if_token_in_blacklist(decrypted_token):
 
 
 def generate_token(user_id):
+    """
+    generates password reset tokens.
+
+    :param user_id: id
+    :return: string
+    """
     token = secrets.token_urlsafe(20)
-    rt = ResetToken(user_id, token)
-    rt.save()
+    reset_token = ResetToken(user_id, token)
+    reset_token.save()
     return token
 
 
 def check_user(username):
+    """
+    Check if username provided is associated to any user in the application.
+
+    :param username: user username
+    :return: user object
+    """
     user = User.get_by_username(username)
     return user
