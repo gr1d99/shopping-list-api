@@ -117,7 +117,7 @@ class UserLoginApi(Resource):
             return make_response(
                 jsonify(dict(
                     status='fail',
-                    message=cridentials_required
+                    message=credentials_required
                 )), 401)
 
         cridentials = request.authorization
