@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Application module with helper functions that handle authentication and authorization.
+App module with function for checking it token has been blacklisted.
 """
 
 import secrets
@@ -12,7 +12,6 @@ from ..models import BlacklistToken, ResetToken, User
 def check_if_token_in_blacklist(decrypted_token):
     """
     Checks if token is stored in blacklist model.
-
     :param decrypted_token: auth token.
     :return: True|False
     """
@@ -28,24 +27,12 @@ def check_if_token_in_blacklist(decrypted_token):
 
 
 def generate_token(user_id):
-    """
-    generates password reset tokens.
-
-    :param user_id: id
-    :return: string
-    """
     token = secrets.token_urlsafe(20)
-    reset_token = ResetToken(user_id, token)
-    reset_token.save()
+    rt = ResetToken(user_id, token)
+    rt.save()
     return token
 
 
 def check_user(username):
-    """
-    Check if username provided is associated to any user in the application.
-
-    :param username: user username
-    :return: user object
-    """
     user = User.get_by_username(username)
     return user
