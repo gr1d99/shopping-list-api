@@ -13,7 +13,7 @@ from webargs.flaskparser import use_args
 from usernames import is_safe_username
 
 from app.core.validators import validate
-from .security import check_user
+from .security import check_user, generate_token
 from .utils import delete_args, registration_args, reset_args, update_args
 from ..messages import *
 from ..models import User, BlacklistToken, ResetToken
@@ -120,10 +120,10 @@ class UserLoginApi(Resource):
                     message=credentials_required
                 )), 401)
 
-        cridentials = request.authorization
+        credentials = request.authorization
 
-        username = cridentials.get('username')
-        password = cridentials.get('password')
+        username = credentials.get('username')
+        password = credentials.get('password')
 
         user = User.get_by_username(username)
 
@@ -320,13 +320,13 @@ class UserLogoutApi(Resource):
             200)
 
 
-class ResetPasswordApi(Resource):
+class PasswordResetTokenApi(Resource):
     """
     Resource class to handle client password reset.
     """
 
     @use_args(update_args)
-    def get(self, data):
+    def post(self, data):
         email = data.get('email', '')
 
         try:
@@ -337,8 +337,7 @@ class ResetPasswordApi(Resource):
                 jsonify(dict(
                     status='fail',
                     message=e.args
-                )), 422
-            )
+                )), 422)
 
         user = User.get_by_email(email)
 
@@ -350,7 +349,7 @@ class ResetPasswordApi(Resource):
             if rt is not None:
                 rt.expire_token()
 
-            token = send_reset_token(user.id)
+            token = generate_token(user.id)
             return make_response(
                 jsonify(dict(
                     status='success',
@@ -363,9 +362,10 @@ class ResetPasswordApi(Resource):
             jsonify(dict(
                 status='fail',
                 message=email_does_not_exist
-            ))
-        )
+            )), 409)
 
+
+class PasswordResetApi(Resource):
     @use_args(reset_args)
     def post(self, data):
         """
@@ -395,9 +395,7 @@ class ResetPasswordApi(Resource):
                 message=reset_token_required
             )), 422)
 
-        rt = ResetToken.query.filter_by(
-            user_id=user.id, token=reset_token
-        ).first()
+        rt = ResetToken.get_instance(reset_token, user.id)
 
         if rt is None:
             errors.setdefault('token', reset_token_does_not_exist)
