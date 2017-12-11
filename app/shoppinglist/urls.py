@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Contains app shoppinglists and shoppingitems url definations.
+This module has shoppinglist functionalities url definitions.
 """
 
 from flask import Blueprint
