@@ -19,8 +19,7 @@ from app.core.exceptions import EmailExists, UsernameExists
 
 class BaseModel(DB.Model):
     """
-    Base class for all models.
-    Contains common methods used by all models.
+    Base class for all models and contains common methods used by all models.
     """
     __abstract__ = True
 
@@ -105,8 +104,7 @@ class BaseUserManager(object):
 
     def _verify_password(self, raw_password):
         """
-        Used to verify user password using the provided raw_password
-        since password stored are hashed.
+        Used to verify user password using the provided raw_password since password stored are hashed.
         """
 
         return bcrypt.check_password_hash(self.password, raw_password)
