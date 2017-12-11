@@ -1,10 +1,9 @@
 """Base class for all tests for the application configuration"""
 
 from flask_testing import TestCase
+from app import APP
 
-from . import APP
 
-
-class TestBase(TestCase):
+class TestBaseCase(TestCase):
     def create_app(self):
         return APP
