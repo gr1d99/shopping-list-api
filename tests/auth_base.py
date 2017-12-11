@@ -3,22 +3,21 @@ from base64 import b64encode
 from flask_restful import url_for
 from flask_testing import TestCase
 
-from app import APP, DB
+from app import DB
 from app.conf import app_config
-from app.models import User
+from .base import TestBaseCase
 
 
-class TestBase(TestCase):
+class TestAuthenticationBaseCase(TestBaseCase):
 
-    def __init__(self, *args, **kwargs):
-        super(TestBase, self).__init__(*args, **kwargs)
+    def __init__(self, *data, **kwargs):
+        super(TestAuthenticationBaseCase, self).__init__(*data, **kwargs)
         # initialize to None because it is not defined in the
         # TestCase init
         self.model = collections.namedtuple('User', ['username', 'email', 'password'])
         self.test_user = self.model('gideon', 'gideon@gmail.com', 'gideonpassword')
-
-    def create_app(self):
-        return APP
+        self.header_name = 'x-access-token'
+        self.header = {}
 
     def setUp(self):
         """
@@ -35,9 +34,6 @@ class TestBase(TestCase):
         DB.drop_all()
         DB.create_all()
 
-        self.header_name = 'x-access-token'
-        self.header = {}
-
     def tearDown(self):
         """
         Remove test tables and data.
@@ -45,11 +41,6 @@ class TestBase(TestCase):
 
         DB.session.remove()
         DB.drop_all()
-
-    @staticmethod
-    def query_user_from_db(username):
-        user = User.get_by_username(username)
-        return user
 
     def login_user(self, with_header=True, **credentials):
         """
@@ -70,6 +61,12 @@ class TestBase(TestCase):
             return self.client.post(url)
 
     def register_user(self, **details):
+        """
+        Helper method to register a user.
+
+        :param details: username, email and password.
+        :return: response.
+        """
         data = details
         url = url_for('user_register')
         return self.client.post(url, data=data)
@@ -85,11 +82,10 @@ class TestBase(TestCase):
 
     def update_user_info(self, token, data=None):
         """
-         Helper method to make a PUT request to update user details.
+         Helper method to update user details.
          """
 
         url = url_for('user_detail')
-
         return self.client.put(url, data=data, headers={self.header_name: token})
 
     def logout_user(self, token):
@@ -97,21 +93,26 @@ class TestBase(TestCase):
         Helper method to make requests to logout logged in users.
         """
 
-        headers = dict(
-            Authorization='Bearer %(token)s' % dict(token=token)
-        )
-
         url = url_for('user_logout')
-
         return self.client.delete(url, headers={self.header_name: token})
 
-    def get_password_reset_token(self, email):
-        url = url_for('password_reset', email=email)
-        return self.client.get(url)
-
-    def reset_password(self, **data):
+    def get_password_reset_token(self, data):
         """
-        A method to make a post request with user details in order to reset user password.
+        Makes POST request to get password reset token.
+
+        :param data: user email.
+        :return: response.
+        """
+
+        url = url_for('password_token')
+        return self.client.post(url, data=data)
+
+    def reset_password(self, data):
+        """
+        A helper method to make request to reset user password.
+
+        :param data: username, email.
+        :return: response.
         """
 
         url = url_for('password_reset')
@@ -119,10 +120,11 @@ class TestBase(TestCase):
 
     def delete_user(self, token, password):
         """
-        Makes DELETE request as client to delete user account.
-        :param token: client auth token.
+        Helper method to make request to delete user account.
+
+        :param token: user auth token.
         :param password: user password.
-        :return: resonse.
+        :return: response.
         """
 
         url = url_for('user_detail')
