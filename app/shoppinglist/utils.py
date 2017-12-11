@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 
 """
-Contain helper argument parsers and classes for resources.
+This module define helper argument parsers and classes.
+
+The helper argument parsers check and validate arguments
+passed in the endpoint url. If the argument provided in the
+url does not pass the parsing stage then the request terminated
+and a response of status code 422 is returned back to the client.
 """
 
 import collections
@@ -9,12 +14,12 @@ import collections
 from webargs import fields, validate
 
 __all__ = [
-    'detail_args', 'limit_args', 'pagination_args', 'prep_keyword',
-    'shoppingitem_update_args', 'search_args', 'shoppingitem_create_args',
-    'shoppinglist_args', 'shoppinglist_update_args', 'urlmaker'
+    'detail_args', 'pagination_args', 'prep_keyword',
+    'item_update_args', 'search_args', 'item_create_args',
+    'create_args', 'update_args', 'urlmaker'
 ]
 
-shoppinglist_args = collections.OrderedDict(
+create_args = collections.OrderedDict(
     [
         ('name', fields.Str(required=True,
                             validate=validate.Length(min=3),
@@ -24,28 +29,27 @@ shoppinglist_args = collections.OrderedDict(
     ]
 )
 
-shoppinglist_update_args = collections.OrderedDict(
+update_args = collections.OrderedDict(
     [
         ('name', fields.Str(required=False, location='form')),
         ('description', fields.Str(required=False, location='form'))
     ]
 )
 
-shoppingitem_create_args = collections.OrderedDict(
+item_create_args = collections.OrderedDict(
     [
         ('name', fields.Str(required=True, validate=validate.Length(min=3))),
         ('price', fields.Decimal(required=True)),
         ('quantity_description', fields.Str(required=True)),
-        ('bought', fields.Bool(required=False))
     ]
 )
 
-shoppingitem_update_args = collections.OrderedDict(
+item_update_args = collections.OrderedDict(
     [
         ('name', fields.Str(required=False)),
         ('price', fields.Decimal(required=False)),
         ('quantity_description', fields.Str(required=False)),
-        ('bought', fields.Bool(required=False))
+        ('bought', fields.Str(required=False))
     ]
 )
 
@@ -59,14 +63,6 @@ pagination_args = collections.OrderedDict(
 search_args = collections.OrderedDict(
     [
         ('q', fields.Str(required=True, location='querystring')),
-        ('page', fields.Int(required=False, location='querystring')),
-        ('limit', fields.Int(required=False, location='querystring')),
-    ]
-)
-
-
-limit_args = collections.OrderedDict(
-    [
         ('page', fields.Int(required=False, location='querystring')),
         ('limit', fields.Int(required=False, location='querystring')),
     ]
@@ -91,7 +87,8 @@ class MakePaginationUrls(object):
 
     def make_url(self):
         """
-        Method to generate urls.
+        Method to generate pagination urls.
+
         :return: url.
         """
 
@@ -115,5 +112,6 @@ def prep_keyword(keyword):
     _term = '%(op)s%(kw)s%(op)s'
     term = _term % dict(op=operator, kw=keyword)
     return term
+
 
 urlmaker = MakePaginationUrls
