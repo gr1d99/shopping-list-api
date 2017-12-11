@@ -12,19 +12,16 @@ Functionalities tested.
     5. User account delete.
 """
 
-import time
-import flask
-
-from ddt import ddt, file_data, data
+from ddt import ddt, data
 from flask import json
 
 from app.messages import *
 from app.models import User
-from .auth_base import TestBase
+from .auth_base import TestAuthenticationBaseCase
 
 
 @ddt
-class TestUserAuth(TestBase):
+class TestUserAuth(TestAuthenticationBaseCase):
     def test_user_can_register(self):
         response = self.register_user(
             username=self.test_user.username,
@@ -38,7 +35,7 @@ class TestUserAuth(TestBase):
         self.assertStatus(response, 201)  # status_code 201 created.
         self.assertTrue(data['status'], 'success')
         self.assertEqual(data['message'], account_created)
-        self.assertIsNotNone(self.query_user_from_db(self.test_user.username))
+        self.assertIsNotNone(User.get_by_username(self.test_user.username))
 
     @data(" gideon", "     ", "  my   name")
     def test_cannot_register_with_username_that_startswith_spaces(self, name):
@@ -133,7 +130,7 @@ class TestUserAuth(TestBase):
         data = json.loads(response.get_data(as_text=True))
 
         # get user instance from database.
-        user = self.query_user_from_db(self.test_user.username)  # should be None
+        user = User.get_by_username(self.test_user.username)  # should be None
 
         self.assert400(response)
         self.assertTrue(data['status'] == 'fail')
@@ -156,7 +153,7 @@ class TestUserAuth(TestBase):
 
         # assertions.
         self.assertStatus(response, 422)
-        self.assertIsNone(self.query_user_from_db(self.test_user.username))
+        self.assertIsNone(User.get_by_username(self.test_user.username))
 
     def test_cannot_register_with_invalid_email(self):
         response = self.register_user(
@@ -166,7 +163,7 @@ class TestUserAuth(TestBase):
 
         # assertions.
         self.assertStatus(response, 422)
-        self.assertIsNone(self.query_user_from_db(self.test_user.username))
+        self.assertIsNone(User.get_by_username(self.test_user.username))
 
     def test_cannot_register_with_password_length_less_than_6(self):
         response = self.register_user(
@@ -176,7 +173,7 @@ class TestUserAuth(TestBase):
 
         # assertions.
         self.assertStatus(response, 422)
-        self.assertIsNone(self.query_user_from_db(self.test_user.username))
+        self.assertIsNone(User.get_by_username(self.test_user.username))
 
     def test_cannot_register_without_password(self):
         response = self.register_user(
@@ -185,7 +182,7 @@ class TestUserAuth(TestBase):
 
         # assertions.
         self.assertStatus(response, 422)
-        self.assertIsNone(self.query_user_from_db(self.test_user.username))
+        self.assertIsNone(User.get_by_username(self.test_user.username))
 
     def test_cannot_register_with_existing_username(self):
         # register first user.
@@ -232,7 +229,7 @@ class TestUserAuth(TestBase):
         self.assertStatus(response, 409)
         self.assertTrue(data['status'] == 'fail')
         self.assertTrue(data['message'] == email_exists)
-        self.assertIsNone(self.query_user_from_db(new_username))
+        self.assertIsNone(User.get_by_username(new_username))
 
     def test_cannot_login_without_authorization_header(self):
         response = self.login_user(
@@ -244,7 +241,7 @@ class TestUserAuth(TestBase):
             response.get_data(as_text=True))
 
         self.assert401(response)
-        self.assertTrue(data['message'] == cridentials_required)
+        self.assertTrue(data['message'] == credentials_required)
         self.assertTrue(data['status'] == 'fail')
 
     def test_cannot_login_without_username(self):
@@ -331,7 +328,7 @@ class TestUserAuth(TestBase):
         data = json.loads(view_resp.get_data(as_text=True))
 
         # query user from database.
-        user = self.query_user_from_db(self.test_user.username)
+        user = User.get_by_username(self.test_user.username)
 
         # format date_joined to string.
         date_joined = user.date_joined.strftime("%Y-%m-%d %H:%M:%S")
@@ -521,17 +518,20 @@ class TestUserAuth(TestBase):
             confirm=self.test_user.password)
 
         # get password reset token.
-        res = self.get_password_reset_token(email=self.test_user.email)
+        data = dict(email=self.test_user.email)
+        res = self.get_password_reset_token(data)
 
         reset_token = json.loads(
             res.get_data(as_text=True))['data']['password_reset_token']
 
-        # make actual response to change password.
-        reset_response = self.reset_password(
+        details = dict(
             username=self.test_user.username,
             new_password=new_password,
             confirm=new_password,
             reset_token=reset_token)
+
+        # make actual response to change password.
+        reset_response = self.reset_password(details)
 
         reset_response_data = json.loads(
             reset_response.get_data(as_text=True))
@@ -560,12 +560,13 @@ class TestUserAuth(TestBase):
             password=self.test_user.password,
             confirm=self.test_user.password)
 
-        reset_response = self.reset_password(
+        details = dict(
             username=self.test_user.username,
             new_password=new_password,
             confirm=new_password,
-            reset_token=''
-        )
+            reset_token='')
+
+        reset_response = self.reset_password(details)
 
         err = json.loads(
             reset_response.get_data(as_text=True))
@@ -587,12 +588,13 @@ class TestUserAuth(TestBase):
             password=self.test_user.password,
             confirm=self.test_user.password)
 
-        reset_response = self.reset_password(
+        details = dict(
             username=self.test_user.username,
             new_password=new_password,
             confirm=new_password,
-            reset_token=token
-        )
+            reset_token=token)
+
+        reset_response = self.reset_password(details)
 
         err = json.loads(
             reset_response.get_data(as_text=True))
@@ -620,25 +622,25 @@ class TestUserAuth(TestBase):
             password=self.test_user.password,
             confirm=self.test_user.password)
 
+        data = dict(email=self.test_user.email)
+
         # get password reset token.
-        res = self.get_password_reset_token(email=self.test_user.email)
+        res = self.get_password_reset_token(data)
 
         reset_token = json.loads(
             res.get_data(as_text=True))['data']['password_reset_token']
 
         # make actual response to change password.
-        self.reset_password(
+        details = dict(
             username=self.test_user.username,
             new_password=new_password,
             confirm=new_password,
             reset_token=reset_token)
 
+        self.reset_password(details)
+
         # make another request with the same token provided.
-        response = self.reset_password(
-            username=self.test_user.username,
-            new_password=new_password,
-            confirm=new_password,
-            reset_token=reset_token)
+        response = self.reset_password(details)
 
         response_data = json.loads(
             response.get_data(as_text=True))
