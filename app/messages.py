@@ -49,19 +49,19 @@ email_does_not_exist = "There is no such email, check the email you provided and
 # shopping list and shopping items endpoints messages
 shoppinglist_created = "Shopping list created"
 valid_integer_required = "Provide a valid id"
-shoppinglist_not_found = 'Shopping list not found'
+shoppinglist_not_found = 'Shopping list not found, please check the ID you provided or create a new shoppinglist.'
 shoppinglist_updated = 'Shopping list updated'
 shoppinglist_not_updated = "Your shoppinglist has not been modified."
-shoppinglist_name_exists = "You are trying to create a shoppinglist with a name that already exist, " \
-                           "please choose a different name and try again."
+shoppinglist_name_exists = "The name you provided already exist, please choose a different name and try again."
 shoppinglist_deleted = 'Shopping list deleted'
 
-shoppingitem_exists = 'There exists a shopping item with similar name, try again'
+shoppingitem_exists = 'There exists a shopping item with similar name and quantity description, ' \
+                      'create a new shopping item or update the existing item. '
 shoppingitem_created = 'Shopping item created'
 shoppingitem_deleted = 'Shopping item deleted.'
 shoppingitem_not_found = 'Shopping item not found'
 shoppingitem_updated = 'Shopping item updated'
-shoppingitem_not_updated = 'Your shoppingitem has not been modified.'
+shoppingitem_not_updated = 'Shopping item not modified.'
 
 
 # server error message
