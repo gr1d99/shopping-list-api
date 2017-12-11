@@ -1,13 +1,13 @@
 from ddt import ddt, data
 
 from flask import json
-from .shopping_base import TestShoppingListBase
+from .shopping_base import TestShoppingListBaseCase
 from app.messages import *
 from app.models import ShoppingList, User
 
 
 @ddt
-class TestShoppingListCase(TestShoppingListBase):
+class TestShoppingListCaseCase(TestShoppingListBaseCase):
     """
     Test all CRUD functionalities of shopping list model.
     """
