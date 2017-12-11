@@ -2,32 +2,23 @@ import collections
 
 from flask import json
 from flask_restful import url_for
-from flask_testing import TestCase
 
 from app import APP, DB
 from app.conf import app_config
 
-from .auth_base import TestBase
+from .auth_base import TestAuthenticationBaseCase
 
 
-class TestShoppingListBase(TestBase):
-
-    def create_app(self):
-        # update app configuration to testing.
-        APP.config.from_object(app_config.TestingConfig)
-        return APP
+class TestShoppingListBaseCase(TestAuthenticationBaseCase):
 
     def setUp(self):
-        """
-        Prep app for testing.
-        """
-        super(TestShoppingListBase, self).setUp()
+        super(TestShoppingListBaseCase, self).setUp()
 
         self.another_test_user = self.model('usertwo', "user_two_password", "user_two@gmail.com")
         self.shoppinglist_model = collections.namedtuple('ShoppingList', ['name', 'description'])
         self.shopping_list = self.shoppinglist_model('testshoppinglist', 'my very first shoppinglist')
         self.shopping_list_two = self.shoppinglist_model('testshoppinglisttwo', "my second shoppinglist")
-        self.shoppinglists = ['Birthday', 'School', 'Breakfast', 'Lunch', 'Camping']
+        self.shoppinglists = ['Birthday', 'School', 'Breakfast', 'Lunch', 'Camping', 'Christmas']
 
     def tearDown(self):
         """
@@ -45,7 +36,7 @@ class TestShoppingListBase(TestBase):
             {'username': self.test_user.username,
              'password': self.test_user.password})
 
-        return super(TestShoppingListBase, self).login_user(with_header=True, **credentials)
+        return super(TestShoppingListBaseCase, self).login_user(with_header=True, **credentials)
 
     def login_second_user(self):
         """
@@ -151,9 +142,9 @@ class TestShoppingListBase(TestBase):
         return self.client.delete(url, headers={self.header_name: token})
 
 
-class TestShoppingItemsBase(TestShoppingListBase):
+class TestShoppingItemsBaseCase(TestShoppingListBaseCase):
     def setUp(self):
-        super(TestShoppingItemsBase, self).setUp()
+        super(TestShoppingItemsBaseCase, self).setUp()
         _testdata = collections.namedtuple('ShoppingItem',
                                            ['name', 'price', 'quantity_description'])
         self.testdata_1 = _testdata('bread', 90.0, '100 Grams')
@@ -235,7 +226,7 @@ class TestShoppingItemsBase(TestShoppingListBase):
         return self.client.delete(url, headers={self.header_name: token})
 
 
-class TestSearchAndPagination(TestShoppingItemsBase):
+class TestSearchAndPaginationBaseCase(TestShoppingItemsBaseCase):
     """
     Base test case class for testing search functionality and pagination.
     """
@@ -251,7 +242,8 @@ class TestSearchAndPagination(TestShoppingItemsBase):
 
         # create shoppinglists.
         for shl in self.shoppinglists:
-            self.create_shoppinglist(token=token, details=dict(name=shl))
+            details = dict(name=shl)
+            self.create_shoppinglist(token, details)
 
         return token
 
@@ -271,8 +263,7 @@ class TestSearchAndPagination(TestShoppingItemsBase):
 
         # create shoppinglist.
         r = self.create_shoppinglist(token, data)
-        shl_id = json.loads(
-            r.get_data(as_text=True))['data']['id']
+        shl_id = json.loads(r.get_data(as_text=True))['data']['id']
 
         # create shopping items.
         for item in self.shoppingitems:
