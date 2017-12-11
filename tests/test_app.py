@@ -7,10 +7,11 @@
 
 """
 
-from . import TestBase, app_config
+from app.conf import app_config
+from .base import TestBaseCase
 
 
-class TestEnviroments(TestBase):
+class TestEnvironmentCase(TestBaseCase):
     """Test various app environment configurations"""
     def test_testing(self):
         """
