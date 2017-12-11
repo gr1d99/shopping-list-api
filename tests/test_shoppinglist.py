@@ -7,7 +7,7 @@ from app.models import ShoppingList, User
 
 
 @ddt
-class TestShoppingListCaseCase(TestShoppingListBaseCase):
+class TestShoppingListCase(TestShoppingListBaseCase):
     """
     Test all CRUD functionalities of shopping list model.
     """
