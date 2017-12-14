@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 
 """
-Contains all Resources to manage crud operations of user shopping lists
-and shopping items.
+This module provides endpoint resources that manages all CRUD operations of user shopping lists
+and shopping items functionalities.
 """
 
 from flask import jsonify, make_response, request
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from webargs import validate
 from webargs.flaskparser import use_args
 
 from .utils import *
 from ..conf.settings import MAX_ITEMS_PER_PAGE
 from ..core.loggers import AppLogger
-from ..core.validators import validate
+from ..core.validators import NameValidator
 from ..messages import *
 from ..models import User, ShoppingList, ShoppingItem
 
@@ -24,7 +23,7 @@ class ShoppingListsApi(Resource):
     @jwt_required
     def get(self, args):
         """
-        Retrieve all shopping lists.
+        Retrieve all user shopping lists.
         """
 
         def params_error(error):
@@ -36,7 +35,6 @@ class ShoppingListsApi(Resource):
 
             return make_response(
                 jsonify(dict(
-                    status='fail',
                     message=error
                 )), 422
             )
@@ -46,7 +44,6 @@ class ShoppingListsApi(Resource):
 
         response = {}
 
-        response.setdefault('status', 'success')
         response.setdefault('total_shoppinglist', user.shopping_lists.count())
 
         page = args.get('page', 1)
@@ -111,16 +108,13 @@ class ShoppingListsApi(Resource):
 
         user = User.query.filter_by(username=current_user).first()
 
-        try:
-            validate(value=name, allow_spaces=True)
+        validator = NameValidator(name)
+        validator()
 
-        except Exception as e:
-            return make_response(
-                jsonify(dict(
-                    status='fail',
-                    message="Shoppinglist name value %(err)s" % dict(err=e.args[0])
-                )), 422
-            )
+        if validator.has_errors:
+            return make_response(jsonify(dict(messages=dict(name=validator.errors))), 422)
+
+        name = name.strip()
 
         # check if shopping list exists
         old_shl = ShoppingList.query.filter_by(name=name, owner_id=user.id).first()
@@ -129,11 +123,7 @@ class ShoppingListsApi(Resource):
         if old_shl:
 
             return make_response(
-                jsonify(dict(
-                    status='fail',
-                    message=shoppinglist_name_exists
-                )), 409
-            )
+                jsonify(dict(message=shoppinglist_name_exists)), 409)
 
         # get user instance.
         user = User.query.filter_by(username=current_user).first()
@@ -144,13 +134,39 @@ class ShoppingListsApi(Resource):
 
         return make_response(
             jsonify(dict(
-                status='success',
                 message=shoppinglist_created,
                 data=dict(
                     id=shl.id,
                     name=shl.name,
                     created_on=shl.timestamp.strftime("%Y-%m-%d %H:%M:%S"))
             )), 201)
+
+    @use_args(delete_items_args)
+    @jwt_required
+    def delete(self, args):
+        """
+        Deletes all user shopping lists
+
+        :return: response.
+        """
+
+        current_user = get_jwt_identity()
+        password = args.get('password', None)
+
+        # get user instance.
+        user = User.get_by_username(username=current_user)
+
+        if not user.verify_password(password):
+            return make_response(jsonify(dict(message=incorrect_password)), 403)
+
+        shoppinglists = user.shopping_lists
+        if shoppinglists.count() > 0:
+            for shl in shoppinglists:
+                shl.delete()
+
+            return make_response(jsonify(dict(message=shoppinglists_deleted)), 200)
+
+        return make_response(jsonify(dict(message=shoppinglist_empty)), 404)
 
 
 class ShoppingListDetailApi(Resource):
@@ -161,17 +177,17 @@ class ShoppingListDetailApi(Resource):
     """
 
     @jwt_required
-    def get(self, id=None):
+    def get(self, shl_id=None):
         """
-        Handles GET request to fetch specific shopping list requested by client.
+        Handles GET request to fetch specific shopping list requested by user.
 
-        :param id: id of shopping list.
+        :param shl_id: id of shopping list.
         :return: response.
         """
         current_user = get_jwt_identity()
 
         # get user instance.
-        user = User.query.filter_by(username=current_user).first()
+        user = User.get_by_username(username=current_user)
 
         data = {}
 
@@ -179,16 +195,13 @@ class ShoppingListDetailApi(Resource):
         # return response to client.
         try:
             shoppinglist = user.shopping_lists.filter_by(
-                id=int(id)).first_or_404()
+                id=int(shl_id)).first_or_404()
 
         except Exception as e:
             AppLogger(self.__class__.__name__).logger.warning(e)
             return make_response(
                 jsonify(dict(
-                    status='fail',
-                    message=shoppinglist_not_found
-                )), 404
-            )
+                    message=shoppinglist_not_found)), 404)
 
         # filter bought items and those not bought.
         bought = shoppinglist.shopping_items.filter_by(bought=True).count()
@@ -205,20 +218,16 @@ class ShoppingListDetailApi(Resource):
         data.setdefault('updated_on', shoppinglist.updated.strftime("%Y-%m-%d %H:%M:%S"))
 
         return make_response(
-            jsonify(dict(
-                status='success',
-                data=data
-            )), 200
-        )
+            jsonify(dict(data=data)), 200)
 
     @use_args(update_args)
     @jwt_required
-    def put(self, args, id):
+    def put(self, args, shl_id):
         """
         Handles PUT request to update user shopping list.
 
         :param args: new name to be updated.
-        :param id: shopping list id
+        :param shl_id: shopping list id
         :return: response
         """
         current_user = get_jwt_identity()
@@ -226,7 +235,6 @@ class ShoppingListDetailApi(Resource):
         def response():
             return make_response(
                 jsonify(dict(
-                    status='success',
                     message=shoppinglist_updated,
                     data=dict(
                         name=shoppinglist.name,
@@ -242,12 +250,11 @@ class ShoppingListDetailApi(Resource):
         description = args.get('description', None)
 
         # check if shopping list exists, if not, return 404 response to client.
-        shoppinglist = user.shopping_lists.filter_by(id=int(id)).first()
+        shoppinglist = user.shopping_lists.filter_by(id=int(shl_id)).first()
 
         if not shoppinglist:
             return make_response(
                 jsonify(dict(
-                    status='fail',
                     message=shoppinglist_not_found
                 )), 404)
 
@@ -255,16 +262,11 @@ class ShoppingListDetailApi(Resource):
         if any([name, description]):
             if name:
 
-                try:
-                    validate(value=name, allow_spaces=True)
+                validator = NameValidator(name)
+                validator()
 
-                except Exception as e:
-                    return make_response(
-                        jsonify(dict(
-                            status='fail',
-                            message="Shoppinglist name value %(err)s" % dict(err=e.args[0])
-                        )), 422
-                    )
+                if validator.has_errors:
+                    return make_response(jsonify(dict(messages=dict(name=validator.errors))), 422)
 
                 # check if shopping list with the same name exists.
                 shl = ShoppingList.query.filter_by(name=name, owner_id=user.id).first()
@@ -273,10 +275,7 @@ class ShoppingListDetailApi(Resource):
                 if shl:
                     msg = shoppinglist_name_exists
                     return make_response(
-                        jsonify(dict(
-                            status='fail',
-                            message=msg
-                        )), 409)
+                        jsonify(dict(message=msg)), 409)
 
                 if description:
                     shoppinglist.description = description
@@ -286,42 +285,36 @@ class ShoppingListDetailApi(Resource):
                 return response()
 
         return make_response(
-            jsonify(dict(
-                status='success',
-                message=shoppinglist_not_updated
-            )), 200)
+            jsonify(dict(message=shoppinglist_not_updated)), 200)
 
-
+    @use_args(delete_item_args)
     @jwt_required
-    def delete(self, id):
+    def delete(self, args, shl_id):
         """
         Handles DELETE request to delete shopping list using its id.
-        :param id: shopping list id
+
+        :param shl_id: shopping list id
         :return: response
         """
 
         current_user = get_jwt_identity()
+        name = args.get('name', '')
 
         # get user instance.
         user = User.query.filter_by(username=current_user).first()
 
-        # delete shopping list from database block.
-        try:
-            instance = user.shopping_lists.filter_by(id=int(id)).first_or_404()
-            instance.delete()
-            return make_response(
-                jsonify(dict(
-                    status="success",
-                    message=shoppinglist_deleted
-                )), 200)
+        instance = user.shopping_lists.filter_by(id=shl_id).first()
 
-        except Exception as e:
-            AppLogger(self.__class__.__name__).logger.warning(e)
-            return make_response(
-                jsonify(dict(
-                    status='fail',
-                    message=shoppinglist_not_found
-                )), 404)
+        if not instance:
+            return make_response(jsonify(dict(message=shoppinglist_not_found)), 404)
+
+        if not instance.name == name:
+            return make_response(jsonify(dict(message=shoppinglist_name_incorrect)), 403)
+
+        instance.delete()
+
+        return make_response(
+            jsonify(dict(message=shoppinglist_deleted)), 200)
 
 
 class ShoppingItemListApi(Resource):
@@ -348,10 +341,7 @@ class ShoppingItemListApi(Resource):
             """
 
             return make_response(
-                jsonify(dict(
-                    status='fail',
-                    message=error
-                )), 422)
+                jsonify(dict(message=error)), 422)
 
         data = {}
 
@@ -365,12 +355,8 @@ class ShoppingItemListApi(Resource):
 
         if not shoppinglist:
             return make_response(
-                jsonify(dict(
-                    status='fail',
-                    message=shoppinglist_not_found
-                )), 404)
+                jsonify(dict(message=shoppinglist_not_found)), 404)
 
-        data.setdefault('status', 'success')
         data.setdefault('total_items', shoppinglist.shopping_items.count())
 
         page = query_args.get('page', 1)
@@ -416,6 +402,42 @@ class ShoppingItemListApi(Resource):
 
         return make_response(jsonify(data), 200)
 
+    @use_args(delete_items_args)
+    @jwt_required
+    def delete(self, args, shl_id):
+        """
+        Handles deletion of all items in user shoppinglist.
+
+        :return:
+        """
+
+        current_user = get_jwt_identity()
+        password = args.get('password', '')
+
+        # user instance
+        user = User.get_by_username(username=current_user)
+
+        if not user.verify_password(password):
+            return make_response(jsonify(dict(message=shoppingitems_not_deleted)), 403)
+
+        # get shoppinglist instance
+        shoppinglist = ShoppingList.get(shl_id, user.id)
+
+        if not shoppinglist:
+            return make_response(
+                jsonify(dict(message=shoppinglist_not_found)), 404)
+
+        items = shoppinglist.shopping_items
+
+        if items.count() > 0:
+            for item in items:
+                shoppinglist.shopping_items.filter_by(id=item.id).first().delete()
+
+            return make_response(
+                jsonify(dict(message=shoppingitems_deleted)), 200)
+
+        return make_response(jsonify(dict(message=shoppinglist_empty)), 404)
+
 
 class ShoppingItemDetailApi(Resource):
     """
@@ -442,19 +464,13 @@ class ShoppingItemDetailApi(Resource):
 
         if not shoppinglist:
             return make_response(
-                jsonify(dict(
-                    status='fail',
-                    message=shoppinglist_not_found
-                )), 404)
+                jsonify(dict(message=shoppinglist_not_found)), 404)
 
         shoppingitem = shoppinglist.shopping_items.filter_by(id=item_id).first()
 
         if not shoppingitem:
             return make_response(
-                jsonify(dict(
-                    status='fail',
-                    message=shoppingitem_not_found
-                )), 404)
+                jsonify(dict(message=shoppingitem_not_found)), 404)
 
         data.setdefault('id', shoppingitem.id)
         data.setdefault('name', shoppingitem.name)
@@ -464,10 +480,7 @@ class ShoppingItemDetailApi(Resource):
         data.setdefault('created_on', shoppingitem.timestamp.strftime("%Y-%m-%d %H:%M:%S"))
         data.setdefault('updated_on', shoppingitem.updated.strftime("%Y-%m-%d %H:%M:%S"))
         return make_response(
-            jsonify(dict(
-                status='success',
-                data=data
-            )), 200)
+            jsonify(dict(data=data)), 200)
 
     @use_args(item_create_args)
     @jwt_required
@@ -486,34 +499,25 @@ class ShoppingItemDetailApi(Resource):
         price = args.get('price')
         quantity = args.get('quantity_description')
 
-        try:
-            validate(value=name, allow_spaces=True)
+        validator = NameValidator(name)
+        validator()
 
-        except Exception as e:
-            return make_response(
-                jsonify(dict(
-                    status='fail',
-                    message="Shoppingitem name value %(err)s" % dict(err=e.args[0])
-                )), 422
-            )
+        if validator.has_errors:
+            return make_response(jsonify(dict(messages=dict(name=validator.errors))), 422)
+
+        name = name.strip()
 
         # get shoppinglist instance.
         instance = ShoppingList.get(shoppinglistId=shl_id, ownerId=user.id)
 
         if not instance:
             return make_response(
-                jsonify(dict(
-                    status='fail',
-                    message=shoppinglist_not_found
-                )), 404)
+                jsonify(dict(message=shoppinglist_not_found)), 404)
 
         # check if quantity description are similar.
         exists = instance.shopping_items.filter_by(name=name, quantity_description=quantity).first()
         if exists:
-            return make_response(jsonify(dict(
-                status='fail',
-                message=shoppingitem_exists
-            )), 404)
+            return make_response(jsonify(dict(message=shoppingitem_exists)), 409)
 
         # create shoppingitem instance.
         item = ShoppingItem(name=name, price=price, quantity_description=quantity)
@@ -527,7 +531,6 @@ class ShoppingItemDetailApi(Resource):
 
         return make_response(
             jsonify(dict(
-                status='success',
                 message=shoppingitem_created,
                 data=dict(
                     id=item.id,
@@ -561,11 +564,7 @@ class ShoppingItemDetailApi(Resource):
         # check if it exists.
         if not shoppinglist:
             return make_response(
-                jsonify(dict(
-                    status='fail',
-                    message=shoppinglist_not_found
-                )), 404
-            )
+                jsonify(dict(message=shoppinglist_not_found)), 404)
 
         # get shoppingitem instance.
         shoppingitem = shoppinglist.shopping_items.filter_by(id=item_id).first()
@@ -574,7 +573,6 @@ class ShoppingItemDetailApi(Resource):
         if not shoppingitem:
             return make_response(
                 jsonify(dict(
-                    status='fail',
                     message=shoppingitem_not_found
                 )), 404
             )
@@ -585,19 +583,18 @@ class ShoppingItemDetailApi(Resource):
         bought = args.get('bought', None)
 
         if any([name, price, quantity, bought]):
-            try:
-                validate(value=name, allow_spaces=True)
-
-            except Exception as e:
-                return make_response(
-                    jsonify(dict(
-                        status='fail',
-                        message="Shoppingitem name value %(err)s" % dict(err=e.args[0])
-                    )), 422
-                )
 
             if not name:
                 name = shoppingitem.name
+
+            # validate name
+            validator = NameValidator(name)
+            validator()
+
+            if validator.has_errors:
+                return make_response(jsonify(dict(messages=dict(name=validator.errors))), 422)
+
+            name = name.strip()
 
             shoppingitem.name = name
 
@@ -628,7 +625,6 @@ class ShoppingItemDetailApi(Resource):
             # return response to client.
             return make_response(
                 jsonify(dict(
-                    status='success',
                     message=shoppingitem_updated,
                     data=dict(
                         id=shoppingitem.id,
@@ -642,7 +638,6 @@ class ShoppingItemDetailApi(Resource):
 
         return make_response(
             jsonify(dict(
-                status='fail',
                 message=shoppingitem_not_updated,
                 data=dict(
                         id=shoppingitem.id,
@@ -654,8 +649,9 @@ class ShoppingItemDetailApi(Resource):
                     )
             )), 200)
 
+    @use_args(delete_item_args)
     @jwt_required
-    def delete(self, shl_id, item_id):
+    def delete(self, args, shl_id, item_id):
         """
         Handles DELETE request from client to delete a single shoppingitem identified by
         its id.
@@ -665,6 +661,7 @@ class ShoppingItemDetailApi(Resource):
         """
 
         current_user = get_jwt_identity()
+        name = args.get('name', '')
 
         user = User.get_by_username(current_user)
 
@@ -675,7 +672,6 @@ class ShoppingItemDetailApi(Resource):
         if not shoppinglist:
             return make_response(
                 jsonify(dict(
-                    status='fail',
                     message=shoppinglist_not_found
                 )), 404)
 
@@ -686,16 +682,17 @@ class ShoppingItemDetailApi(Resource):
         if not shoppingitem:
             return make_response(
                 jsonify(dict(
-                    status='fail',
                     message=shoppingitem_not_found
                 )), 404)
+
+        if shoppingitem.name != name:
+            return make_response(jsonify(dict(message=shoppingitem_not_deleted)), 403)
 
         # delete shoppingitem.
         shoppingitem.delete()
 
         # return response to client.
         return make_response(jsonify(dict(
-            status='success',
             message=shoppingitem_deleted)), 200)
 
 
@@ -725,7 +722,6 @@ class SearchShoppingListApi(Resource):
         if _term == '':
             return make_response(
                 jsonify(dict(
-                    status='fail',
                     message="please provide query value"
                 )), 422)
 
