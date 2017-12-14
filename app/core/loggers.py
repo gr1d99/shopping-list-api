@@ -19,6 +19,7 @@ class AppLogger(object):
     def __init__(self, name):
         """
         Initialize logger file handlers, formatters and streaming of logs.
+
         :param name: name of the context within which the log is executed.
         """
 
