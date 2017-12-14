@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This module has shoppinglist functionalities url definitions.
+This module has shoppinglist endpoints url definitions.
 """
 
 from flask import Blueprint
@@ -18,7 +18,7 @@ API.add_resource(
     ShoppingListsApi, 'shopping-lists', endpoint='shoppinglist_list')
 
 API.add_resource(
-    ShoppingListDetailApi, 'shopping-lists/<int:id>', endpoint='shoppinglist_detail')
+    ShoppingListDetailApi, 'shopping-lists/<int:shl_id>', endpoint='shoppinglist_detail')
 
 API.add_resource(
     ShoppingItemListApi, 'shopping-lists/<int:shl_id>/shopping-items',
