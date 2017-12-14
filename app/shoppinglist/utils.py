@@ -13,12 +13,6 @@ import collections
 
 from webargs import fields, validate
 
-__all__ = [
-    'detail_args', 'pagination_args', 'prep_keyword',
-    'item_update_args', 'search_args', 'item_create_args',
-    'create_args', 'update_args', 'urlmaker'
-]
-
 create_args = collections.OrderedDict(
     [
         ('name', fields.Str(required=True,
@@ -71,6 +65,18 @@ search_args = collections.OrderedDict(
 detail_args = collections.OrderedDict(
     [
         ('id', fields.Int(required=True, location='query'))
+    ]
+)
+
+delete_item_args = collections.OrderedDict(
+    [
+        ('name', fields.Str(required=True, location='form'))
+    ]
+)
+
+delete_items_args = collections.OrderedDict(
+    [
+        ('password', fields.Str(required=True, location='form'))
     ]
 )
 
