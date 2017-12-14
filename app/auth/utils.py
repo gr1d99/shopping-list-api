@@ -1,29 +1,44 @@
 # -*- coding: utf-8 -*-
 
 """
-This module implements argument parsers for authentication endpoint urls
-providing a clean way to validate arguments included in urls.
+This module provides argument parsers for authentication endpoint urls
+providing a clean way to validate arguments sent to endpoints.
 """
 
 from collections import OrderedDict
 
 from webargs import fields, validate
 
-from .security import generate_token
 
 registration_args = OrderedDict(
     [
-        ('username', fields.Str(location='form', required=True)),
+        ('username', fields.Str(location='form', required=True,
+                                validate=validate.Length(min=3))),
         ('email', fields.Str(location='form', message='Email required',
                              required=True, validate=validate.Email())),
         ('password', fields.Str(location='form', required=True,
-                                validate=validate.Length(min=6))),
+                                validate=validate.Length(min=8))),
         ('confirm', fields.Str(location='form', required=True,
-                               validate=validate.Length(min=6)))
+                               validate=validate.Length(min=8)))
+    ]
+)
+
+login_args = OrderedDict(
+    [
+        ('username', fields.Str(location='form', required=True)),
+        ('password', fields.Str(location='form', required=True,
+                                validate=validate.Length(min=6))),
     ]
 )
 
 update_args = OrderedDict(
+    [
+        ('username', fields.Str(location='form', required=False,
+                                validate=validate.Length(min=3))),
+    ]
+)
+
+get_password_token_args = OrderedDict(
     [
         ('email', fields.Str(location='form', required=False,
                              validate=validate.Email())),
