@@ -11,6 +11,7 @@ from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from app.conf import app_config, settings
 
+
 APP = Flask(__name__)
 bcrypt = Bcrypt(APP)
 APP.config.from_object(app_config.DevelopmentConfig)
@@ -21,7 +22,6 @@ JWT = JWTManager(APP)
 from app.auth import security
 from app.auth.urls import auth_blueprint
 from app.shoppinglist.urls import SHOPPINGLIST
-
 
 APP.register_blueprint(auth_blueprint)
 APP.register_blueprint(SHOPPINGLIST)
