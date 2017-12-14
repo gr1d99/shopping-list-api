@@ -1,8 +1,17 @@
+"""
+Application module defining configuration settings for various environments.
+"""
+
+
 import os
 import datetime
 
 
 class Config(object):
+    """
+    Default application configuration values.
+    """
+
     DEBUG = False
     TESTING = False
     SECRET_KEY = os.environ.get('SECRET_KEY')
@@ -19,14 +28,24 @@ class Config(object):
 
 
 class ProductionConfig(Config):
-    pass
+    """
+    Production environment configurations.
+    """
 
 
 class DevelopmentConfig(Config):
+    """
+    Development environment configuration.
+    """
+
     DEBUG = True
 
 
 class TestingConfig(Config):
+    """
+    Testing environment configuration.
+    """
+
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DB_URL')
     TESTING = True
