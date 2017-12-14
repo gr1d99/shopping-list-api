@@ -10,7 +10,11 @@ from .auth_base import TestAuthenticationBaseCase
 
 
 class TestShoppingListBaseCase(TestAuthenticationBaseCase):
+    """
+    Base class for TestShoppinglistCase.
 
+    Provides test data and helper methods for running tests.
+    """
     def setUp(self):
         super(TestShoppingListBaseCase, self).setUp()
 
@@ -37,22 +41,6 @@ class TestShoppingListBaseCase(TestAuthenticationBaseCase):
              'password': self.test_user.password})
 
         return super(TestShoppingListBaseCase, self).login_user(with_header=True, **credentials)
-
-    def login_second_user(self):
-        """
-        Helper method to login another client..
-
-        Makes post request using client information initialized in
-        the setUp method.
-        """
-
-        credentials = dict(
-            username=self.another_test_user.username,
-            password=self.another_test_user.password)
-
-        url = url_for('user_login')
-
-        return self.client.post(url, data=credentials)
 
     def register_user(self):
         """
@@ -111,7 +99,7 @@ class TestShoppingListBaseCase(TestAuthenticationBaseCase):
         """
 
         # append shoppinglist id at the end of url.
-        url = url_for('shoppinglist_detail', id=id)
+        url = url_for('shoppinglist_detail', shl_id=id)
 
         return self.client.get(url, headers={self.header_name: token})
 
@@ -125,21 +113,33 @@ class TestShoppingListBaseCase(TestAuthenticationBaseCase):
         :return: response
         """
 
-        url = url_for('shoppinglist_detail', id=id)
+        url = url_for('shoppinglist_detail', shl_id=id)
 
         return self.client.put(url, data=new_info, headers={self.header_name: token})
 
-    def delete_shoppinglist(self, token, id):
+    def delete_shoppinglist(self, token, id, name):
         """
         Makes a PUT request as client to delete shoppinglist.
         :param token: user auth token.
         :param id: shoppinglist id.
+        ":param name: shoppinglist name.
         :return: response from server.
         """
 
-        url = url_for('shoppinglist_detail', id=id)
+        url = url_for('shoppinglist_detail', shl_id=id)
 
-        return self.client.delete(url, headers={self.header_name: token})
+        return self.client.delete(url, data=dict(name=name), headers={self.header_name: token})
+
+    def delete_all_shoppinglists(self, token, password):
+        """
+        Makes a PUT request to delete all user shoppinglists.
+        :param token: user auth token.
+        :return: response.
+        """
+
+        url = url_for('shoppinglist_list')
+
+        return self.client.delete(url, data=dict(password=password), headers={self.header_name: token})
 
 
 class TestShoppingItemsBaseCase(TestShoppingListBaseCase):
@@ -212,18 +212,33 @@ class TestShoppingItemsBaseCase(TestShoppingListBaseCase):
 
         return self.client.put(url, data=data, headers={self.header_name: token})
 
-    def delete_shoppingitem(self, token, shl_id, item_id):
+    def delete_shoppingitem(self, token, shl_id, item_id, name):
         """
         Makes DELETE request as a client to delete associated shopping item.
         :param token: user auth token.
-        :param id: shopping item id.
+        :param shl_id: shoppinglist id.
+        :param item_id: shopping item id.
+        :param : name: name of shopping item.
         :return: response
         """
 
         url = url_for('shoppingitem_edit',
                       shl_id=shl_id, item_id=item_id)
 
-        return self.client.delete(url, headers={self.header_name: token})
+        return self.client.delete(url, headers={self.header_name: token}, data=dict(name=name))
+
+    def delete_shoppingitems(self, token, shl_id, password):
+            """
+            Makes DELETE request as a client to delete associated shopping item.
+            :param token: user auth token.
+            :param shl_id: shoppinglist id.
+            :param : password: user password.
+            :return: response
+            """
+
+            url = url_for('shoppingitem_detail', shl_id=shl_id)
+
+            return self.client.delete(url, headers={self.header_name: token}, data=dict(password=password))
 
 
 class TestSearchAndPaginationBaseCase(TestShoppingItemsBaseCase):
