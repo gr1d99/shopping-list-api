@@ -55,7 +55,6 @@ class TestSearchBaseCase(TestSearchAndPaginationBaseCase):
             res.get_data(as_text=True))
 
         self.assertStatus(res, 422)
-        self.assertTrue(data['status'] == 'fail')
 
     @data(-1, -2, -3, -4)
     def test_cannot_use_negative_limit_query_parameter_in_get_shoppinglists(self, val: int):
@@ -71,7 +70,6 @@ class TestSearchBaseCase(TestSearchAndPaginationBaseCase):
             res.get_data(as_text=True))
 
         self.assertStatus(res, 422)
-        self.assertTrue(data['status'] == 'fail')
 
     @data(1, 2, 3)
     def test_can_limit_returned_shoppingitems_objects(self, limit_no: int):
@@ -124,7 +122,6 @@ class TestSearchBaseCase(TestSearchAndPaginationBaseCase):
             res.get_data(as_text=True))
 
         self.assertStatus(res, 422)
-        self.assertTrue(data['status'] == 'fail')
 
     @data(-1, -2, -3, -4)
     def test_cannot_use_negative_limit_query_parameter_get_shoppingitems(self, limit_no: int):
@@ -141,7 +138,6 @@ class TestSearchBaseCase(TestSearchAndPaginationBaseCase):
             res.get_data(as_text=True))
 
         self.assertStatus(res, 422)
-        self.assertTrue(data['status'] == 'fail')
 
     def test_search(self):
         """
