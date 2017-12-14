@@ -9,15 +9,9 @@ from .base import TestBaseCase
 
 
 class TestAuthenticationBaseCase(TestBaseCase):
-
-    def __init__(self, *data, **kwargs):
-        super(TestAuthenticationBaseCase, self).__init__(*data, **kwargs)
-        # initialize to None because it is not defined in the
-        # TestCase init
-        self.model = collections.namedtuple('User', ['username', 'email', 'password'])
-        self.test_user = self.model('gideon', 'gideon@gmail.com', 'gideonpassword')
-        self.header_name = 'x-access-token'
-        self.header = {}
+    """
+    Base class for authentication tests.
+    """
 
     def setUp(self):
         """
@@ -26,7 +20,13 @@ class TestAuthenticationBaseCase(TestBaseCase):
         What it does.
         1. sets application configuration to testing.
         2. create tables.
+        3. initialize test data and keywords.
         """
+
+        self.model = collections.namedtuple('User', ['username', 'email', 'password'])
+        self.test_user = self.model('gideon', 'gideon@gmail.com', 'g1Deonp@ssword')
+        self.header_name = 'x-access-token'
+        self.header = {}
 
         self.app.config.from_object(app_config.TestingConfig)
 
@@ -46,19 +46,9 @@ class TestAuthenticationBaseCase(TestBaseCase):
         """
         Login and authenticate user.
         """
-        auth = b64encode(
-            bytes(
-                credentials.get('username', '') + ":" + credentials.get('password', ''), 'ascii')
-        ).decode('ascii')
 
-        header = dict(Authorization='Basic %(auth)s' % dict(auth=auth))
         url = url_for('user_login')
-
-        if with_header:
-            return self.client.post(url, headers=header)
-
-        else:
-            return self.client.post(url)
+        return self.client.post(url, data=credentials)
 
     def register_user(self, **details):
         """
