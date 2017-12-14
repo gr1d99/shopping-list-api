@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-App module with function for checking it token has been blacklisted.
+This module provides functions that handles user authentication and authorization.
 """
 
 import secrets
@@ -27,6 +27,9 @@ def check_if_token_in_blacklist(decrypted_token):
 
 
 def generate_token(user_id):
+    """
+    Generates password reset token key that is associated with specific user.
+    """
     token = secrets.token_urlsafe(20)
     rt = ResetToken(user_id, token)
     rt.save()
@@ -34,5 +37,8 @@ def generate_token(user_id):
 
 
 def check_user(username):
+    """
+    Gets user instance using the provided username.
+    """
     user = User.get_by_username(username)
     return user
