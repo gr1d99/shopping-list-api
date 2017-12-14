@@ -28,12 +28,11 @@ class User(BaseUserManager, BaseModel, DB.Model):
     password = DB.Column(DB.Binary(200), nullable=False)
     email = DB.Column(DB.String(30), unique=True, nullable=False)
     shopping_lists = DB.relationship('ShoppingList', backref='user',
-                                      lazy='dynamic', cascade='all, delete-orphan')
+                                     lazy='dynamic', cascade='all, delete-orphan')
     reset_tokens = DB.relationship('ResetToken', backref='user',
-                                    lazy='dynamic', cascade='all, delete-orphan')
+                                   lazy='dynamic', cascade='all, delete-orphan')
     date_joined = DB.Column(DB.DateTime(timezone=True),
                             default=datetime.now(tz=pytz.timezone(TIME_ZONE)).now)
-
 
     def __init__(self, username, password, email):
         """Initialize model values."""
