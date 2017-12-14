@@ -2,82 +2,111 @@
 Application module with custom validator classes for username and password inputs.
 """
 
-import string
+import re
 
 
-class BaseValidator(object):
+class PasswordValidator(object):
     """
-    Defines constants and initialize default values for other validator classes.
+    Validates password inputs and stores appropriate
+    error message for each error found.
     """
+    PREFIX = 'inspect_'
 
-    PUNCTUATIONS = list(string.punctuation)
-    DIGITS = list(string.digits)
+    def __init__(self, password):
+        self.password = password
+        self.errors = []
+        self.has_errors = False
+
+    def __call__(self, *args, **kwargs):
+        for method in dir(self):
+            if method.startswith(PasswordValidator.PREFIX):
+                getattr(self, method)()
+
+    def add_error(self, error):
+        self.errors.append(error)
+        self.has_errors = True
+
+    def inspect_lower(self):
+        regex = re.compile('[a-z ]+')
+        res = re.search(regex, self.password)
+        if not res:
+            self.add_error('should contain at least one character in lowercase')
+
+    def inspect_upper(self):
+        regex = re.compile('[A-Z ]+')
+        res = re.search(regex, self.password)
+        if not res:
+            self.add_error('should contain at least one letter in uppercase')
+
+    def inspect_punctuations(self):
+        regex = re.compile('[!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ ]+')
+        res = re.search(regex, self.password)
+        if not res:
+            self.add_error('should contain at least one special character')
+
+    def inspect_integers(self):
+        regex = re.compile('[0-9 ]+')
+        res = re.search(regex, self.password)
+        if not res:
+            self.add_error('should contain at least on digit')
+
+    def inspect_length(self):
+        regex = re.compile('[a-zA-Z0-9!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ ]{8,}')
+        res = re.search(regex, self.password)
+        if not res:
+            self.add_error('password length should not be minimum than eight characters long')
+
+    def inspect_continuous_characters(self):
+        res = re.findall(r'(.)\1{3,}', self.password)
+        if not bool(res == []):
+            self.add_error('should not have more than three '
+                           'characters following each other')
+
+
+class UsernameValidator(object):
+    """
+    Validates username input value and store appropriate error
+    encountered during validation process.
+    """
     PREFIX = 'validate_'
 
-    def __init__(self, value, special=True, allow_digits=False, allow_spaces=False):
-        self.value = str(value)
-        self.special = special
-        self.allow_digits = allow_digits
-        self.allow_spaces = allow_spaces
+    def __init__(self, username):
+        self.username = username
+        self.errors = []
+        self.has_errors = False
+
+    def __call__(self, *args, **kwargs):
+        for method in dir(self):
+            if method.startswith(UsernameValidator.PREFIX):
+                getattr(self, method)()
+
+    def add_error(self, error):
+        self.errors.append(error)
+        self.has_errors = True
+
+    def validate_username(self):
+        regex = re.compile('^[a-zA-Z0-9_@]+$')
+
+        res = re.match(regex, self.username)
+        if not res:
+            self.add_error('should only contain alpha-numeric characters, optional special characters are @ and _')
+
+    def validate_continuous(self):
+        last = self.username[-1:]
+        regex = re.compile('^[%(char)s]+$' % dict(char=last))
+        res = re.match(regex, self.username)
+        if res:
+            self.add_error('cannot be all `%(last)s`' % dict(last=last))
 
 
-class CustomBaseValidator(BaseValidator):
-    def __init__(self, *args, **kwargs):
-        super(CustomBaseValidator, self).__init__(*args, **kwargs)
-        self.whitespace = " "
-
-    def validate_does_not_startswith_special_chars(self):
-        if not self.special:
-            try:
-                if self.value[0] in CustomBaseValidator.PUNCTUATIONS:
-                    raise ValueError('cannot start with %(c)s' % dict(c=self.value[0]))
-
-            except IndexError:
-                pass
-
-    def validate_does_not_contain_special_chars(self):
-        if not self.special:
-            val = list(self.value)
-            for c in val:
-                if c in CustomBaseValidator.PUNCTUATIONS:
-                    raise ValueError('should not contain any punctuation marks.')
-
-    def validate_does_not_startswith_space(self):
-        if self.value.startswith(self.whitespace):
-            raise ValueError('cannot start with whitespace')
-
-    def validate_does_not_contain_whitespaces(self):
-        if not self.allow_spaces:
-            if self.value.__contains__(self.whitespace):
-                raise ValueError("cannot contain whitespaces")
-
-    def validate_does_not_startswith_digits(self):
-            if not self.allow_digits:
-                try:
-                    if self.value[0] in CustomBaseValidator.DIGITS:
-                        raise ValueError('cannot start with digits')
-
-                except IndexError:
-                    pass
-
-    def validate_does_not_contain_digits(self):
-        if not self.allow_digits:
-            val = list(self.value)
-            for c in val:
-                if c in CustomBaseValidator.DIGITS:
-                    raise ValueError('should not contain any digits.')
-
-
-def validate(value, special=False, allow_digits=False, allow_spaces=False):
+class NameValidator(UsernameValidator):
     """
-    Runs the available validation methods to check input value.
-
-    :param value: input.
-    :param special: bool to allow special characters.
-    :param allow_digits: bool to allow integers.
-    :param allow_spaces: bool to allow spaces.
-    :return: None
+    Validates normal names that restricts the number of special characters in the sentence.
     """
-    for method in dir(CustomBaseValidator):
-        if method.startswith(CustomBaseValidator.PREFIX):
-            getattr(CustomBaseValidator(value, special, allow_digits, allow_spaces), method)()
+    def validate_username(self):
+        regex = re.compile('^[a-zA-Z0-9_@ ]+$')
+
+        res = re.match(regex, self.username)
+        if not res:
+            self.add_error('should only contain alpha-numeric characters, '
+                           'optional special characters are @ and _')
