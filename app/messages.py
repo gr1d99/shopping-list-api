@@ -1,16 +1,23 @@
+"""
+This module implements default response messages for all endpoints.
+"""
+
 __all__ = [
     'account_created', 'account_deleted', 'account_not_updated', 'account_updated',
     'credentials_required', 'data_required', 'email_does_not_exist', 'email_not_provided',
     'email_exists', 'incomplete_delete', 'incorrect_old_password', 'incorrect_password',
-    'invalid_email', 'invalid_limit', 'invalid_page', 'login_again', 'negative_limit',
-    'negative_page', 'new_email_exists', 'new_username_exists', 'password_changed', 'passwords_donot_match',
-    'password_not_provided', 'reset_token_sent', 'reset_token_expired', 'reset_token_does_not_exist',
-    'reset_token_required', 'search_not_found', 'server_error', 'shoppingitem_created',
-    'shoppingitem_deleted', 'shoppingitem_exists', 'shoppingitem_not_found', 'shoppingitem_not_updated',
-    'shoppingitem_updated', 'shoppinglist_created', 'shoppinglist_deleted', 'shoppinglist_name_exists',
-    'shoppinglist_not_found', 'shoppinglist_not_updated', 'logout_successful', 'shoppinglist_updated',
-    'successful_login', 'user_does_not_exist', 'username_exists', 'username_not_allowed',
-    'user_not_found', 'username_not_provided', 'username_or_email_required', 'username_with_whitespaces',
+    'invalid_email', 'invalid_limit', 'invalid_page', 'shoppingitems_deleted', 'login_again',
+    'negative_limit', 'negative_page', 'new_email_exists', 'new_username_exists',
+    'password_changed', 'passwords_donot_match', 'password_not_provided', 'reset_token_sent',
+    'reset_token_expired', 'reset_token_does_not_exist', 'reset_token_required', 'search_not_found',
+    'server_error', 'shoppingitem_created', 'shoppingitem_deleted', 'shoppingitem_exists',
+    'shoppingitem_not_deleted', 'shoppingitem_not_found', 'shoppingitem_not_updated',
+    'shoppingitem_updated', 'shoppinglist_created', 'shoppinglist_empty', 'shoppinglist_deleted',
+    'shoppinglists_deleted', 'shoppingitems_not_deleted', 'shoppinglists_empty',
+    'shoppinglist_name_exists', 'shoppinglist_name_incorrect', 'shoppinglist_not_found',
+    'shoppinglist_not_updated', 'logout_successful', 'shoppinglist_updated', 'successful_login',
+    'user_does_not_exist', 'username_exists', 'username_not_allowed', 'user_not_found',
+    'username_not_provided', 'username_or_email_required', 'username_with_whitespaces',
     'valid_integer_required'
 ]
 
@@ -21,9 +28,10 @@ credentials_required = "You musty provide username and password."
 username_not_provided = 'Provide a username'
 email_not_provided = 'Provide an email'
 password_not_provided = 'Provide a password'
-username_exists = 'The username you provided already exists, use a different username or login if it belongs to you'
+username_exists = 'The username you provided already exists, ' \
+                  'use a different username or login if it belongs to you'
 email_exists = 'User with that email exists, use a different email id or login if it belongs to you'
-account_created = 'Account created, login with your username and password to get authorization token.'
+account_created = 'Account created, you can now login with your username and password.'
 account_updated = 'Your account has been successfully updated.'
 account_deleted = 'Your account has been deleted successfully.'
 password_changed = 'Your password has been successfully changed'
@@ -34,34 +42,44 @@ incorrect_password = 'The password you provided is incorrect.'
 user_not_found = "User not found, login and try again"
 invalid_email = "Not a valid email address."
 data_required = "Missing data for required field."
-username_not_allowed = "The username you provided is not allowed, please try again but with a different name."
-username_with_whitespaces = 'username values %(err)s, please try again without without whitespaces'
+username_not_allowed = "The username you provided is not allowed, " \
+                       "please try again but with a different name."
+username_with_whitespaces = 'username values %(err)s, please try again ' \
+                            'without without whitespaces'
 successful_login = 'Successfully logged in.'
 new_username_exists = "User with %(username)s exists. Choose a different username."
 new_email_exists = "User with %(email)s exists. Choose a different email."
-account_not_updated = "You made an update request with no new details, " \
-                      "your account has not been modified."
+account_not_updated = "your account has not been modified."
 logout_successful = "You have successfully been logged out."
 incomplete_delete = "The password you provided is incorrect. Try again."
 email_does_not_exist = "There is no such email, check the email you provided and try again."
 
-
 # shopping list and shopping items endpoints messages
 shoppinglist_created = "Shopping list created"
+shoppinglist_empty = 'Shopping list is empty'
 valid_integer_required = "Provide a valid id"
-shoppinglist_not_found = 'Shopping list not found, please check the ID you provided or create a new shoppinglist.'
+shoppinglist_not_found = 'Shopping list not found.'
 shoppinglist_updated = 'Shopping list updated'
 shoppinglist_not_updated = "Your shoppinglist has not been modified."
-shoppinglist_name_exists = "The name you provided already exist, please choose a different name and try again."
+shoppinglist_name_exists = "The name you provided already exist, " \
+                           "please choose a different name and try again."
 shoppinglist_deleted = 'Shopping list deleted'
+shoppinglists_deleted = 'All shopping lists deleted'
+shoppinglists_empty = 'You do not have any shopping list.'
+shoppinglist_name_incorrect = 'The name you provided is incorrect, try again.'
 
 shoppingitem_exists = 'There exists a shopping item with similar name and quantity description, ' \
                       'create a new shopping item or update the existing item. '
-shoppingitem_created = 'Shopping item created'
-shoppingitem_deleted = 'Shopping item deleted.'
-shoppingitem_not_found = 'Shopping item not found'
-shoppingitem_updated = 'Shopping item updated'
-shoppingitem_not_updated = 'Shopping item not modified.'
+shoppingitem_created = 'item created'
+shoppingitem_deleted = 'item deleted.'
+shoppingitems_deleted = 'all items deleted.'
+shoppingitem_not_found = 'item not found'
+shoppingitem_updated = 'item updated'
+shoppingitem_not_updated = 'item not modified.'
+shoppingitem_not_deleted = 'item not deleted, the name you provided does ' \
+                           'not match with the name of the item.'
+shoppingitems_not_deleted = 'items not deleted, you provided an incorrect ' \
+                            'password. Please try again.'
 
 
 # server error message
