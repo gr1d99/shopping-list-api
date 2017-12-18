@@ -196,6 +196,7 @@ class UserProfileApi(Resource):
         # if everything checks out correctly, we save the new details.
         user.username.strip()
         user.save()
+        BlacklistToken(token=get_raw_jwt()['jti']).save()
 
         return make_response(
             jsonify(dict(
