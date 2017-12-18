@@ -105,7 +105,7 @@ Follow the links below and and install the softwares depending on the operating 
 
 **Register User**
 ```bash
-   $ curl -H "Content-Type: application/form" -X POST -d '{"username":"testuser","email":"testuser@gmail.com", "password":"testuserpassword"}' http://localhost:5000/api/v1.0/auth/register
+   $ curl -H "Content-Type: application/x-www-form-urlencoded" -X POST -d "username=testuser&password=testuserpassword&confirm=testuserpassword&email=testuser@gmail.com" http://localhost:5000/api/v1.0/auth/register
 ```
 
 you should see the response below.
@@ -119,14 +119,13 @@ you should see the response below.
 
 **Login User**
 ```bash
-   $ curl -H "Content-Type: application/json" -X POST -d '{"username":"testuser","password":"testuserpassword"}' http://localhost:5000/api/v1.0/auth/login
+   $ curl -H "Content-Type application/x-www-form-urlencoded" -X POST -d "username=testuser&password=testuserpassword" http://localhost:5000/api/v1.0/auth/login
 ```
 
 you should see the response.
 ```
 {
-  "status": "success",
-  "message": "Logged in", 
+  "message": "Successfully logged in", 
   "auth_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlkZW50aXR5IjoidGVzdHVzZXIiLCJpYXQiOjE1MTA5NDc1MDUsImp0aSI6Ijg4YWM0NGE1LTA3NWMtNDU0Zi05NTdmLTU2ZWRlODI3MWUzMyIsInR5cGUiOiJhY2Nlc3MiLCJuYmYiOjE1MTA5NDc1MDUsImV4cCI6MTUxMDk1MTEwNX0.qIKKIDStHtjPx9V51mmZgtrYTbCxuD2s0E1gzJPkDDk",
 }
 
@@ -174,7 +173,11 @@ named `idex.html`.
 
    * **Data Format**
 
+<<<<<<< HEAD
      `application/form`
+=======
+     `application/x-www-form-urlencoded`
+>>>>>>> 00c02ffaeddcd185dcc469041efe2bcaa3112fb9
   
    * **Data Params**
   
@@ -192,7 +195,7 @@ named `idex.html`.
     
      * **Content:** 
   
-           {status :"success", message : "Account created, login with your email and password to get your access tokens" }
+           {message : "Successfully logged in." }
  
    * **Error Response:**
   
@@ -209,6 +212,9 @@ named `idex.html`.
                      "Missing data for required field."
                    ],
                    "password": [
+                     "Missing data for required field."
+                     
+                   ]"confirm": [
                      "Missing data for required field."
                    ]
                    "confirm": [
@@ -238,14 +244,17 @@ named `idex.html`.
 
     * **Data Format**
 
+<<<<<<< HEAD
       `application/form`
+=======
+      `application/x-www-form-urlencoded`
+>>>>>>> 00c02ffaeddcd185dcc469041efe2bcaa3112fb9
      
     * **Data Params**
   
       * **Required**
 
         * `username`
-        * `email`
         * `password`
 
     * **Success Response:**
@@ -255,7 +264,6 @@ named `idex.html`.
       * **Content:** 
   
             {
-                status:"success", 
                 message: "Logged in",
                 auth_token: "XXXXXXXXXX.XXXXXXXXX",
             }
@@ -284,7 +292,6 @@ named `idex.html`.
     * **Content**: 
       
           {
-            "status": "fail",
             "message": "Incorrect username or password"
           }
   
@@ -300,7 +307,7 @@ named `idex.html`.
 
     * **Data Format**
 
-      `application/form`
+      `application/x-www-form-urlencoded`
 
     * **Success Response:**
 
@@ -341,19 +348,12 @@ named `idex.html`.
 
     * **Data Format**
 
-      `application/json`
+      `application/x-www-form-urlencoded`
      
     * **Data Params**
   
       * **Required**
       
-       * `old_password`
-       * `new_password`
-       * `confirm`
-      
-     * **Optional**
-   
-       * `username`
        * `email`
      
    * **Success Response:**
@@ -363,7 +363,6 @@ named `idex.html`.
      * **Content:** 
   
            {
-                status:"success", 
                 message: "Your password has been successfully changed"
            }
      
@@ -383,26 +382,16 @@ named `idex.html`.
      
      * **Content:** 
     
-           { "old_password": [
-                "Missing data for required field."
-                ]
-           }
-    
-           { "new_password": [
-                "Missing data for required field."
-                ]
-           }
-           
-           { "new_password": [
+           { "email": [
                 "Missing data for required field."
                 ]
            }
       
- 5. **Refresh Auth Token.**
+ 5. **Reset User Password.**
  
     * **URL**
    
-      `/users/logout`
+      `/users/reset-password/process`
 
     * **Method:**
 
@@ -410,7 +399,16 @@ named `idex.html`.
 
     * **Data Format**
 
-       `application/json`
+       `application/x-www-form-urlencoded`
+       
+    * **Data Params**
+  
+      * **Required**
+      
+       * `username`
+       * `new_password`
+       * `confirm`
+       * `reset_token`
       
     * **Success Response:**
 
@@ -419,8 +417,7 @@ named `idex.html`.
        * **Content:** 
   
              {
-                 status:"success", 
-                 auth_token: "XXXXXXXXXX.XXXXXXXXXXXX"
+                 "message": "Your password has been successfully changed"
              }
       
     * **Error Response:**
@@ -429,15 +426,25 @@ named `idex.html`.
       
       * **Content:** 
       
-            { "message": "authorization header required" }
+            { "message": "passwords do not match" }
       
+      OR
+    
+      * **Code:** 409 CONFLICT
+      
+      * **Content:** 
+       
+            { "message": "email does not exist" }
+            
       OR
     
       * **Code:** 422 UNPROCESSABLE ENTITY
       
       * **Content:** 
        
-            { "message": "invalid authorization header" }
+            { "message": "missing reset token" }
+            { "message": invalid reset token }
+            { "message": "expired reset token" }
             
  6. **User Detail.**
  
@@ -451,7 +458,7 @@ named `idex.html`.
 
     * **Data Format**
 
-      `application/json`
+      `application/x-www-form-urlencoded`
   
     * **Success Response:**
 
@@ -467,8 +474,7 @@ named `idex.html`.
              "date_joined": "2017-11-14 03:34:06",
              "email": "example@email.com",
              "updated": "2017-11-14 03:34:06"
-           },
-           "status": "success"
+           }
          }
 
         ```
@@ -501,15 +507,14 @@ named `idex.html`.
      
     * **Data Format**
    
-      `application/json`
+      `application/x-www-form-urlencoded`
 
     * **Data Params**
      
       * **Required**
      
         * `username`
-        * `email`
-     
+        
     * **Success Response:**
    
       * **Code:** 200 OK
@@ -526,7 +531,6 @@ named `idex.html`.
               "updated": "2017-11-15 03:15:26"
               },
           "message": "Account updated",
-          "status": "success"
          }
          ```
          
@@ -571,7 +575,7 @@ named `idex.html`.
      
     * **Data Format**
    
-      `application/json`
+      `application/x-www-form-urlencoded`
      
     * **Success Response**
    
@@ -609,7 +613,7 @@ named `idex.html`.
 
    * **Data Format**
 
-     `application/json`
+     `application/x-www-form-urlencoded`
  
    * **Query Params**
  
@@ -626,7 +630,6 @@ named `idex.html`.
     
       ```json
       {
-        "status": "success",
         "total_pages": 1,
         "message": {
           "shopping_lists": [
@@ -669,7 +672,7 @@ named `idex.html`.
 
    * **Data Format**
 
-     `application/json`
+     `application/x-www-form-urlencoded`
     
    * **Data Params**
  
@@ -713,8 +716,65 @@ named `idex.html`.
    * **Content:** 
    
          { "message": "invalid authorization header" }
+         
+         
+3. **Delete all Shoppinglists**
 
-3. **Retrieve Shoppinglist.**
+   * **URL**
+ 
+     `/shopping-lists`
+
+   * **Method:**
+
+     `DELETE`
+
+   * **Data Format**
+
+     `application/x-www-form-urlencoded`
+    
+   * **Data Params**
+ 
+   * **Required**
+ 
+     * `password`
+     
+   * **Success Response**
+ 
+   * **Code:** 200 OK
+   
+   * **Content** 
+   
+     ```json
+         {
+          "message": "All shopping lists deleted"
+         }
+         
+   * **Error Response**
+ 
+   * **Code:** 401 UNAUTHORIZED
+     
+   * **Content:** 
+     
+         { "message": "authorization header required" }
+         
+   OR
+     
+   * **Code:** 403 FORBIDDEN
+     
+   * **Content:** 
+   
+         { "message": "incorrect password" }
+         
+   OR
+         
+   * **Code:** 404 NOT FOUND
+     
+   * **Content:** 
+   
+         { "message": "shopping list empty" }
+         
+
+4. **Retrieve Shoppinglist.**
 
    * **URL**
  
@@ -738,7 +798,6 @@ named `idex.html`.
    
      ```json
      {
-       "status": "success",
        "message": {
          "id": 2,
          "name": "string",
@@ -807,13 +866,12 @@ named `idex.html`.
    
      ```json
             {
-               "status": "success",
                "message": "Shopping list updated",
                "data": {
-               "created_on": "2017-11-15 18:23:19",
-               "is_active": true,
-               "name": "new string",
-               "updated_on": "2017-11-16 03:29:11"
+                 "created_on": "2017-11-15 18:23:19",
+                 "is_active": true,
+                 "name": "new string",
+                 "updated_on": "2017-11-16 03:29:11"
                }
             }
        
@@ -859,10 +917,20 @@ named `idex.html`.
    * **Method**
  
      `DELETE`
+     
+   * **Data Params**
+ 
+   * **Required**
+ 
+     * `name`
    
    * **Success Response**
  
-   * **Code:** 204 NO CONTENT
+   * **Code:** 200 OK
+   
+   * **Content:** 
+     
+         { "message": "Shopping list deleted" }
    
    * **Error Response**
              
@@ -871,15 +939,7 @@ named `idex.html`.
    * **Content:** 
      
          { "message": "Shopping list not found" }
-         
-   OR
-   
-   * **Code:** 409 CONFLICT
      
-   * **Content:** 
-     
-         { "message": "There exists a shoppinglist with the provided name exists, try again with a different name" }
-         
  
 ## Shopping Items.
 
@@ -905,11 +965,8 @@ named `idex.html`.
     
        * `name=[string]`
        * `price=[decimal]`
-       * `quantity=[decimal]`
+       * `quantity_description=[string]`
     
-     * **Optional**
-    
-       * `bought=[bool]`
   
    * **Success Response**
   
@@ -919,16 +976,7 @@ named `idex.html`.
       
        ```json
        { 
-          "status": "success",
-          "message": "Shopping item created",
-          "data": {
-            "bought": true,
-            "id": 1,
-            "name": "Bread",
-            "price": 50,
-            "quantity": 1,
-            "total_amount": 50
-          }
+          "message": "item created"
         }
   
    * **Error Response**
@@ -973,7 +1021,6 @@ named `idex.html`.
     
        ```json
        { 
-         "status": "success",
          "message": {
            "created_on": "2017-11-16 16:48:21",
            "id": 1,
@@ -1022,7 +1069,6 @@ named `idex.html`.
        
        ```json
        {
-         "status": "success",
          "total_items": 2,
          "total_pages": 1,
          "message": {
@@ -1035,6 +1081,41 @@ named `idex.html`.
               }
            ]
          }
+       }
+   
+     * **Error Response**
+  
+       * **Code:** 404 NOT FOUND
+     
+       * **Content:** 
+     
+             { "message": "Shopping list not found" }
+
+4. **Delete All Shopping Items**
+
+   * **Url**
+  
+     `/shopping-lists/{ shoppinglistId }/shopping-items`
+    
+   * **Method**
+  
+     `DELETE`
+    
+   * **Data Params**
+  
+     * **Required**
+  
+       * `name`
+      
+   * **Success Response**
+  
+     * **Code:** 200 OK
+     
+     * **Content:** 
+       
+       ```json
+       {
+         "message": "all items deleted"
        }
    
      * **Error Response**
@@ -1068,7 +1149,7 @@ named `idex.html`.
      
        * `name`
        * `price`
-       * `quantity`
+       * `quantity_description`
        * `bought`
        
    * **Success Response**
@@ -1078,14 +1159,12 @@ named `idex.html`.
      * **Content:** 
        ```json
        {
-         "status": "success",
          "message": "Shopping item updated",
          "data": {
            "bought": true,
             "name": "Bread",
             "price": 100,
-            "quantity": 10,
-            "total_amount": 1000,
+            "quantity_description": "200mg brown bread",
             "updated_on": "2017-11-17 02:55:36"
          }
        }
@@ -1125,10 +1204,20 @@ named `idex.html`.
   
        * `shoppinglistId=[integer]`
        * `shoppingitemId=[integer]`
+          
+   * **Data Params**
+  
+     * **Required**
+  
+       * `name`
             
    * **Success Response**
    
-     * **Code:** 204 NO CONTENT
+     * **Code:** 200 OK
+     
+     * **Content:** 
+     
+           { "message": "item deleted" }
    
    * **Error Response**
    
