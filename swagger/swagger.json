@@ -1,33 +1,55 @@
 {
   "swagger" : "2.0",
   "info" : {
-    "description" : "allows users to record their shopping lists",
+    "description" : "Shoppinglist API documentation",
     "version" : "1.0",
-    "title" : "shoppinglist"
+    "title" : "shoppinglist",
+    "contact" : {
+      "email" : "gideonkimutai9@gmail.com"
+    }
   },
-  "host" : "04d01669.ngrok.io",
-  "basePath" : "/api/v1",
-  "schemes" : [ "http" ],
+  "host" : "shoppinglistapiapp.herokuapp.com",
+  "basePath" : "/api/v1.0",
+  "schemes" : [ "http", "https" ],
   "paths" : {
     "/auth/register" : {
       "post" : {
         "tags" : [ "Auth" ],
         "summary" : "Create user object",
-        "description" : "User details should be sent in json format only.",
-        "consumes" : [ "application/json" ],
-        "produces" : [ "application/json" ],
+        "description" : "",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/json", "text/plain; charset=utf-8" ],
         "parameters" : [ {
-          "in" : "body",
-          "name" : "body",
-          "description" : "Created user object",
+          "name" : "username",
+          "in" : "formData",
+          "description" : "",
           "required" : true,
-          "schema" : {
-            "$ref" : "#/definitions/User"
-          }
+          "type" : "string"
+        }, {
+          "name" : "email",
+          "in" : "formData",
+          "description" : "",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "password",
+          "in" : "formData",
+          "description" : "",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "confirm",
+          "in" : "formData",
+          "description" : "",
+          "required" : true,
+          "type" : "string"
         } ],
         "responses" : {
           "201" : {
             "description" : "user account created"
+          },
+          "400" : {
+            "description" : "passwords do not match"
           },
           "401" : {
             "description" : "authorization required"
@@ -36,10 +58,7 @@
             "description" : "username or email exists"
           },
           "422" : {
-            "description" : "missing data"
-          },
-          "500" : {
-            "description" : "server error"
+            "description" : "missing data or invalid data"
           }
         }
       }
@@ -48,31 +67,26 @@
       "post" : {
         "tags" : [ "Auth" ],
         "summary" : "Login user object",
-        "description" : "Takes username and password and returns access tokens: 'auth_token, refresh_token'",
-        "operationId" : "username",
-        "consumes" : [ "application/json" ],
-        "produces" : [ "application/json" ],
+        "description" : "Takes username and password and returns auth_token",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/json", "text/plain; charset=utf-8" ],
         "parameters" : [ {
-          "in" : "body",
-          "name" : "body",
-          "description" : "Created user object",
+          "name" : "username",
+          "in" : "formData",
           "required" : true,
-          "schema" : {
-            "$ref" : "#/definitions/body"
-          }
+          "type" : "string"
+        }, {
+          "name" : "password",
+          "in" : "formData",
+          "required" : true,
+          "type" : "string"
         } ],
         "responses" : {
           "200" : {
             "description" : "successful login"
           },
           "401" : {
-            "description" : "username and password do not match"
-          },
-          "422" : {
-            "description" : "missing data"
-          },
-          "500" : {
-            "description" : "server error"
+            "description" : "username and password do not match or username and password required"
           }
         }
       }
@@ -82,40 +96,86 @@
         "tags" : [ "Auth" ],
         "summary" : "Blacklists user auth_token",
         "description" : "Logs out user object by blacklisting user auth_token",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/json" ],
         "parameters" : [ ],
         "responses" : {
           "200" : {
             "description" : "User object logged out"
           },
-          "422" : {
-            "description" : "Invalid auth token"
+          "401" : {
+            "description" : "auth token error, login again"
           }
         },
         "security" : [ {
-          "Bearer" : [ ]
+          "access-token" : [ ]
         } ]
       }
     },
     "/auth/reset-password" : {
       "post" : {
         "tags" : [ "Auth" ],
-        "summary" : "Resets user object password",
-        "consumes" : [ "application/json" ],
+        "summary" : "Retrieve reset password token",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
         "produces" : [ "application/json" ],
         "parameters" : [ {
-          "in" : "body",
-          "name" : "body",
+          "name" : "email",
+          "in" : "formData",
           "required" : true,
-          "schema" : {
-            "$ref" : "#/definitions/body_1"
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "reset password sent"
+          },
+          "409" : {
+            "description" : "email does not exist"
+          },
+          "422" : {
+            "description" : "invalid or missing email"
           }
+        }
+      }
+    },
+    "/auth/reset-password/process" : {
+      "post" : {
+        "tags" : [ "Auth" ],
+        "summary" : "Reset user password",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "username",
+          "in" : "formData",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "new_password",
+          "in" : "formData",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "confirm",
+          "in" : "formData",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "reset_token",
+          "in" : "formData",
+          "required" : true,
+          "type" : "string"
         } ],
         "responses" : {
           "200" : {
             "description" : "password changed successfully"
           },
+          "401" : {
+            "description" : "passwords do not match"
+          },
+          "409" : {
+            "description" : "email does not exist"
+          },
           "422" : {
-            "description" : "invalid or missing data"
+            "description" : "missing reset token or invalid reset token or expired reset token"
           }
         }
       }
@@ -124,14 +184,17 @@
       "get" : {
         "tags" : [ "Auth" ],
         "summary" : "Retrieve user object",
-        "description" : "Takes username and password and returns access tokens: 'auth_token, refresh_token'",
-        "consumes" : [ "application/json" ],
+        "description" : "",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
         "produces" : [ "application/json" ],
         "parameters" : [ ],
         "responses" : {
           "200" : {
             "description" : "successful operation"
           },
+          "401" : {
+            "description" : "token expired or missing authorization header"
+          },
           "422" : {
             "description" : "Bad authorization header"
           },
@@ -140,67 +203,76 @@
           }
         },
         "security" : [ {
-          "Bearer" : [ ]
+          "access-token" : [ ]
         } ]
       },
       "put" : {
         "tags" : [ "Auth" ],
         "summary" : "Updates user object",
-        "consumes" : [ "application/json" ],
+        "consumes" : [ "application/x-www-form-urlencoded" ],
         "produces" : [ "application/json" ],
         "parameters" : [ {
-          "in" : "body",
-          "name" : "body",
+          "name" : "username",
+          "in" : "formData",
           "description" : "Update user account",
           "required" : true,
-          "schema" : {
-            "$ref" : "#/definitions/body_2"
-          }
+          "type" : "string"
         } ],
         "responses" : {
           "200" : {
             "description" : "successful update of user account"
           },
-          "304" : {
-            "description" : "user object not modified"
+          "401" : {
+            "description" : "authorization required"
           },
           "409" : {
-            "description" : "username or email exists"
+            "description" : "username exists"
           },
           "422" : {
-            "description" : "Bad authorization header or invalid email"
-          },
-          "500" : {
-            "description" : "server error"
+            "description" : "Bad authorization header or invalid username"
           }
         },
         "security" : [ {
-          "Bearer" : [ ]
+          "access-token" : [ ]
         } ]
       },
       "delete" : {
         "tags" : [ "Auth" ],
         "summary" : "deletes user object",
-        "consumes" : [ "application/json" ],
+        "consumes" : [ "application/x-www-form-urlencoded" ],
         "produces" : [ "application/json" ],
-        "parameters" : [ ],
+        "parameters" : [ {
+          "name" : "password",
+          "in" : "formData",
+          "description" : "Password of user",
+          "required" : true,
+          "type" : "string"
+        } ],
         "responses" : {
-          "204" : {
+          "200" : {
             "description" : "User object deleted successfully"
+          },
+          "401" : {
+            "description" : "Authorization required"
+          },
+          "409" : {
+            "description" : "Passwords do not match"
           },
           "422" : {
             "description" : "Bad authorization header"
           }
         },
         "security" : [ {
-          "Bearer" : [ ]
+          "access-token" : [ ]
         } ]
       }
     },
     "/shopping-lists" : {
       "get" : {
         "tags" : [ "Shoppinglists" ],
-        "summary" : "retrieve all shoppinglists",
+        "summary" : "retrieve all shopping lists",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/json" ],
         "parameters" : [ {
           "name" : "limit",
           "in" : "query",
@@ -217,22 +289,35 @@
         "responses" : {
           "200" : {
             "description" : "Successfully fetched all shopping lists"
+          },
+          "401" : {
+            "description" : "authorization required"
+          },
+          "422" : {
+            "description" : "error in query parameters"
           }
         },
         "security" : [ {
-          "Bearer" : [ ]
+          "access-token" : [ ]
         } ]
       },
       "post" : {
         "tags" : [ "Shoppinglists" ],
         "summary" : "creates shoppinglist object",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/json" ],
         "parameters" : [ {
-          "in" : "body",
-          "name" : "body",
+          "name" : "name",
+          "in" : "formData",
+          "description" : "name of shoppinglist",
           "required" : true,
-          "schema" : {
-            "$ref" : "#/definitions/ShoppingList"
-          }
+          "type" : "string"
+        }, {
+          "name" : "description",
+          "in" : "formData",
+          "description" : "optional description of the shoppinglist",
+          "required" : false,
+          "type" : "string"
         } ],
         "responses" : {
           "201" : {
@@ -245,11 +330,38 @@
             "description" : "shopping list already exists"
           },
           "422" : {
-            "description" : "unprocessed header or missing shoppinglist name"
+            "description" : "unprocessed header or missing shoppinglist name or invalid shoppinglist name"
           }
         },
         "security" : [ {
-          "Bearer" : [ ]
+          "access-token" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "Shoppinglists" ],
+        "summary" : "Remove all shoppinglists objects at once",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "password",
+          "in" : "formData",
+          "description" : "password of user",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "shoppinglists removed successfully"
+          },
+          "403" : {
+            "description" : "Incorrect password"
+          },
+          "404" : {
+            "description" : "shoppinglist empty"
+          }
+        },
+        "security" : [ {
+          "access-token" : [ ]
         } ]
       }
     },
@@ -257,6 +369,8 @@
       "get" : {
         "tags" : [ "Shoppinglists" ],
         "summary" : "Retrieve a single shoppinglist object",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/json" ],
         "parameters" : [ {
           "name" : "ID",
           "in" : "path",
@@ -276,31 +390,35 @@
           }
         },
         "security" : [ {
-          "Bearer" : [ ]
+          "access-token" : [ ]
         } ]
       },
       "put" : {
         "tags" : [ "Shoppinglists" ],
         "summary" : "update shoppinglist object",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/json" ],
         "parameters" : [ {
           "name" : "ID",
           "in" : "path",
           "required" : true,
           "type" : "integer"
         }, {
-          "in" : "body",
-          "name" : "body",
+          "name" : "name",
+          "in" : "formData",
+          "description" : "new name of shoppinglist",
           "required" : false,
-          "schema" : {
-            "$ref" : "#/definitions/body_3"
-          }
+          "type" : "string"
+        }, {
+          "name" : "description",
+          "in" : "formData",
+          "description" : "new description of shoppinglist",
+          "required" : false,
+          "type" : "string"
         } ],
         "responses" : {
           "200" : {
-            "description" : "shoppinglist object updated"
-          },
-          "304" : {
-            "description" : "shoppinglist object not modified"
+            "description" : "shoppinglist object updated or shoppinglist not updated"
           },
           "401" : {
             "description" : "missing authorization header"
@@ -310,24 +428,35 @@
           },
           "409" : {
             "description" : "shoppinglist object exists"
+          },
+          "422" : {
+            "description" : "invalid shoppinglist name"
           }
         },
         "security" : [ {
-          "Bearer" : [ ]
+          "access-token" : [ ]
         } ]
       },
       "delete" : {
         "tags" : [ "Shoppinglists" ],
         "summary" : "deletes shoppinglist object",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/json" ],
         "parameters" : [ {
           "name" : "ID",
           "in" : "path",
           "description" : "shoppinglist object ID",
           "required" : true,
           "type" : "integer"
+        }, {
+          "name" : "name",
+          "in" : "formData",
+          "description" : "name of shoppinglist",
+          "required" : true,
+          "type" : "string"
         } ],
         "responses" : {
-          "204" : {
+          "200" : {
             "description" : "shoppinglist object deleted"
           },
           "404" : {
@@ -335,7 +464,7 @@
           }
         },
         "security" : [ {
-          "Bearer" : [ ]
+          "access-token" : [ ]
         } ]
       }
     },
@@ -343,6 +472,8 @@
       "get" : {
         "tags" : [ "Shoppinglists" ],
         "summary" : "retrieve all shoppingitems objects",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/json" ],
         "parameters" : [ {
           "name" : "shoppinglistId",
           "in" : "path",
@@ -374,12 +505,14 @@
           }
         },
         "security" : [ {
-          "Bearer" : [ ]
+          "access-token" : [ ]
         } ]
       },
       "post" : {
         "tags" : [ "Shoppinglists" ],
         "summary" : "create shoppingitem object",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/json" ],
         "parameters" : [ {
           "name" : "shoppinglistId",
           "in" : "path",
@@ -387,13 +520,23 @@
           "required" : true,
           "type" : "integer"
         }, {
-          "in" : "body",
-          "name" : "body",
-          "description" : "details of shoppingitem object",
+          "name" : "name",
+          "in" : "formData",
+          "description" : "name of item",
           "required" : true,
-          "schema" : {
-            "$ref" : "#/definitions/ShoppingItem"
-          }
+          "type" : "string"
+        }, {
+          "name" : "price",
+          "in" : "formData",
+          "description" : "item price",
+          "required" : true,
+          "type" : "number"
+        }, {
+          "name" : "quantity_description",
+          "in" : "formData",
+          "description" : "item description",
+          "required" : true,
+          "type" : "string"
         } ],
         "responses" : {
           "201" : {
@@ -407,7 +550,40 @@
           }
         },
         "security" : [ {
-          "Bearer" : [ ]
+          "access-token" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "Shoppinglists" ],
+        "summary" : "delete all shoppingitems",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "shoppinglistId",
+          "in" : "path",
+          "description" : "ID of shoppinglist object",
+          "required" : true,
+          "type" : "integer"
+        }, {
+          "name" : "password",
+          "in" : "formData",
+          "description" : "user password",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "all items deleted"
+          },
+          "403" : {
+            "description" : "incorrect password"
+          },
+          "404" : {
+            "description" : "shoppinglis not found or empty shoppinglist"
+          }
+        },
+        "security" : [ {
+          "access-token" : [ ]
         } ]
       }
     },
@@ -415,6 +591,8 @@
       "get" : {
         "tags" : [ "Shoppinglists" ],
         "summary" : "retrieve single shoppingitem object",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/json" ],
         "parameters" : [ {
           "name" : "shoppinglistId",
           "in" : "path",
@@ -440,12 +618,14 @@
           }
         },
         "security" : [ {
-          "Bearer" : [ ]
+          "access-token" : [ ]
         } ]
       },
       "put" : {
         "tags" : [ "Shoppinglists" ],
         "summary" : "update shoppingitem object",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/json" ],
         "parameters" : [ {
           "name" : "shoppinglistId",
           "in" : "path",
@@ -459,12 +639,29 @@
           "required" : true,
           "type" : "integer"
         }, {
-          "in" : "body",
-          "name" : "body",
+          "name" : "name",
+          "in" : "formData",
+          "description" : "name of item",
           "required" : false,
-          "schema" : {
-            "$ref" : "#/definitions/ShoppingItem"
-          }
+          "type" : "string"
+        }, {
+          "name" : "price",
+          "in" : "formData",
+          "description" : "item price",
+          "required" : false,
+          "type" : "number"
+        }, {
+          "name" : "quantity_description",
+          "in" : "formData",
+          "description" : "item description",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "bought",
+          "in" : "formData",
+          "description" : "mark item as bought or not bought",
+          "required" : false,
+          "type" : "string"
         } ],
         "responses" : {
           "200" : {
@@ -478,12 +675,14 @@
           }
         },
         "security" : [ {
-          "Bearer" : [ ]
+          "access-token" : [ ]
         } ]
       },
       "delete" : {
         "tags" : [ "Shoppinglists" ],
         "summary" : "delete shoppingitem object",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/json" ],
         "parameters" : [ {
           "name" : "shoppinglistId",
           "in" : "path",
@@ -496,9 +695,15 @@
           "description" : "shoppingitem object ID",
           "required" : true,
           "type" : "integer"
+        }, {
+          "name" : "name",
+          "in" : "formData",
+          "description" : "name of item",
+          "required" : true,
+          "type" : "string"
         } ],
         "responses" : {
-          "204" : {
+          "200" : {
             "description" : "shoppingitem object deleted"
           },
           "401" : {
@@ -509,7 +714,7 @@
           }
         },
         "security" : [ {
-          "Bearer" : [ ]
+          "access-token" : [ ]
         } ]
       }
     },
@@ -518,6 +723,8 @@
         "tags" : [ "Search" ],
         "summary" : "search shoppinglists objects",
         "description" : "search and retrieves shoppinglist objects that match the query keyword",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/json" ],
         "parameters" : [ {
           "name" : "q",
           "in" : "query",
@@ -542,108 +749,23 @@
           },
           "401" : {
             "description" : "authorization header required"
+          },
+          "422" : {
+            "description" : "query keyword missing"
           }
         },
         "security" : [ {
-          "Bearer" : [ ]
+          "access-token" : [ ]
         } ]
       }
     }
   },
   "securityDefinitions" : {
-    "Bearer" : {
+    "access-token" : {
       "type" : "apiKey",
-      "name" : "Authorization",
+      "name" : "x-access-token",
       "in" : "header"
     }
   },
-  "definitions" : {
-    "User" : {
-      "properties" : {
-        "username" : {
-          "type" : "string"
-        },
-        "email" : {
-          "type" : "string"
-        },
-        "password" : {
-          "type" : "string"
-        }
-      }
-    },
-    "ShoppingList" : {
-      "properties" : {
-        "name" : {
-          "type" : "string"
-        },
-        "description" : {
-          "type" : "string"
-        }
-      }
-    },
-    "ShoppingItem" : {
-      "properties" : {
-        "name" : {
-          "type" : "string"
-        },
-        "price" : {
-          "type" : "number",
-          "format" : "double"
-        },
-        "quantity" : {
-          "type" : "number",
-          "format" : "double"
-        },
-        "bought" : {
-          "type" : "boolean"
-        }
-      }
-    },
-    "body" : {
-      "properties" : {
-        "username" : {
-          "type" : "string"
-        },
-        "password" : {
-          "type" : "string"
-        }
-      }
-    },
-    "body_1" : {
-      "properties" : {
-        "username" : {
-          "type" : "string"
-        },
-        "email" : {
-          "type" : "string"
-        },
-        "old_password" : {
-          "type" : "string"
-        },
-        "new_password" : {
-          "type" : "string"
-        },
-        "confirm" : {
-          "type" : "string"
-        }
-      }
-    },
-    "body_2" : {
-      "properties" : {
-        "username" : {
-          "type" : "string"
-        },
-        "email" : {
-          "type" : "string"
-        }
-      }
-    },
-    "body_3" : {
-      "properties" : {
-        "new_name" : {
-          "type" : "string"
-        }
-      }
-    }
-  }
+  "definitions" : { }
 }
