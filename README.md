@@ -105,7 +105,7 @@ Follow the links below and and install the softwares depending on the operating 
 
 **Register User**
 ```bash
-   $ curl -H "Content-Type: application/json" -X POST -d '{"username":"testuser","password":"testuserpassword","email":"testuser@gmail.com"}' http://localhost:5000/api/v1.0/auth/register
+   $ curl -H "Content-Type: application/form" -X POST -d '{"username":"testuser","email":"testuser@gmail.com", "password":"testuserpassword"}' http://localhost:5000/api/v1.0/auth/register
 ```
 
 you should see the response below.
@@ -128,7 +128,6 @@ you should see the response.
   "status": "success",
   "message": "Logged in", 
   "auth_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlkZW50aXR5IjoidGVzdHVzZXIiLCJpYXQiOjE1MTA5NDc1MDUsImp0aSI6Ijg4YWM0NGE1LTA3NWMtNDU0Zi05NTdmLTU2ZWRlODI3MWUzMyIsInR5cGUiOiJhY2Nlc3MiLCJuYmYiOjE1MTA5NDc1MDUsImV4cCI6MTUxMDk1MTEwNX0.qIKKIDStHtjPx9V51mmZgtrYTbCxuD2s0E1gzJPkDDk",
-  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eSI6InRlc3R1c2VyIiwiaWF0IjoxNTEwOTQ3NTA1LCJqdGkiOiI2NmFiMDc0My0yYjViLTQwODQtYTU3Mi04ZmY2ZWVkZDFhYTciLCJ0eXBlIjoicmVmcmVzaCIsIm5iZiI6MTUxMDk0NzUwNSwiZXhwIjoxNTEzNTM5NTA1fQ.1-6Tfskjj5xwRdeJIwiqBrh5fGSY9Viij0sjRLG44Ys"
 }
 
 ```
@@ -139,7 +138,7 @@ This app uses `nose` as the main package for testing.
 Copy the commands below in your terminal to run automated tests and view test coverage.
 
 ```bash
-   $ nosetests --with-coverage tests app/auth/tests app/shoppinglist/tests
+   $ nosetests --with-coverage tests/
 ```
 
 Then show coverage.
@@ -175,7 +174,7 @@ named `idex.html`.
 
    * **Data Format**
 
-     `application/json`
+     `application/form`
   
    * **Data Params**
   
@@ -184,6 +183,7 @@ named `idex.html`.
        * `username`
        * `email`
        * `password`
+       * `confirm`
   
 
    * **Success Response:**
@@ -211,6 +211,9 @@ named `idex.html`.
                    "password": [
                      "Missing data for required field."
                    ]
+                   "confirm": [
+                   "password does not match with confirm"
+                   ],
                }
            }  
            
@@ -235,7 +238,7 @@ named `idex.html`.
 
     * **Data Format**
 
-      `application/json`
+      `application/form`
      
     * **Data Params**
   
@@ -255,7 +258,6 @@ named `idex.html`.
                 status:"success", 
                 message: "Logged in",
                 auth_token: "XXXXXXXXXX.XXXXXXXXX",
-                "refresh_token": "XXXXXXXX.XXXXXX"
             }
  
     * **Error Response:**
@@ -298,7 +300,7 @@ named `idex.html`.
 
     * **Data Format**
 
-      `application/json`
+      `application/form`
 
     * **Success Response:**
 
