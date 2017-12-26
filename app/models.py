@@ -108,7 +108,6 @@ class ShoppingList(BaseModel, DB.Model):
                                      lazy='dynamic', cascade='all, delete-orphan')
     description = DB.Column(DB.Text(), nullable=True, default="")
 
-
     @staticmethod
     def get(shoppinglistId, ownerId):
         """
@@ -133,6 +132,15 @@ class ShoppingList(BaseModel, DB.Model):
                     DB.session.query(self.__class__).
                    filter_by(id=self.id).first().
                    shopping_items.all()])
+
+    def get_all_items(self):
+        """
+        Retrieve all items.
+
+        :return: list
+        """
+
+        return self.shopping_items.all()
 
     def __repr__(self):
         return '<%(name)s obj>' % dict(name=self.name.capitalize())
