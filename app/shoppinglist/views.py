@@ -726,16 +726,22 @@ class SearchShoppingListApi(Resource):
                 )), 422)
 
         term = prep_keyword(_term)
+
+        # search through shoppinglist objects first.
         shoppinglists = user.\
-            shopping_lists.filter(ShoppingList.name.ilike(term)).paginate(page, limit)
+            shopping_lists.filter(
+            ShoppingList.name.ilike(term) |
+            ShoppingList.description.ilike(term) |
+            ShoppingList.shopping_items.any(
+                ShoppingItem.name.ilike(term) | ShoppingItem.quantity_description.ilike(term))
+        ).paginate(page, limit)
 
         if any(shoppinglists.items):
             response.setdefault('total_pages', shoppinglists.pages)
             results = [
-                {shl.name:
-                     {'shoppingitems':
-                          [item.name for item in shl.shopping_items.all()]
-                      }
+                {'name': shl.name,
+                 'id': shl.id,
+                 'items': [item.name for item in shl.shopping_items.all()]
                  } for shl in shoppinglists.items]
             response.setdefault('shoppinglists', results)
 
