@@ -91,8 +91,7 @@ class ShoppingListsApi(Resource):
             response.setdefault('shopping_lists', output)
 
         return make_response(
-            jsonify(response), 200
-        )
+            jsonify(response), 200)
 
     @use_args(create_args)
     @jwt_required
