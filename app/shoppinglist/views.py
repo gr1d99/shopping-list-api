@@ -271,7 +271,7 @@ class ShoppingListDetailApi(Resource):
                 shl = ShoppingList.query.filter_by(name=name, owner_id=user.id).first()
 
                 # if shopping list exists and it is not owned by the client return bad request.
-                if shl:
+                if shl and shl.id != shoppinglist.id:
                     msg = shoppinglist_name_exists
                     return make_response(
                         jsonify(dict(message=msg)), 409)
