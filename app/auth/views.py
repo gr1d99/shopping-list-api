@@ -13,7 +13,7 @@ from usernames import is_safe_username
 
 from app.core.validators import PasswordValidator, UsernameValidator
 from .security import check_user, generate_token
-from .utils import delete_args, login_args, registration_args, reset_args, update_args, get_password_token_args
+from .utils import login_args, registration_args, reset_args, update_args, get_password_token_args
 from ..messages import *
 from ..models import User, BlacklistToken, ResetToken
 
@@ -208,9 +208,8 @@ class UserProfileApi(Resource):
                     updated=user.updated.strftime("%Y-%m-%d %H:%M:%S"))
             )), 200)
 
-    @use_args(delete_args)
     @jwt_required
-    def delete(self, data):
+    def delete(self):
         """
         Handles DELETE request to remove/delete client from database.
 
@@ -219,14 +218,6 @@ class UserProfileApi(Resource):
 
         current_user = get_jwt_identity()
         user = check_user(current_user)
-        password = data.get('password')
-
-        if not user.verify_password(password):
-            return make_response(
-                jsonify(dict(
-                    message=incomplete_delete
-                )), 409
-            )
 
         user.delete()
 
@@ -274,6 +265,7 @@ class PasswordResetTokenApi(Resource):
                 rt.expire_token()
 
             token = generate_token(user.id)
+
             return make_response(
                 jsonify(dict(
                     message=reset_token_sent,

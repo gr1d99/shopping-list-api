@@ -140,7 +140,6 @@ class ShoppingListsApi(Resource):
                     created_on=shl.timestamp.strftime("%Y-%m-%d %H:%M:%S"))
             )), 201)
 
-    @use_args(delete_items_args)
     @jwt_required
     def delete(self, args):
         """
@@ -150,13 +149,9 @@ class ShoppingListsApi(Resource):
         """
 
         current_user = get_jwt_identity()
-        password = args.get('password', None)
 
         # get user instance.
         user = User.get_by_username(username=current_user)
-
-        if not user.verify_password(password):
-            return make_response(jsonify(dict(message=incorrect_password)), 403)
 
         shoppinglists = user.shopping_lists
         if shoppinglists.count() > 0:
@@ -286,9 +281,8 @@ class ShoppingListDetailApi(Resource):
         return make_response(
             jsonify(dict(message=shoppinglist_not_updated)), 200)
 
-    @use_args(delete_item_args)
     @jwt_required
-    def delete(self, args, shl_id):
+    def delete(self, shl_id):
         """
         Handles DELETE request to delete shopping list using its id.
 
@@ -297,7 +291,6 @@ class ShoppingListDetailApi(Resource):
         """
 
         current_user = get_jwt_identity()
-        name = args.get('name', '')
 
         # get user instance.
         user = User.query.filter_by(username=current_user).first()
@@ -306,9 +299,6 @@ class ShoppingListDetailApi(Resource):
 
         if not instance:
             return make_response(jsonify(dict(message=shoppinglist_not_found)), 404)
-
-        if not instance.name == name:
-            return make_response(jsonify(dict(message=shoppinglist_name_incorrect)), 403)
 
         instance.delete()
 
@@ -386,9 +376,14 @@ class ShoppingItemListApi(Resource):
                 data.setdefault('next_page_url', next_page_url)
 
             output = [
-                {'name': item.name,
+                {'id': item.id,
+                 'parent_name': shoppinglist.name,
+                 'name': item.name,
                  'price': item.price,
-                 'bought': item.bought} for item in paginated.items]
+                 'bought': item.bought,
+                 'quantity_description': item.quantity_description,
+                 'created_on': item.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                 'updated_on': item.updated.strftime("%Y-%m-%d %H:%M:%S")} for item in paginated.items]
 
             data.setdefault('total_pages', paginated.pages)
             data.setdefault('shopping_items', output)
@@ -396,14 +391,23 @@ class ShoppingItemListApi(Resource):
         else:
             items = [
                 {'id': item.id,
-                 'name': item.name} for item in shoppinglist.shopping_items.all()]
+                 'name': item.name,
+                 'parent_name': shoppinglist.name,
+                 'price': item.price,
+                 'bought': item.bought,
+                 'quantity_description': item.quantity_description,
+                 'created_on': item.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                 'updated_on': item.updated.strftime("%Y-%m-%d %H:%M:%S")}
+                for item in shoppinglist.shopping_items.all()]
             data.setdefault('shopping_items', items)
+
+            for item in shoppinglist.shopping_items.all():
+                print(item.bought)
 
         return make_response(jsonify(data), 200)
 
-    @use_args(delete_items_args)
     @jwt_required
-    def delete(self, args, shl_id):
+    def delete(self, shl_id):
         """
         Handles deletion of all items in user shoppinglist.
 
@@ -648,9 +652,8 @@ class ShoppingItemDetailApi(Resource):
                     )
             )), 200)
 
-    @use_args(delete_item_args)
     @jwt_required
-    def delete(self, args, shl_id, item_id):
+    def delete(self, shl_id, item_id):
         """
         Handles DELETE request from client to delete a single shoppingitem identified by
         its id.
@@ -660,7 +663,6 @@ class ShoppingItemDetailApi(Resource):
         """
 
         current_user = get_jwt_identity()
-        name = args.get('name', '')
 
         user = User.get_by_username(current_user)
 
@@ -683,9 +685,6 @@ class ShoppingItemDetailApi(Resource):
                 jsonify(dict(
                     message=shoppingitem_not_found
                 )), 404)
-
-        if shoppingitem.name != name:
-            return make_response(jsonify(dict(message=shoppingitem_not_deleted)), 403)
 
         # delete shoppingitem.
         shoppingitem.delete()
@@ -737,20 +736,25 @@ class SearchShoppingListApi(Resource):
 
         if any(shoppinglists.items):
             response.setdefault('total_pages', shoppinglists.pages)
+            response.setdefault('current_page', shoppinglists.page)
+            response.setdefault('total_items', shoppinglists.total)
             results = [
                 {'name': shl.name,
                  'id': shl.id,
+                 'description': shl.description,
                  'items': [item.name for item in shl.shopping_items.all()]
                  } for shl in shoppinglists.items]
             response.setdefault('shoppinglists', results)
 
             if shoppinglists.has_prev:
-                previous_page = urlmaker(request, shoppinglists.prev_num, limit).make_url()
-                response.setdefault('previous_page', previous_page)
+                previous_page = urlmaker(request, shoppinglists.prev_num, limit).make_url(for_search=True, term=_term)
+                response.setdefault('previous_page_url', previous_page)
+                response.setdefault('previous_page', shoppinglists.prev_num)
 
             if shoppinglists.has_next:
-                next_page = urlmaker(request, shoppinglists.next_num, limit).make_url()
-                response.setdefault('next_page', next_page)
+                next_page = urlmaker(request, shoppinglists.next_num, limit).make_url(for_search=True, term=_term)
+                response.setdefault('next_page_url', next_page)
+                response.setdefault('next_page', shoppinglists.next_num)
 
         else:
             response.setdefault('message', search_not_found)

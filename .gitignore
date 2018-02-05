@@ -6,3 +6,9 @@ env
 shl_api/
 migrations/
 htmlcov/
+.DS_Store
+app/.DS_Store
+app/core/.DS_Store
+app/errors.log
+env.sh
+shl/

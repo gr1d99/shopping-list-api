@@ -56,8 +56,3 @@ reset_args = OrderedDict(
     ]
 )
 
-delete_args = OrderedDict(
-    [
-        ('password', fields.Str(location='form', required=True))
-    ]
-)

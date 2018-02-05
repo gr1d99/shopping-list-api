@@ -68,18 +68,6 @@ detail_args = collections.OrderedDict(
     ]
 )
 
-delete_item_args = collections.OrderedDict(
-    [
-        ('name', fields.Str(required=True, location='form'))
-    ]
-)
-
-delete_items_args = collections.OrderedDict(
-    [
-        ('password', fields.Str(required=True, location='form'))
-    ]
-)
-
 
 class MakePaginationUrls(object):
     """
@@ -91,18 +79,25 @@ class MakePaginationUrls(object):
         self.page = page
         self.limit = limit
 
-    def make_url(self):
+    def make_url(self, term=None, for_search=False):
         """
         Method to generate pagination urls.
 
         :return: url.
         """
+        url = ''
+        if for_search:
+            _url = "%(base)s?q=%(term)s&page=%(page)s&limit=%(limit)s"
+            url = _url % dict(base=self.request.base_url,
+                              term=term,
+                              page=self.page,
+                              limit=self.limit)
 
-        _url = "%(base)s?page=%(page)s&limit=%(limit)s"
-
-        url = _url % dict(base=self.request.base_url,
-                          page=self.page,
-                          limit=self.limit)
+        else:
+            _url = "%(base)s?page=%(page)s&limit=%(limit)s"
+            url = _url % dict(base=self.request.base_url,
+                              page=self.page,
+                              limit=self.limit)
 
         return url
 

@@ -40,6 +40,16 @@ class User(BaseUserManager, BaseModel, DB.Model):
         self.password = self.hash_password(password)
         self.email = self.normalize_email(email)
 
+    # TODO
+    def get_reset_url(self):
+        return self.reset_tokens.filter_by(expired=False).first()
+
+    def send_reset_url(self): pass
+
+    def verify_reset_url(self): pass
+
+    def reset_password(self): pass
+
     @staticmethod
     def check_email(email):
         """
