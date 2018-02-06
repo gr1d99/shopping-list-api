@@ -14,7 +14,6 @@ from app.conf import app_config, settings
 
 
 APP = Flask(__name__)
-CORS(APP)
 bcrypt = Bcrypt(APP)
 APP.config.from_object(app_config.DevelopmentConfig)
 DB = SQLAlchemy(APP)
