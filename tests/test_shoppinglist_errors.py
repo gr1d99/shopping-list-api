@@ -121,43 +121,6 @@ class TestShoppingListErrorsCase(TestShoppingListBaseCase):
         self.assertStatus(update_response, 422)
         self.assertIsNotNone(obj)
 
-
-    def test_cannot_update_shoppinglist_name_with_a_name_that_exists(self):
-        # register first user.
-        self.register_user()
-        login_response = self.login_user()
-
-        # get auth token of first user.
-        auth_token = json.loads(
-            login_response.get_data(as_text=True))['data']['auth_token']
-
-        # new shoppinglists info.
-        first = {
-            'name': 'New Shoppinglist',
-            'description': 'New Shoppinglist description.'}
-
-        duplicate = {
-            'name': 'New Shoppinglist',
-            'description': 'Other new Shoppinglist description.'}
-
-        # use auth_token to create shoppinglist for first user and get id of shoppinglist.
-        res = self.create_shoppinglist(token=auth_token, details=first)
-        shl_id = json.loads(
-            res.get_data(as_text=True))['data']['id']
-
-        response = self.update_shoppinglist(auth_token, shl_id, duplicate)
-
-        # query shoppinglist obj.
-        obj = ShoppingList.query.filter_by(name=duplicate.get('name')).all()
-
-        # assert response
-        self.assertStatus(response, 409)
-        self.assertEqual(len(obj), 1)
-
-        # object from db description should be equal to the details used to
-        # create the first shoppinglist.
-        self.assertTrue(obj[0].description == first.get('description'))
-
     def test_cannot_delete_non_existing_shoppinglist(self):
         self.register_user()
         login_response = self.login_user()
@@ -179,27 +142,27 @@ class TestShoppingListErrorsCase(TestShoppingListBaseCase):
         self.assertTrue(msg.shoppinglist_not_found == res_data['message'])
         self.assertIsNone(obj)
 
-    def test_cannot_delete_shoppinglist_using_incorrect_name(self):
-        self.register_user()
-        login_response = self.login_user()
-
-        auth_token = json.loads(login_response.get_data(as_text=True))['data']['auth_token']
-
-        # shoppinglist name
-        det = {
-            'name': 'School'}
-
-        # use auth_token to create shopping list.
-        create_response = self.create_shoppinglist(token=auth_token, details=det)
-
-        # get shoppinglist ID.
-        shl_id = json.loads(create_response.get_data(as_text=True))['data']['id']
-
-        # make DELETE request to server
-        res = self.delete_shoppinglist(token=auth_token, id=shl_id, name='incorrect')
-
-        # assertions.
-        self.assertStatus(res, 403)
+    # def test_cannot_delete_shoppinglist_using_incorrect_name(self):
+    #     self.register_user()
+    #     login_response = self.login_user()
+    #
+    #     auth_token = json.loads(login_response.get_data(as_text=True))['data']['auth_token']
+    #
+    #     # shoppinglist name
+    #     det = {
+    #         'name': 'School'}
+    #
+    #     # use auth_token to create shopping list.
+    #     create_response = self.create_shoppinglist(token=auth_token, details=det)
+    #
+    #     # get shoppinglist ID.
+    #     shl_id = json.loads(create_response.get_data(as_text=True))['data']['id']
+    #
+    #     # make DELETE request to server
+    #     res = self.delete_shoppinglist(token=auth_token, id=shl_id, name='incorrect')
+    #
+    #     # assertions.
+    #     self.assertStatus(res, 403)
 
     def test_user_cannot_delete_empty_shoppinglist(self):
         self.register_user()
@@ -213,14 +176,14 @@ class TestShoppingListErrorsCase(TestShoppingListBaseCase):
         # assertions.
         self.assert404(res)
 
-    def test_user_cannot_delet_shoppinglists_using_incorrect_password(self):
-        self.register_user()
-        login_response = self.login_user()
-
-        auth_token = json.loads(login_response.get_data(as_text=True))['data']['auth_token']
-
-        # delete all shopping lists
-        res = self.delete_all_shoppinglists(auth_token, 'incorrectpassword')
-
-        # assertions.
-        self.assert403(res)
+    # def test_user_cannot_delet_shoppinglists_using_incorrect_password(self):
+    #     self.register_user()
+    #     login_response = self.login_user()
+    #
+    #     auth_token = json.loads(login_response.get_data(as_text=True))['data']['auth_token']
+    #
+    #     # delete all shopping lists
+    #     res = self.delete_all_shoppinglists(auth_token, 'incorrectpassword')
+    #
+    #     # assertions.
+    #     self.assert403(res)

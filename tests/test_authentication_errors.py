@@ -284,23 +284,23 @@ class TestUserAuthErrorsCase(TestAuthenticationBaseCase):
         response = self.reset_password(details)
         self.assertStatus(response, 409)
 
-    def test_cannot_delete_account_with_incorrect_passwords(self):
-        # register user.
-        self.register_user(
-            username=self.test_user.username, email=self.test_user.email,
-            password=self.test_user.password, confirm=self.test_user.password)
-
-        # login user
-        login_response = self.login_user(
-            username=self.test_user.username, password=self.test_user.password)
-
-        # logout client.
-        token = json.loads(login_response.get_data(as_text=True))['data']['auth_token']
-
-        # make delete request.
-        delete_response = self.delete_user(token, "very incorrect")
-
-        res_data = json.loads(delete_response.get_data(as_text=True))
-
-        self.assertStatus(delete_response, 409)
-        self.assertTrue(res_data['message'] == msg.incomplete_delete)
+    # def test_cannot_delete_account_with_incorrect_passwords(self):
+    #     # register user.
+    #     self.register_user(
+    #         username=self.test_user.username, email=self.test_user.email,
+    #         password=self.test_user.password, confirm=self.test_user.password)
+    #
+    #     # login user
+    #     login_response = self.login_user(
+    #         username=self.test_user.username, password=self.test_user.password)
+    #
+    #     # logout client.
+    #     token = json.loads(login_response.get_data(as_text=True))['data']['auth_token']
+    #
+    #     # make delete request.
+    #     delete_response = self.delete_user(token, "very incorrect")
+    #
+    #     res_data = json.loads(delete_response.get_data(as_text=True))
+    #
+    #     self.assertStatus(delete_response, 409)
+    #     self.assertTrue(res_data['message'] == msg.incomplete_delete)
