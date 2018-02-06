@@ -141,7 +141,7 @@ class ShoppingListsApi(Resource):
             )), 201)
 
     @jwt_required
-    def delete(self, args):
+    def delete(self):
         """
         Deletes all user shopping lists
 
@@ -415,13 +415,9 @@ class ShoppingItemListApi(Resource):
         """
 
         current_user = get_jwt_identity()
-        password = args.get('password', '')
 
         # user instance
         user = User.get_by_username(username=current_user)
-
-        if not user.verify_password(password):
-            return make_response(jsonify(dict(message=shoppingitems_not_deleted)), 403)
 
         # get shoppinglist instance
         shoppinglist = ShoppingList.get(shl_id, user.id)
