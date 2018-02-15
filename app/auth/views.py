@@ -27,6 +27,8 @@ class UserRegisterApi(Resource):
         :param args: user data: username, email and password.
         :return: Response object.
         """
+        import time
+        time.sleep(10)
 
         username = args.get('username', '').lower()
         email = args.get('email')
