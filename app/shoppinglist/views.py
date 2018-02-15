@@ -582,6 +582,11 @@ class ShoppingItemDetailApi(Resource):
         bought = args.get('bought', None)
 
         if any([name, price, quantity, bought]):
+            # check if quantity description are similar.
+            exists = shoppinglist.shopping_items.filter_by(name=name, quantity_description=quantity).first()
+            print(exists)
+            if exists and exists.id != shoppingitem.id:
+                return make_response(jsonify(dict(message=shoppingitem_exists)), 409)
 
             if not name:
                 name = shoppingitem.name
@@ -724,10 +729,7 @@ class SearchShoppingListApi(Resource):
         # search through shoppinglist objects first.
         shoppinglists = user.\
             shopping_lists.filter(
-            ShoppingList.name.ilike(term) |
-            ShoppingList.description.ilike(term) |
-            ShoppingList.shopping_items.any(
-                ShoppingItem.name.ilike(term) | ShoppingItem.quantity_description.ilike(term))
+            ShoppingList.name.ilike(term)
         ).paginate(page, limit)
 
         if any(shoppinglists.items):
